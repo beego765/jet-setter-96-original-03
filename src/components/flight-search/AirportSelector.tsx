@@ -48,14 +48,14 @@ export const AirportSelector = ({
             {value || placeholder}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="p-0 bg-gray-800 border-gray-700">
+        <PopoverContent className="p-0 bg-gray-800 border-gray-700 w-[400px]" align="start">
           <Command>
             <CommandInput 
               placeholder="Search airports..." 
               className="h-12 bg-gray-700/50"
               onValueChange={setQuery}
             />
-            <CommandList>
+            <CommandList className="max-h-[300px] overflow-auto">
               {isLoading ? (
                 <CommandEmpty>Loading...</CommandEmpty>
               ) : !airports?.length ? (

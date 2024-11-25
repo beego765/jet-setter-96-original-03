@@ -1,13 +1,5 @@
-const SUPABASE_PROJECT_ID = 'yqzsdhoxnkjgmdjxbyos'
-const DUFFEL_PROXY = `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/duffel-proxy`
-
-// Get the anon key from environment
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-const headers = {
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-}
+const SUPABASE_PROJECT_ID = 'yqzsdhoxnkjgmdjxbyos';
+const DUFFEL_PROXY = `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/duffel-proxy`;
 
 export const searchAirports = async (query: string) => {
   try {
@@ -15,7 +7,10 @@ export const searchAirports = async (query: string) => {
 
     const response = await fetch(`${DUFFEL_PROXY}/air/airports?query=${encodeURIComponent(query)}&limit=10`, {
       method: 'GET',
-      headers
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+      }
     });
     
     if (!response.ok) {
@@ -23,12 +18,7 @@ export const searchAirports = async (query: string) => {
     }
     
     const data = await response.json();
-    return data.data.map((airport: any) => ({
-      iata_code: airport.iata_code,
-      name: airport.name,
-      city: airport.city?.name,
-      country: airport.country?.name
-    })) || [];
+    return data.data || [];
   } catch (error) {
     console.error('Error searching airports:', error);
     return [];
@@ -39,7 +29,10 @@ export const searchFlights = async (params: any) => {
   try {
     const response = await fetch(`${DUFFEL_PROXY}/air/offer_requests`, {
       method: 'POST',
-      headers,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+      },
       body: JSON.stringify({
         data: {
           slices: [
@@ -82,7 +75,10 @@ export const createBooking = async (offerId: string, passengers: any[]) => {
   try {
     const response = await fetch(`${DUFFEL_PROXY}/air/orders`, {
       method: 'POST',
-      headers,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+      },
       body: JSON.stringify({
         data: {
           type: 'instant',

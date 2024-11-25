@@ -15,11 +15,11 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
-  const url = new URL(req.url)
-  const path = url.pathname.replace('/duffel-proxy/air', '')
-  const query = url.search
-
   try {
+    const url = new URL(req.url)
+    const path = url.pathname.replace('/duffel-proxy/air', '')
+    const query = url.search
+
     console.log('Calling Duffel API:', `${DUFFEL_API}${path}${query}`)
     
     const response = await fetch(`${DUFFEL_API}${path}${query}`, {
@@ -33,12 +33,8 @@ serve(async (req) => {
       body: req.method !== 'GET' ? await req.text() : undefined
     })
 
-    if (!response.ok) {
-      console.error('Duffel API error:', response.status, await response.text())
-      throw new Error(`Duffel API error: ${response.status}`)
-    }
-
     const data = await response.json()
+
     return new Response(JSON.stringify(data), {
       headers: {
         'Content-Type': 'application/json',
@@ -47,12 +43,15 @@ serve(async (req) => {
     })
   } catch (error) {
     console.error('Error in Duffel proxy:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        }
       }
-    })
+    )
   }
 })

@@ -1,5 +1,4 @@
 const API_KEY = 'duffel_test_VKTSwY1W6qRnC2ipzsOQvpKSc426Ct5OIKanj3ERZc-';
-const PROXY_URL = 'https://api.allorigins.win/raw?url=';
 const DUFFEL_API = 'https://api.duffel.com/air';
 
 const headers = {
@@ -11,18 +10,18 @@ const headers = {
 
 export const searchAirports = async (query: string) => {
   try {
-    const encodedUrl = encodeURIComponent(`${DUFFEL_API}/airports?query=${query}`);
-    const response = await fetch(`${PROXY_URL}${encodedUrl}`, {
+    // Using direct API call with proper headers
+    const response = await fetch(`${DUFFEL_API}/airports/suggestions?query=${encodeURIComponent(query)}`, {
       method: 'GET',
       headers
     });
     
     if (!response.ok) {
-      throw new Error('Failed to fetch airports');
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     const data = await response.json();
-    return data.data;
+    return data.data || [];
   } catch (error) {
     console.error('Error searching airports:', error);
     return [];
@@ -31,8 +30,7 @@ export const searchAirports = async (query: string) => {
 
 export const searchFlights = async (params: any) => {
   try {
-    const encodedUrl = encodeURIComponent(`${DUFFEL_API}/offer_requests`);
-    const response = await fetch(`${PROXY_URL}${encodedUrl}`, {
+    const response = await fetch(`${DUFFEL_API}/offer_requests`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -62,7 +60,7 @@ export const searchFlights = async (params: any) => {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to search flights');
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
@@ -75,8 +73,7 @@ export const searchFlights = async (params: any) => {
 
 export const createBooking = async (offerId: string, passengers: any[]) => {
   try {
-    const encodedUrl = encodeURIComponent(`${DUFFEL_API}/orders`);
-    const response = await fetch(`${PROXY_URL}${encodedUrl}`, {
+    const response = await fetch(`${DUFFEL_API}/orders`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -98,7 +95,7 @@ export const createBooking = async (offerId: string, passengers: any[]) => {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to create booking');
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();

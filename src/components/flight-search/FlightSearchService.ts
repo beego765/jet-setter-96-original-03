@@ -6,6 +6,8 @@ export const useAirportSearch = (query: string) => {
     queryKey: ['airports', query],
     queryFn: () => searchAirports(query),
     enabled: query.length > 2,
+    retry: false,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 };
 
@@ -14,6 +16,7 @@ export const useFlightSearch = (searchParams: any) => {
     queryKey: ['flights', searchParams],
     queryFn: () => searchFlights(searchParams),
     enabled: !!searchParams,
+    retry: false,
   });
 };
 
@@ -22,5 +25,6 @@ export const useCreateBooking = (offerId: string, passengers: any[]) => {
     queryKey: ['booking', offerId],
     queryFn: () => createBooking(offerId, passengers),
     enabled: false,
+    retry: false,
   });
 };

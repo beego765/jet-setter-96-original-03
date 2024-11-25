@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, Users, Plane } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface SearchFormData {
@@ -44,37 +44,46 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-4xl mx-auto p-6 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg animate-fadeIn">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="relative z-10 space-y-6 w-full max-w-4xl mx-auto p-8 bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl animate-fadeIn">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-flight-primary">From</label>
+          <label className="text-sm font-medium text-flight-primary flex items-center gap-2">
+            <Plane className="w-4 h-4 rotate-45" />
+            From
+          </label>
           <Input
             placeholder="Origin airport"
             value={origin}
             onChange={(e) => setOrigin(e.target.value)}
-            className="h-12"
+            className="h-12 bg-white/80 backdrop-blur-sm transition-all focus:bg-white"
           />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-flight-primary">To</label>
+          <label className="text-sm font-medium text-flight-primary flex items-center gap-2">
+            <Plane className="w-4 h-4 -rotate-45" />
+            To
+          </label>
           <Input
             placeholder="Destination airport"
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
-            className="h-12"
+            className="h-12 bg-white/80 backdrop-blur-sm transition-all focus:bg-white"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-flight-primary">Date</label>
+          <label className="text-sm font-medium text-flight-primary flex items-center gap-2">
+            <CalendarIcon className="w-4 h-4" />
+            Date
+          </label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 className={cn(
-                  "w-full h-12 justify-start text-left font-normal",
+                  "w-full h-12 justify-start text-left font-normal bg-white/80 backdrop-blur-sm transition-all hover:bg-white",
                   !date && "text-muted-foreground"
                 )}
               >
@@ -88,20 +97,24 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
                 selected={date}
                 onSelect={setDate}
                 initialFocus
+                className="rounded-md border"
               />
             </PopoverContent>
           </Popover>
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-flight-primary">Passengers</label>
+          <label className="text-sm font-medium text-flight-primary flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Passengers
+          </label>
           <Input
             type="number"
             min={1}
             max={9}
             value={passengers}
             onChange={(e) => setPassengers(parseInt(e.target.value))}
-            className="h-12"
+            className="h-12 bg-white/80 backdrop-blur-sm transition-all focus:bg-white"
           />
         </div>
 
@@ -110,7 +123,7 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
           <select
             value={flightClass}
             onChange={(e) => setFlightClass(e.target.value as "economy" | "business" | "first")}
-            className="w-full h-12 px-3 py-2 bg-white border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full h-12 px-3 py-2 bg-white/80 backdrop-blur-sm border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring transition-all hover:bg-white"
           >
             <option value="economy">Economy</option>
             <option value="business">Business</option>
@@ -119,7 +132,10 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
         </div>
       </div>
 
-      <Button type="submit" className="w-full h-12 bg-flight-accent hover:bg-flight-accent/90 text-white">
+      <Button 
+        type="submit" 
+        className="w-full h-12 bg-gradient-to-r from-flight-accent to-blue-600 hover:from-flight-accent/90 hover:to-blue-600/90 text-white font-medium text-lg"
+      >
         Search Flights
       </Button>
     </form>

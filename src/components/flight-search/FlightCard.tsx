@@ -20,6 +20,12 @@ interface FlightCardProps {
 }
 
 export const FlightCard = ({ flight, onSelect }: FlightCardProps) => {
+  // Format price to GBP
+  const formattedPrice = new Intl.NumberFormat('en-GB', {
+    style: 'currency',
+    currency: 'GBP',
+  }).format(flight.price);
+
   return (
     <Card className="p-6 hover:shadow-xl transition-all duration-300 animate-fadeIn bg-gray-800/50 backdrop-blur-sm border-gray-700 hover:bg-gray-800/70">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -64,10 +70,10 @@ export const FlightCard = ({ flight, onSelect }: FlightCardProps) => {
         </div>
         
         <div className="flex flex-col items-end gap-3 w-full md:w-auto">
-          <p className="text-3xl font-bold text-blue-400">${flight.price}</p>
+          <p className="text-3xl font-bold text-purple-400">{formattedPrice}</p>
           <Button 
             onClick={() => onSelect(flight)}
-            className="w-full md:w-auto bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-8"
+            className="w-full md:w-auto bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white px-8"
           >
             Select
           </Button>

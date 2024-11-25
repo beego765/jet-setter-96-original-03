@@ -75,7 +75,7 @@ export const DashboardCharts = () => (
           arcLinkLabelsTextColor="#9CA3AF"
           arcLinkLabelsOffset={0}
           arcLinkLabelsDiagonalLength={16}
-          arcLinkLabelsHorizontalLength={24}
+          arcLinkLabelsStraightLength={24}
           arcLinkLabelsThickness={1}
           arcLinkLabelsColor={{ from: "color" }}
           arcLabelsTextColor="#9CA3AF"

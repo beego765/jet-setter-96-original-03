@@ -6,10 +6,11 @@ const DUFFEL_API = 'https://api.duffel.com/air/v1'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -44,10 +45,10 @@ serve(async (req) => {
       console.error('Duffel API error:', {
         status: response.status,
         url,
-        data,
+        error: data.errors?.[0] || data.error,
         headers: Object.fromEntries(response.headers)
       })
-      throw new Error(`Duffel API error: ${response.status} - ${data.errors?.[0]?.message || 'Unknown error'}`)
+      throw new Error(`Duffel API error: ${response.status} - ${data.errors?.[0]?.message || data.error?.message || 'Unknown error'}`)
     }
 
     return new Response(JSON.stringify(data), {

@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 
-export const searchAirports = async (query: string) => {
+export const useAirportSearch = async (query: string) => {
   try {
     if (!query || query.length < 2) return [];
 

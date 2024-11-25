@@ -1,18 +1,13 @@
-const API_KEY = 'duffel_test_VKTSwY1W6qRnC2ipzsOQvpKSc426Ct5OIKanj3ERZc-';
-const DUFFEL_API = 'https://api.duffel.com';
-
-const headers = {
-  'Accept': 'application/json',
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${API_KEY}`,
-  'Duffel-Version': 'beta'
-};
+const SUPABASE_PROJECT_ID = 'yqzsdhoxnkjgmdjxbyos'
+const DUFFEL_PROXY = `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/duffel-proxy`
 
 export const searchAirports = async (query: string) => {
   try {
-    const response = await fetch(`${DUFFEL_API}/air/places?query=${encodeURIComponent(query)}`, {
+    const response = await fetch(`${DUFFEL_PROXY}/air/places?query=${encodeURIComponent(query)}`, {
       method: 'GET',
-      headers
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
     
     if (!response.ok) {
@@ -30,9 +25,11 @@ export const searchAirports = async (query: string) => {
 export const searchFlights = async (params: any) => {
   try {
     // First create an offer request
-    const offerRequestResponse = await fetch(`${DUFFEL_API}/air/offer_requests`, {
+    const offerRequestResponse = await fetch(`${DUFFEL_PROXY}/air/offer_requests`, {
       method: 'POST',
-      headers,
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         data: {
           slices: [
@@ -67,10 +64,12 @@ export const searchFlights = async (params: any) => {
     
     // Then get the offers for this request
     const offersResponse = await fetch(
-      `${DUFFEL_API}/air/offers?offer_request_id=${offerRequestData.data.id}`,
+      `${DUFFEL_PROXY}/air/offers?offer_request_id=${offerRequestData.data.id}`,
       {
         method: 'GET',
-        headers,
+        headers: {
+          'Content-Type': 'application/json'
+        },
       }
     );
 
@@ -88,9 +87,11 @@ export const searchFlights = async (params: any) => {
 
 export const createBooking = async (offerId: string, passengers: any[]) => {
   try {
-    const response = await fetch(`${DUFFEL_API}/air/orders`, {
+    const response = await fetch(`${DUFFEL_PROXY}/air/orders`, {
       method: 'POST',
-      headers,
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         data: {
           type: 'instant',

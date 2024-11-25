@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const DUFFEL_API_KEY = Deno.env.get('DUFFEL_API_KEY')
-const DUFFEL_API = 'https://api.duffel.com'
+const DUFFEL_API = 'https://api.duffel.com/air/v1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -33,7 +33,7 @@ serve(async (req) => {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${DUFFEL_API_KEY}`,
-        'Duffel-Version': 'v1'
+        'Duffel-Version': '2024-01',
       },
       body: body ? JSON.stringify(body) : undefined
     })

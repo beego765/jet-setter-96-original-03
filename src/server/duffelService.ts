@@ -6,7 +6,7 @@ export const searchAirports = async (query: string) => {
 
     const { data, error } = await supabase.functions.invoke('duffel-proxy', {
       body: { 
-        path: '/air/places', 
+        path: '/places', 
         query: { query },
         method: 'GET'
       }
@@ -24,7 +24,7 @@ export const searchFlights = async (params: any) => {
   try {
     const { data, error } = await supabase.functions.invoke('duffel-proxy', {
       body: {
-        path: '/air/offers/requests',
+        path: '/offers/requests',
         method: 'POST',
         body: {
           data: {
@@ -65,7 +65,7 @@ export const createBooking = async (offerId: string, passengers: any[]) => {
   try {
     const { data, error } = await supabase.functions.invoke('duffel-proxy', {
       body: {
-        path: '/air/orders',
+        path: '/orders',
         method: 'POST',
         body: {
           data: {

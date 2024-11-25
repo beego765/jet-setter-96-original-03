@@ -6,34 +6,40 @@ const DUFFEL_API = 'https://api.duffel.com/air'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const url = new URL(req.url)
-    const path = url.pathname.replace('/duffel-proxy/air', '')
-    const query = url.search
-
-    console.log('Calling Duffel API:', `${DUFFEL_API}${path}${query}`)
+    const { path, method = 'GET', query = {}, body = null } = await req.json()
     
-    const response = await fetch(`${DUFFEL_API}${path}${query}`, {
-      method: req.method,
+    // Construct URL with query parameters
+    const queryString = new URLSearchParams(query).toString()
+    const url = `${DUFFEL_API}${path}${queryString ? `?${queryString}` : ''}`
+    
+    console.log(`Calling Duffel API: ${url}`)
+    
+    const response = await fetch(url, {
+      method,
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${DUFFEL_API_KEY}`,
         'Duffel-Version': 'beta'
       },
-      body: req.method !== 'GET' ? await req.text() : undefined
+      body: body ? JSON.stringify(body) : undefined
     })
 
     const data = await response.json()
+    
+    if (!response.ok) {
+      console.error('Duffel API error:', response.status, data)
+      throw new Error(`Duffel API error: ${response.status}`)
+    }
 
     return new Response(JSON.stringify(data), {
       headers: {

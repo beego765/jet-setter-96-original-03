@@ -18,6 +18,8 @@ import {
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Users, Plane } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useFlightSearch } from "./FlightSearchService";
+import { useToast } from "@/components/ui/use-toast";
 
 // Mock airport data - in real app, this would come from an API
 const airports = [
@@ -43,6 +45,7 @@ interface SearchFormProps {
 }
 
 export const SearchForm = ({ onSearch }: SearchFormProps) => {
+  const { toast } = useToast();
   const [departureDate, setDepartureDate] = useState<Date>();
   const [returnDate, setReturnDate] = useState<Date>();
   const [origin, setOrigin] = useState("");
@@ -52,10 +55,29 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
   const [tripType, setTripType] = useState<"oneWay" | "roundTrip">("oneWay");
   const [openOrigin, setOpenOrigin] = useState(false);
   const [openDestination, setOpenDestination] = useState(false);
+  const [searchParams, setSearchParams] = useState(null);
+  
+  const { data: flights, isLoading, error } = useFlightSearch(searchParams);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!departureDate || !origin || !destination) return;
+    if (!departureDate || !origin || !destination) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSearchParams({
+      origin,
+      destination,
+      departureDate: departureDate.toISOString().split('T')[0],
+      returnDate: returnDate?.toISOString().split('T')[0],
+      passengers,
+      cabinClass: flightClass,
+    });
 
     onSearch({
       origin,

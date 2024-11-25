@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Clock, Plane } from "lucide-react";
+import { useCreateBooking } from "./FlightSearchService";
+import { useToast } from "@/components/ui/use-toast";
 
 export interface Flight {
   id: string;
@@ -20,6 +22,26 @@ interface FlightCardProps {
 }
 
 export const FlightCard = ({ flight, onSelect }: FlightCardProps) => {
+  const { toast } = useToast();
+  const createBookingMutation = useCreateBooking(flight.id, []);
+
+  const handleSelect = async () => {
+    try {
+      await createBookingMutation.refetch();
+      onSelect(flight);
+      toast({
+        title: "Booking Created",
+        description: "Your flight has been successfully booked!",
+      });
+    } catch (error) {
+      toast({
+        title: "Booking Failed",
+        description: "There was an error creating your booking. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Format price to GBP
   const formattedPrice = new Intl.NumberFormat('en-GB', {
     style: 'currency',
@@ -72,7 +94,7 @@ export const FlightCard = ({ flight, onSelect }: FlightCardProps) => {
         <div className="flex flex-col items-end gap-3 w-full md:w-auto">
           <p className="text-3xl font-bold text-purple-400">{formattedPrice}</p>
           <Button 
-            onClick={() => onSelect(flight)}
+            onClick={handleSelect}
             className="w-full md:w-auto bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white px-8"
           >
             Select

@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@duffel/api": "^4.0.0",
     "@hookform/resolvers": "^3.9.0",
     "@nivo/line": "^0.88.0",
     "@nivo/pie": "^0.88.0",

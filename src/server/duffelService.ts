@@ -1,13 +1,19 @@
 const SUPABASE_PROJECT_ID = 'yqzsdhoxnkjgmdjxbyos'
 const DUFFEL_PROXY = `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/duffel-proxy`
 
+// Get the anon key from environment
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+const headers = {
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+}
+
 export const searchAirports = async (query: string) => {
   try {
     const response = await fetch(`${DUFFEL_PROXY}/air/places?query=${encodeURIComponent(query)}`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
+      headers
     });
     
     if (!response.ok) {
@@ -27,9 +33,7 @@ export const searchFlights = async (params: any) => {
     // First create an offer request
     const offerRequestResponse = await fetch(`${DUFFEL_PROXY}/air/offer_requests`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers,
       body: JSON.stringify({
         data: {
           slices: [
@@ -67,9 +71,7 @@ export const searchFlights = async (params: any) => {
       `${DUFFEL_PROXY}/air/offers?offer_request_id=${offerRequestData.data.id}`,
       {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers,
       }
     );
 
@@ -89,9 +91,7 @@ export const createBooking = async (offerId: string, passengers: any[]) => {
   try {
     const response = await fetch(`${DUFFEL_PROXY}/air/orders`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers,
       body: JSON.stringify({
         data: {
           type: 'instant',

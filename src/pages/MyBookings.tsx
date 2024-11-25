@@ -2,6 +2,7 @@ import { LoyaltyCard } from "@/components/bookings/LoyaltyCard";
 import { BookingCard } from "@/components/bookings/BookingCard";
 import { TravelStats } from "@/components/bookings/TravelStats";
 import { BoardingPass } from "@/components/bookings/BoardingPass";
+import { BookingsCalendar } from "@/components/bookings/BookingsCalendar";
 
 const MyBookings = () => {
   const loyaltyInfo = {
@@ -40,8 +41,16 @@ const MyBookings = () => {
     seat: "12A",
     gate: "B22",
     boardingTime: "10:30",
+    departureTime: "2024-04-15T11:30:00",
+    terminal: "T2",
     qrCode: "boarding-pass-qr"
   };
+
+  const flights = bookings.map(booking => ({
+    date: new Date(booking.date),
+    flightNumber: booking.flightNumber,
+    destination: booking.to
+  }));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
@@ -53,9 +62,16 @@ const MyBookings = () => {
           <p className="text-gray-300">Manage your flight bookings and travel details</p>
         </div>
 
-        <TravelStats {...travelStats} />
-        <LoyaltyCard {...loyaltyInfo} />
-        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="md:col-span-2">
+            <TravelStats {...travelStats} />
+            <LoyaltyCard {...loyaltyInfo} />
+          </div>
+          <div>
+            <BookingsCalendar flights={flights} />
+          </div>
+        </div>
+
         {bookings.some(b => b.status === "Upcoming") && (
           <div className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">Digital Boarding Pass</h2>

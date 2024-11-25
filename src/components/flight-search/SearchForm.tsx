@@ -8,27 +8,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Users, Plane } from "lucide-react";
+import { Calendar as CalendarIcon, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFlightSearch } from "./FlightSearchService";
 import { useToast } from "@/components/ui/use-toast";
-
-// Mock airport data - in real app, this would come from an API
-const airports = [
-  { code: "LHR", name: "London Heathrow", city: "London" },
-  { code: "LGW", name: "London Gatwick", city: "London" },
-  { code: "MAN", name: "Manchester Airport", city: "Manchester" },
-  { code: "BHX", name: "Birmingham Airport", city: "Birmingham" },
-];
+import { AirportSelector } from "./AirportSelector";
 
 export interface SearchFormData {
   origin: string;
@@ -53,8 +38,6 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
   const [passengers, setPassengers] = useState(1);
   const [flightClass, setFlightClass] = useState<"economy" | "business" | "first">("economy");
   const [tripType, setTripType] = useState<"oneWay" | "roundTrip">("oneWay");
-  const [openOrigin, setOpenOrigin] = useState(false);
-  const [openDestination, setOpenDestination] = useState(false);
   const [searchParams, setSearchParams] = useState(null);
 
   const { data: flights, isLoading } = useFlightSearch(searchParams);
@@ -90,62 +73,6 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
     });
   };
 
-  const AirportSelector = ({ 
-    value, 
-    onChange, 
-    isOpen, 
-    onOpenChange, 
-    placeholder,
-    label 
-  }: { 
-    value: string;
-    onChange: (value: string) => void;
-    isOpen: boolean;
-    onOpenChange: (open: boolean) => void;
-    placeholder: string;
-    label: string;
-  }) => (
-    <div className="space-y-2">
-      <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
-        <Plane className={`w-4 h-4 ${label === "From" ? "rotate-45" : "-rotate-45"}`} />
-        {label}
-      </label>
-      <Popover open={isOpen} onOpenChange={onOpenChange}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className="w-full justify-start h-12 bg-gray-700/50 border-gray-600 text-white"
-          >
-            {value ? airports.find(a => a.code === value)?.name : placeholder}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="p-0 bg-gray-800 border-gray-700">
-          <Command>
-            <CommandList>
-              <CommandInput placeholder="Search airports..." className="h-12 bg-gray-700/50" />
-              <CommandEmpty>No airports found.</CommandEmpty>
-              <CommandGroup>
-                {airports.map((airport) => (
-                  <CommandItem
-                    key={airport.code}
-                    onSelect={() => {
-                      onChange(airport.code);
-                      onOpenChange(false);
-                    }}
-                    className="hover:bg-gray-700"
-                  >
-                    <span>{airport.name}</span>
-                    <span className="ml-2 text-gray-400">({airport.code})</span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-    </div>
-  );
-
   return (
     <form onSubmit={handleSubmit} className="relative z-10 space-y-6 w-full max-w-4xl mx-auto p-8 bg-gray-800/50 backdrop-blur-xl rounded-3xl border border-gray-700">
       <div className="flex items-center justify-center gap-4 mb-6">
@@ -169,16 +96,12 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
         <AirportSelector
           value={origin}
           onChange={setOrigin}
-          isOpen={openOrigin}
-          onOpenChange={setOpenOrigin}
           placeholder="Select departure airport"
           label="From"
         />
         <AirportSelector
           value={destination}
           onChange={setDestination}
-          isOpen={openDestination}
-          onOpenChange={setOpenDestination}
           placeholder="Select arrival airport"
           label="To"
         />

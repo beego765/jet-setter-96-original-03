@@ -1,5 +1,6 @@
-const API_URL = 'https://api.duffel.com/air/';
 const API_KEY = 'duffel_test_VKTSwY1W6qRnC2ipzsOQvpKSc426Ct5OIKanj3ERZc-';
+const PROXY_URL = 'https://api.allorigins.win/raw?url=';
+const DUFFEL_API = 'https://api.duffel.com/air';
 
 const headers = {
   'Accept': 'application/json',
@@ -8,16 +9,30 @@ const headers = {
   'Duffel-Version': 'v1'
 };
 
-export const searchFlights = async (params: {
-  origin: string;
-  destination: string;
-  departureDate: string;
-  returnDate?: string;
-  passengers: number;
-  cabinClass: string;
-}) => {
+export const searchAirports = async (query: string) => {
   try {
-    const response = await fetch(`${API_URL}offer_requests`, {
+    const encodedUrl = encodeURIComponent(`${DUFFEL_API}/airports?query=${query}`);
+    const response = await fetch(`${PROXY_URL}${encodedUrl}`, {
+      method: 'GET',
+      headers
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch airports');
+    }
+    
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error searching airports:', error);
+    return [];
+  }
+};
+
+export const searchFlights = async (params: any) => {
+  try {
+    const encodedUrl = encodeURIComponent(`${DUFFEL_API}/offer_requests`);
+    const response = await fetch(`${PROXY_URL}${encodedUrl}`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -54,13 +69,14 @@ export const searchFlights = async (params: {
     return data.data;
   } catch (error) {
     console.error('Error searching flights:', error);
-    throw error;
+    return [];
   }
 };
 
 export const createBooking = async (offerId: string, passengers: any[]) => {
   try {
-    const response = await fetch(`${API_URL}orders`, {
+    const encodedUrl = encodeURIComponent(`${DUFFEL_API}/orders`);
+    const response = await fetch(`${PROXY_URL}${encodedUrl}`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -89,6 +105,6 @@ export const createBooking = async (offerId: string, passengers: any[]) => {
     return data.data;
   } catch (error) {
     console.error('Error creating booking:', error);
-    throw error;
+    return null;
   }
 };

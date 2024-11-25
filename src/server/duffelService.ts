@@ -2,10 +2,12 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const searchAirports = async (query: string) => {
   try {
+    if (!query || query.length < 2) return [];
+
     const { data, error } = await supabase.functions.invoke('duffel-proxy', {
       body: { 
         path: '/air/places', 
-        query: { query, limit: 10 },
+        query: { query },
         method: 'GET'
       }
     });
@@ -45,7 +47,7 @@ export const searchFlights = async (params: any) => {
             passengers: Array(params.passengers).fill({
               type: 'adult',
             }),
-            cabin_class: params.cabinClass.toLowerCase(),
+            cabin_class: params.cabinClass?.toLowerCase(),
           },
         }
       }

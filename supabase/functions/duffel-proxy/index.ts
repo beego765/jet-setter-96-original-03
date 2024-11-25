@@ -21,7 +21,11 @@ serve(async (req) => {
     const queryString = new URLSearchParams(query).toString()
     const url = `${DUFFEL_API}${path}${queryString ? `?${queryString}` : ''}`
     
-    console.log(`Calling Duffel API: ${method} ${url}`)
+    console.log(`Making request to Duffel API:`, {
+      method,
+      url,
+      bodyPreview: body ? JSON.stringify(body).slice(0, 100) + '...' : 'No body'
+    })
     
     const response = await fetch(url, {
       method,
@@ -39,9 +43,11 @@ serve(async (req) => {
     if (!response.ok) {
       console.error('Duffel API error:', {
         status: response.status,
-        data
+        url,
+        data,
+        headers: Object.fromEntries(response.headers)
       })
-      throw new Error(`Duffel API error: ${response.status}`)
+      throw new Error(`Duffel API error: ${response.status} - ${data.errors?.[0]?.message || 'Unknown error'}`)
     }
 
     return new Response(JSON.stringify(data), {

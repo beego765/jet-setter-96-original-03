@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const DUFFEL_API_KEY = Deno.env.get('DUFFEL_API_KEY')
-const DUFFEL_API = 'https://api.duffel.com'
+const DUFFEL_API = 'https://api.duffel.com/air'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,7 +16,7 @@ serve(async (req) => {
   }
 
   const url = new URL(req.url)
-  const path = url.pathname.replace('/duffel-proxy', '')
+  const path = url.pathname.replace('/duffel-proxy/air', '')
   const query = url.search
 
   try {

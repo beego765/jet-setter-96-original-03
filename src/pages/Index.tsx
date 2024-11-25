@@ -65,24 +65,24 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-1/2 -left-1/4 w-1/2 h-1/2 bg-gradient-to-br from-blue-200/20 to-purple-300/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-1/2 -right-1/4 w-1/2 h-1/2 bg-gradient-to-br from-purple-200/20 to-blue-300/20 rounded-full blur-3xl" />
+        <div className="absolute -top-1/2 -left-1/4 w-1/2 h-1/2 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-1/2 -right-1/4 w-1/2 h-1/2 bg-gradient-to-br from-purple-500/10 to-blue-500/10 rounded-full blur-3xl" />
       </div>
 
       <div className="container max-w-7xl mx-auto px-4 py-12 relative z-10">
         <div className="text-center mb-12 space-y-4 animate-fadeIn">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-3 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg">
-              <Plane className="w-8 h-8 text-flight-accent" />
+            <div className="p-3 bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg">
+              <Plane className="w-8 h-8 text-blue-400" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-flight-primary to-flight-accent bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
               Find Your Perfect Flight
             </h1>
           </div>
-          <p className="text-lg text-flight-secondary max-w-2xl mx-auto">
+          <p className="text-gray-300 max-w-2xl mx-auto">
             Search through thousands of flights to find the best deals. Book with confidence and take off to your next adventure.
           </p>
         </div>
@@ -94,7 +94,7 @@ const Index = () => {
             {[1, 2, 3].map((i) => (
               <div 
                 key={i} 
-                className="h-40 bg-white/50 animate-pulse rounded-2xl shadow-lg"
+                className="h-40 bg-gray-800/50 animate-pulse rounded-2xl"
               />
             ))}
           </div>

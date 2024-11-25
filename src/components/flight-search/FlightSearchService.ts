@@ -1,10 +1,10 @@
-import { searchFlights, createBooking, searchAirports } from '../../server/duffelService';
+import { searchFlights, createBooking, useAirportSearch } from '../../server/duffelService';
 import { useQuery } from '@tanstack/react-query';
 
 export const useAirportSearch = (query: string) => {
   return useQuery({
     queryKey: ['airports', query],
-    queryFn: () => searchAirports(query),
+    queryFn: () => useAirportSearch(query),
     enabled: query.length > 2,
     retry: false,
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes

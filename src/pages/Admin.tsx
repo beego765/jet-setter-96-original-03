@@ -4,20 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  BarChart,
-  Users,
-  Plane,
-  PoundSterling,
-  Settings,
-  Calendar,
-  TrendingUp,
-  Map,
-  Bell,
-  Shield,
-  ArrowUpRight,
-  ArrowDownRight,
-} from "lucide-react";
+import { AdminHeader } from "@/components/admin/AdminHeader";
+import { StatsGrid } from "@/components/admin/StatsGrid";
+import { ActivityLog } from "@/components/admin/ActivityLog";
 
 const Admin = () => {
   const { toast } = useToast();
@@ -45,91 +34,9 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-              OpusTravels Admin
-            </h1>
-            <p className="text-gray-400 mt-2">Manage your business operations</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <Button variant="outline" className="border-gray-700 hover:bg-gray-700">
-              <Bell className="w-4 h-4 mr-2" />
-              Notifications
-            </Button>
-            <Button variant="outline" className="border-gray-700 hover:bg-gray-700">
-              <Shield className="w-4 h-4 mr-2" />
-              Security
-            </Button>
-          </div>
-        </div>
+        <AdminHeader />
+        <StatsGrid stats={stats} />
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6 hover:bg-gray-800/70 transition-all">
-            <div className="flex items-center justify-between">
-              <div className="p-3 bg-purple-500/20 rounded-xl">
-                <Plane className="w-6 h-6 text-purple-400" />
-              </div>
-              <span className="flex items-center text-green-400 text-sm">
-                <ArrowUpRight className="w-4 h-4 mr-1" />
-                {stats.bookingsChange}
-              </span>
-            </div>
-            <div className="mt-4">
-              <p className="text-gray-400">Total Bookings</p>
-              <p className="text-2xl font-bold">{stats.totalBookings}</p>
-            </div>
-          </Card>
-
-          <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6 hover:bg-gray-800/70 transition-all">
-            <div className="flex items-center justify-between">
-              <div className="p-3 bg-green-500/20 rounded-xl">
-                <PoundSterling className="w-6 h-6 text-green-400" />
-              </div>
-              <span className="flex items-center text-green-400 text-sm">
-                <ArrowUpRight className="w-4 h-4 mr-1" />
-                {stats.revenueChange}
-              </span>
-            </div>
-            <div className="mt-4">
-              <p className="text-gray-400">Total Revenue</p>
-              <p className="text-2xl font-bold">£{stats.totalRevenue.toLocaleString()}</p>
-            </div>
-          </Card>
-
-          <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6 hover:bg-gray-800/70 transition-all">
-            <div className="flex items-center justify-between">
-              <div className="p-3 bg-blue-500/20 rounded-xl">
-                <Users className="w-6 h-6 text-blue-400" />
-              </div>
-              <span className="flex items-center text-green-400 text-sm">
-                <ArrowUpRight className="w-4 h-4 mr-1" />
-                {stats.userChange}
-              </span>
-            </div>
-            <div className="mt-4">
-              <p className="text-gray-400">Active Users</p>
-              <p className="text-2xl font-bold">{stats.activeUsers}</p>
-            </div>
-          </Card>
-
-          <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6 hover:bg-gray-800/70 transition-all">
-            <div className="flex items-center justify-between">
-              <div className="p-3 bg-orange-500/20 rounded-xl">
-                <Map className="w-6 h-6 text-orange-400" />
-              </div>
-              <span className="text-sm text-gray-400">Most Popular</span>
-            </div>
-            <div className="mt-4">
-              <p className="text-gray-400">Top Destination</p>
-              <p className="text-2xl font-bold">{stats.topDestination}</p>
-            </div>
-          </Card>
-        </div>
-
-        {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="bg-gray-800/50 border-gray-700 w-full justify-start overflow-x-auto">
             <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -171,32 +78,7 @@ const Admin = () => {
                   </Button>
                 </div>
               </Card>
-
-              <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold">Recent Activity</h2>
-                  <Button variant="ghost" className="text-gray-400 hover:text-white">
-                    View All
-                  </Button>
-                </div>
-                <div className="space-y-4">
-                  {[
-                    { title: "New Booking #1234", time: "2 hours ago", icon: Plane },
-                    { title: "Revenue Report Generated", time: "4 hours ago", icon: BarChart },
-                    { title: "New User Registration", time: "5 hours ago", icon: Users },
-                  ].map((activity, i) => (
-                    <div key={i} className="flex items-center gap-4 p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-colors">
-                      <div className="p-2 bg-gray-700 rounded-full">
-                        <activity.icon className="w-4 h-4 text-gray-400" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">{activity.title}</p>
-                        <p className="text-xs text-gray-400">{activity.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
+              <ActivityLog />
             </div>
           </TabsContent>
 
@@ -234,8 +116,6 @@ const Admin = () => {
               </div>
             </Card>
           </TabsContent>
-
-          {/* Other tab contents would follow the same pattern */}
         </Tabs>
       </div>
     </div>

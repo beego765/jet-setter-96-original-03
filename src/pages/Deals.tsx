@@ -27,7 +27,7 @@ const Deals = () => {
       category: "weekend",
       originalPrice: 374,
       destination: "Paris",
-      imageUrl: "https://images.unsplash.com/photo-1431576901776-e539bd916ba2",
+      imageUrl: "https://images.unsplash.com/photo-1502920514313-52581002a659?auto=format&fit=crop&q=80", // Iconic Paris shot with Eiffel Tower
     },
     {
       id: 2,
@@ -39,7 +39,7 @@ const Deals = () => {
       category: "seasonal",
       originalPrice: 570,
       destination: "Barcelona",
-      imageUrl: "https://images.unsplash.com/photo-1551038247-3d9af20df552",
+      imageUrl: "https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&q=80", // Beautiful Barcelona aerial view
     },
     {
       id: 3,
@@ -51,7 +51,7 @@ const Deals = () => {
       category: "business",
       originalPrice: 2132,
       destination: "New York",
-      imageUrl: "https://images.unsplash.com/photo-1492321936769-b49830bc1d1e",
+      imageUrl: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80", // Luxury business class cabin interior
     },
   ];
 
@@ -89,7 +89,7 @@ const Deals = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
       <div className="relative h-72 mb-8">
         <img
-          src="https://images.unsplash.com/photo-1517022812141-23620dba5c23"
+          src="https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&q=80"
           alt="Travel Deals"
           className="w-full h-full object-cover"
         />

@@ -1,25 +1,20 @@
 import { supabase } from '@/integrations/supabase/client';
 
-const SUPABASE_PROJECT_ID = 'yqzsdhoxnkjgmdjxbyos';
-const DUFFEL_PROXY = `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/duffel-proxy`;
-
 export const searchAirports = async (query: string) => {
   try {
-    if (!query || query.length < 2) return [];
-
     const { data, error } = await supabase.functions.invoke('duffel-proxy', {
-      body: { path: '/air/airports', query: { query, limit: 10 } }
+      body: { 
+        path: '/air/places', 
+        query: { query, limit: 10 },
+        method: 'GET'
+      }
     });
 
-    if (error) {
-      console.error('Error calling duffel-proxy function:', error);
-      throw error;
-    }
-    
+    if (error) throw error;
     return data?.data || [];
   } catch (error) {
     console.error('Error searching airports:', error);
-    return [];
+    throw error;
   }
 };
 
@@ -27,7 +22,7 @@ export const searchFlights = async (params: any) => {
   try {
     const { data, error } = await supabase.functions.invoke('duffel-proxy', {
       body: {
-        path: '/air/offer_requests',
+        path: '/air/offers/requests',
         method: 'POST',
         body: {
           data: {
@@ -56,15 +51,11 @@ export const searchFlights = async (params: any) => {
       }
     });
 
-    if (error) {
-      console.error('Error calling duffel-proxy function:', error);
-      throw error;
-    }
-
+    if (error) throw error;
     return data?.data || [];
   } catch (error) {
     console.error('Error searching flights:', error);
-    return [];
+    throw error;
   }
 };
 
@@ -93,14 +84,10 @@ export const createBooking = async (offerId: string, passengers: any[]) => {
       }
     });
 
-    if (error) {
-      console.error('Error calling duffel-proxy function:', error);
-      throw error;
-    }
-
+    if (error) throw error;
     return data?.data || null;
   } catch (error) {
     console.error('Error creating booking:', error);
-    return null;
+    throw error;
   }
 };

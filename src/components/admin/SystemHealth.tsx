@@ -11,7 +11,7 @@ export const SystemHealth = () => (
           <Server className="w-5 h-5 text-blue-400" />
           <span className="text-gray-200">Server Status</span>
         </div>
-        <Progress value={92} className="bg-gray-700" indicatorClassName="bg-blue-500" />
+        <Progress value={92} className="bg-gray-700 [&>div]:bg-blue-500" />
         <p className="text-sm text-gray-300">92% Uptime</p>
       </div>
       
@@ -20,7 +20,7 @@ export const SystemHealth = () => (
           <Database className="w-5 h-5 text-green-400" />
           <span className="text-gray-200">Database Health</span>
         </div>
-        <Progress value={88} className="bg-gray-700" indicatorClassName="bg-green-500" />
+        <Progress value={88} className="bg-gray-700 [&>div]:bg-green-500" />
         <p className="text-sm text-gray-300">88% Performance</p>
       </div>
       
@@ -29,7 +29,7 @@ export const SystemHealth = () => (
           <Cpu className="w-5 h-5 text-purple-400" />
           <span className="text-gray-200">CPU Usage</span>
         </div>
-        <Progress value={45} className="bg-gray-700" indicatorClassName="bg-purple-500" />
+        <Progress value={45} className="bg-gray-700 [&>div]:bg-purple-500" />
         <p className="text-sm text-gray-300">45% Utilized</p>
       </div>
     </div>

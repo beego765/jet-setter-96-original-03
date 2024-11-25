@@ -70,16 +70,15 @@ export const DashboardCharts = () => (
           colors={{ scheme: "category10" }}
           borderWidth={1}
           borderColor={{ from: "color", modifiers: [["darker", 0.2]] }}
-          radialLabelsSkipAngle={10}
-          radialLabelsTextXOffset={6}
-          radialLabelsTextColor="#9CA3AF"
-          radialLabelsLinkOffset={0}
-          radialLabelsLinkDiagonalLength={16}
-          radialLabelsLinkHorizontalLength={24}
-          radialLabelsLinkStrokeWidth={1}
-          radialLabelsLinkColor={{ from: "color" }}
-          slicesLabelsSkipAngle={10}
-          slicesLabelsTextColor="#9CA3AF"
+          arcLabelsSkipAngle={10}
+          arcLinkLabelsTextOffset={6}
+          arcLinkLabelsTextColor="#9CA3AF"
+          arcLinkLabelsOffset={0}
+          arcLinkLabelsDiagonalLength={16}
+          arcLinkLabelsHorizontalLength={24}
+          arcLinkLabelsThickness={1}
+          arcLinkLabelsColor={{ from: "color" }}
+          arcLabelsTextColor="#9CA3AF"
         />
       </div>
     </Card>

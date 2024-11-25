@@ -37,8 +37,7 @@ export const searchAirports = async (query: string) => {
 
 export const searchFlights = async (params: any) => {
   try {
-    // First create an offer request
-    const offerRequestResponse = await fetch(`${DUFFEL_PROXY}/air/offer_requests`, {
+    const response = await fetch(`${DUFFEL_PROXY}/air/offer_requests`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -67,27 +66,12 @@ export const searchFlights = async (params: any) => {
       }),
     });
 
-    if (!offerRequestResponse.ok) {
-      throw new Error(`HTTP error! status: ${offerRequestResponse.status}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const offerRequestData = await offerRequestResponse.json();
-    
-    // Then get the offers for this request
-    const offersResponse = await fetch(
-      `${DUFFEL_PROXY}/air/offers?offer_request_id=${offerRequestData.data.id}`,
-      {
-        method: 'GET',
-        headers,
-      }
-    );
-
-    if (!offersResponse.ok) {
-      throw new Error(`HTTP error! status: ${offersResponse.status}`);
-    }
-
-    const offersData = await offersResponse.json();
-    return offersData.data;
+    const data = await response.json();
+    return data.data;
   } catch (error) {
     console.error('Error searching flights:', error);
     return [];

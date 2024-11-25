@@ -42,10 +42,36 @@ const Admin = () => {
 
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="bg-gray-800/50 border-gray-700 w-full justify-start overflow-x-auto">
-            <TabsTrigger value="overview" className="text-gray-200 data-[state=active]:text-white">Overview</TabsTrigger>
-            <TabsTrigger value="users" className="text-gray-200 data-[state=active]:text-white">Users</TabsTrigger>
-            <TabsTrigger value="system" className="text-gray-200 data-[state=active]:text-white">System</TabsTrigger>
-            <TabsTrigger value="settings" className="text-gray-200 data-[state=active]:text-white">Settings</TabsTrigger>
+            <TabsTrigger 
+              value="overview" 
+              className="flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700"
+            >
+              Overview
+            </TabsTrigger>
+            <TabsTrigger 
+              value="bookings" 
+              className="flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700"
+            >
+              Bookings
+            </TabsTrigger>
+            <TabsTrigger 
+              value="users" 
+              className="flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700"
+            >
+              Users
+            </TabsTrigger>
+            <TabsTrigger 
+              value="system" 
+              className="flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700"
+            >
+              System
+            </TabsTrigger>
+            <TabsTrigger 
+              value="settings" 
+              className="flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700"
+            >
+              Settings
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -70,6 +96,26 @@ const Admin = () => {
                 </div>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="bookings">
+            <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6">
+              <h2 className="text-xl font-semibold text-gray-100 mb-4">Booking Management</h2>
+              <div className="space-y-4">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <Input 
+                    placeholder="Search bookings..." 
+                    className="bg-gray-700/50 border-gray-600 text-gray-200 placeholder:text-gray-400"
+                  />
+                  <Button className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
+                    New Booking
+                  </Button>
+                </div>
+                <div className="bg-gray-700/30 rounded-lg p-4">
+                  <p className="text-gray-300">Booking management interface coming soon...</p>
+                </div>
+              </div>
+            </Card>
           </TabsContent>
 
           <TabsContent value="users">

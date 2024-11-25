@@ -14,6 +14,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Users, Plane } from "lucide-react";
@@ -27,7 +28,6 @@ const airports = [
   { code: "LGW", name: "London Gatwick", city: "London" },
   { code: "MAN", name: "Manchester Airport", city: "Manchester" },
   { code: "BHX", name: "Birmingham Airport", city: "Birmingham" },
-  // Add more UK airports as needed
 ];
 
 export interface SearchFormData {
@@ -56,8 +56,8 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
   const [openOrigin, setOpenOrigin] = useState(false);
   const [openDestination, setOpenDestination] = useState(false);
   const [searchParams, setSearchParams] = useState(null);
-  
-  const { data: flights, isLoading, error } = useFlightSearch(searchParams);
+
+  const { data: flights, isLoading } = useFlightSearch(searchParams);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,6 +90,62 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
     });
   };
 
+  const AirportSelector = ({ 
+    value, 
+    onChange, 
+    isOpen, 
+    onOpenChange, 
+    placeholder,
+    label 
+  }: { 
+    value: string;
+    onChange: (value: string) => void;
+    isOpen: boolean;
+    onOpenChange: (open: boolean) => void;
+    placeholder: string;
+    label: string;
+  }) => (
+    <div className="space-y-2">
+      <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+        <Plane className={`w-4 h-4 ${label === "From" ? "rotate-45" : "-rotate-45"}`} />
+        {label}
+      </label>
+      <Popover open={isOpen} onOpenChange={onOpenChange}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className="w-full justify-start h-12 bg-gray-700/50 border-gray-600 text-white"
+          >
+            {value ? airports.find(a => a.code === value)?.name : placeholder}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="p-0 bg-gray-800 border-gray-700">
+          <Command>
+            <CommandList>
+              <CommandInput placeholder="Search airports..." className="h-12 bg-gray-700/50" />
+              <CommandEmpty>No airports found.</CommandEmpty>
+              <CommandGroup>
+                {airports.map((airport) => (
+                  <CommandItem
+                    key={airport.code}
+                    onSelect={() => {
+                      onChange(airport.code);
+                      onOpenChange(false);
+                    }}
+                    className="hover:bg-gray-700"
+                  >
+                    <span>{airport.name}</span>
+                    <span className="ml-2 text-gray-400">({airport.code})</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+
   return (
     <form onSubmit={handleSubmit} className="relative z-10 space-y-6 w-full max-w-4xl mx-auto p-8 bg-gray-800/50 backdrop-blur-xl rounded-3xl border border-gray-700">
       <div className="flex items-center justify-center gap-4 mb-6">
@@ -110,81 +166,22 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
-            <Plane className="w-4 h-4 rotate-45" />
-            From
-          </label>
-          <Popover open={openOrigin} onOpenChange={setOpenOrigin}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full justify-start h-12 bg-gray-700/50 border-gray-600 text-white"
-              >
-                {origin ? airports.find(a => a.code === origin)?.name : "Select airport"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="p-0 bg-gray-800 border-gray-700">
-              <Command>
-                <CommandInput placeholder="Search airports..." className="h-12 bg-gray-700/50" />
-                <CommandEmpty>No airports found.</CommandEmpty>
-                <CommandGroup>
-                  {airports.map((airport) => (
-                    <CommandItem
-                      key={airport.code}
-                      onSelect={() => {
-                        setOrigin(airport.code);
-                        setOpenOrigin(false);
-                      }}
-                      className="hover:bg-gray-700"
-                    >
-                      <span>{airport.name}</span>
-                      <span className="ml-2 text-gray-400">({airport.code})</span>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </Command>
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
-            <Plane className="w-4 h-4 -rotate-45" />
-            To
-          </label>
-          <Popover open={openDestination} onOpenChange={setOpenDestination}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full justify-start h-12 bg-gray-700/50 border-gray-600 text-white"
-              >
-                {destination ? airports.find(a => a.code === destination)?.name : "Select airport"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="p-0 bg-gray-800 border-gray-700">
-              <Command>
-                <CommandInput placeholder="Search airports..." className="h-12 bg-gray-700/50" />
-                <CommandEmpty>No airports found.</CommandEmpty>
-                <CommandGroup>
-                  {airports.map((airport) => (
-                    <CommandItem
-                      key={airport.code}
-                      onSelect={() => {
-                        setDestination(airport.code);
-                        setOpenDestination(false);
-                      }}
-                      className="hover:bg-gray-700"
-                    >
-                      <span>{airport.name}</span>
-                      <span className="ml-2 text-gray-400">({airport.code})</span>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </Command>
-            </PopoverContent>
-          </Popover>
-        </div>
+        <AirportSelector
+          value={origin}
+          onChange={setOrigin}
+          isOpen={openOrigin}
+          onOpenChange={setOpenOrigin}
+          placeholder="Select departure airport"
+          label="From"
+        />
+        <AirportSelector
+          value={destination}
+          onChange={setDestination}
+          isOpen={openDestination}
+          onOpenChange={setOpenDestination}
+          placeholder="Select arrival airport"
+          label="To"
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

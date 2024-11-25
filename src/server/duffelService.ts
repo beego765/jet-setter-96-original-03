@@ -11,7 +11,9 @@ const headers = {
 
 export const searchAirports = async (query: string) => {
   try {
-    const response = await fetch(`${DUFFEL_PROXY}/air/places?query=${encodeURIComponent(query)}`, {
+    if (!query || query.length < 2) return [];
+
+    const response = await fetch(`${DUFFEL_PROXY}/air/airports?query=${encodeURIComponent(query)}&limit=10`, {
       method: 'GET',
       headers
     });
@@ -21,7 +23,12 @@ export const searchAirports = async (query: string) => {
     }
     
     const data = await response.json();
-    return data.data || [];
+    return data.data.map((airport: any) => ({
+      iata_code: airport.iata_code,
+      name: airport.name,
+      city: airport.city?.name,
+      country: airport.country?.name
+    })) || [];
   } catch (error) {
     console.error('Error searching airports:', error);
     return [];

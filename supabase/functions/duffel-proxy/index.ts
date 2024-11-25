@@ -33,6 +33,11 @@ serve(async (req) => {
       body: req.method !== 'GET' ? await req.text() : undefined
     })
 
+    if (!response.ok) {
+      console.error('Duffel API error:', response.status, await response.text())
+      throw new Error(`Duffel API error: ${response.status}`)
+    }
+
     const data = await response.json()
     return new Response(JSON.stringify(data), {
       headers: {

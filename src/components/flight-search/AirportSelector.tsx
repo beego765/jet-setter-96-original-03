@@ -71,8 +71,12 @@ export const AirportSelector = ({
                       }}
                       className="hover:bg-gray-700"
                     >
-                      <span>{airport.name}</span>
-                      <span className="ml-2 text-gray-400">({airport.iata_code})</span>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{airport.name}</span>
+                        <span className="text-sm text-gray-400">
+                          {airport.city}, {airport.country} ({airport.iata_code})
+                        </span>
+                      </div>
                     </CommandItem>
                   ))}
                 </CommandGroup>

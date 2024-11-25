@@ -1,8 +1,12 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plane, Tag, BookOpen, HelpCircle, User, Settings } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Plane, Tag, BookOpen, HelpCircle, User, Settings, Menu } from "lucide-react";
+import { useState } from "react";
 
 export const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <nav className="bg-gray-900/80 backdrop-blur-lg border-b border-gray-700 sticky top-0 z-50">
       <div className="container max-w-7xl mx-auto px-4">
@@ -34,12 +38,44 @@ export const Navbar = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <Link to="/auth">
+            <Link to="/auth" className="hidden md:block">
               <Button variant="ghost" className="text-gray-300 hover:text-white">
                 <User className="w-4 h-4 mr-2" />
                 Sign In
               </Button>
             </Link>
+
+            <Sheet>
+              <SheetTrigger asChild className="md:hidden">
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-6 w-6 text-gray-300" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] bg-gray-900/95 border-gray-700">
+                <div className="flex flex-col gap-4 mt-8">
+                  <Link to="/deals" className="text-gray-300 hover:text-white flex items-center gap-2 p-2">
+                    <Tag className="w-4 h-4" />
+                    Deals
+                  </Link>
+                  <Link to="/my-bookings" className="text-gray-300 hover:text-white flex items-center gap-2 p-2">
+                    <BookOpen className="w-4 h-4" />
+                    My Bookings
+                  </Link>
+                  <Link to="/support" className="text-gray-300 hover:text-white flex items-center gap-2 p-2">
+                    <HelpCircle className="w-4 h-4" />
+                    Support
+                  </Link>
+                  <Link to="/admin" className="text-gray-300 hover:text-white flex items-center gap-2 p-2">
+                    <Settings className="w-4 h-4" />
+                    Admin
+                  </Link>
+                  <Link to="/auth" className="text-gray-300 hover:text-white flex items-center gap-2 p-2">
+                    <User className="w-4 h-4" />
+                    Sign In
+                  </Link>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>

@@ -9,6 +9,7 @@ import Deals from "./pages/Deals";
 import MyBookings from "./pages/MyBookings";
 import Support from "./pages/Support";
 import Auth from "./pages/Auth";
+import Admin from "./pages/Admin";
 import { Navbar } from "./components/Navbar";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/support" element={<Support />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/admin" element={<Admin />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

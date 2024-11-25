@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plane, Tag, BookOpen, HelpCircle, User } from "lucide-react";
+import { Plane, Tag, BookOpen, HelpCircle, User, Settings } from "lucide-react";
 
 export const Navbar = () => {
   return (
@@ -26,6 +26,10 @@ export const Navbar = () => {
             <Link to="/support" className="text-gray-300 hover:text-white flex items-center gap-2">
               <HelpCircle className="w-4 h-4" />
               Support
+            </Link>
+            <Link to="/admin" className="text-gray-300 hover:text-white flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              Admin
             </Link>
           </div>
 

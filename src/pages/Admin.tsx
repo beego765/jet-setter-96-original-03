@@ -7,6 +7,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { StatsGrid } from "@/components/admin/StatsGrid";
 import { ActivityLog } from "@/components/admin/ActivityLog";
+import { DashboardCharts } from "@/components/admin/DashboardCharts";
+import { UserManagement } from "@/components/admin/UserManagement";
+import { SystemHealth } from "@/components/admin/SystemHealth";
 
 const Admin = () => {
   const { toast } = useToast();
@@ -40,15 +43,15 @@ const Admin = () => {
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="bg-gray-800/50 border-gray-700 w-full justify-start overflow-x-auto">
             <TabsTrigger value="overview" className="text-gray-200 data-[state=active]:text-white">Overview</TabsTrigger>
-            <TabsTrigger value="bookings" className="text-gray-200 data-[state=active]:text-white">Bookings</TabsTrigger>
-            <TabsTrigger value="customers" className="text-gray-200 data-[state=active]:text-white">Customers</TabsTrigger>
-            <TabsTrigger value="flights" className="text-gray-200 data-[state=active]:text-white">Flights</TabsTrigger>
-            <TabsTrigger value="reports" className="text-gray-200 data-[state=active]:text-white">Reports</TabsTrigger>
+            <TabsTrigger value="users" className="text-gray-200 data-[state=active]:text-white">Users</TabsTrigger>
+            <TabsTrigger value="system" className="text-gray-200 data-[state=active]:text-white">System</TabsTrigger>
             <TabsTrigger value="settings" className="text-gray-200 data-[state=active]:text-white">Settings</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TabsContent value="overview">
+            <DashboardCharts />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+              <ActivityLog />
               <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6">
                 <h2 className="text-xl font-semibold text-gray-100 mb-4">Quick Actions</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -62,57 +65,38 @@ const Admin = () => {
                     variant="outline" 
                     className="w-full border-gray-600 hover:bg-gray-700 text-gray-200 hover:text-white"
                   >
-                    Manage Flights
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full border-gray-600 hover:bg-gray-700 text-gray-200 hover:text-white"
-                  >
-                    User Management
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full border-gray-600 hover:bg-gray-700 text-gray-200 hover:text-white"
-                  >
-                    View Reports
+                    Generate Report
                   </Button>
                 </div>
               </Card>
-              <ActivityLog />
             </div>
           </TabsContent>
 
-          <TabsContent value="bookings">
+          <TabsContent value="users">
+            <UserManagement />
+          </TabsContent>
+
+          <TabsContent value="system">
+            <SystemHealth />
+          </TabsContent>
+
+          <TabsContent value="settings">
             <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                <h2 className="text-xl font-semibold text-gray-100">Recent Bookings</h2>
-                <div className="flex items-center gap-3">
-                  <Input 
-                    placeholder="Search bookings..." 
-                    className="bg-gray-700/50 border-gray-600 text-gray-200 placeholder:text-gray-400 w-full md:w-auto"
-                  />
-                  <Button variant="outline" className="border-gray-600 hover:bg-gray-700 text-gray-200 hover:text-white">
-                    Filter
-                  </Button>
-                </div>
-              </div>
-              <div className="space-y-4">
-                {[1, 2, 3].map((booking) => (
-                  <div key={booking} className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-colors">
-                    <div>
-                      <p className="font-medium text-gray-100">Booking #{booking}234</p>
-                      <p className="text-sm text-gray-300">London → Paris</p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className="px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-sm">
-                        Confirmed
-                      </span>
-                      <Button variant="ghost" size="sm" className="text-gray-200 hover:text-white hover:bg-gray-700">
-                        View Details
-                      </Button>
-                    </div>
+              <h2 className="text-xl font-semibold text-gray-100 mb-6">Settings</h2>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm text-gray-300">Site Name</label>
+                    <Input defaultValue="OpusTravels Admin" className="bg-gray-700/50 border-gray-600 text-gray-200" />
                   </div>
-                ))}
+                  <div className="space-y-2">
+                    <label className="text-sm text-gray-300">Contact Email</label>
+                    <Input defaultValue="admin@opustravels.com" className="bg-gray-700/50 border-gray-600 text-gray-200" />
+                  </div>
+                </div>
+                <Button className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
+                  Save Changes
+                </Button>
               </div>
             </Card>
           </TabsContent>

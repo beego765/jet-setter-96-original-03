@@ -87,6 +87,36 @@ export type Database = {
         }
         Relationships: []
       }
+      client_analysis: {
+        Row: {
+          description: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          uploaded_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          uploaded_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          uploaded_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

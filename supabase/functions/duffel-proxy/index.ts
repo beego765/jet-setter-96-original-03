@@ -30,7 +30,10 @@ serve(async (req) => {
     console.log('Body:', body)
 
     if (path === '/places/suggestions') {
+      console.log('Searching places with query:', query.query)
       const places = await duffel.placesSuggestions.list({ query: query.query })
+      console.log('Places found:', places.data?.length || 0)
+      
       return new Response(JSON.stringify({ data: places.data }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -41,17 +44,24 @@ serve(async (req) => {
       const offerRequest = await duffel.offerRequests.create(body.data)
       
       if (!offerRequest.data?.id) {
+        console.error('No offer request ID received:', offerRequest)
         throw new Error('No offer request ID received')
       }
 
       console.log('Fetching offers for request:', offerRequest.data.id)
-      const offers = await duffel.offers.list({
+      const offersResponse = await duffel.offers.list({
         offer_request_id: offerRequest.data.id,
         sort: 'total_amount',
         limit: 10,
       })
 
-      return new Response(JSON.stringify({ data: offers.data }), {
+      if (!offersResponse.data) {
+        console.error('No offers data received:', offersResponse)
+        throw new Error('No offers data received from Duffel API')
+      }
+
+      console.log(`Found ${offersResponse.data.length} offers`)
+      return new Response(JSON.stringify({ data: offersResponse.data }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
@@ -60,7 +70,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Duffel API error:', error)
     return new Response(
-      JSON.stringify({ error: `Duffel API error: ${error.message}` }),
+      JSON.stringify({ 
+        error: `Duffel API error: ${error.message}`,
+        details: error instanceof Error ? error.stack : undefined
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

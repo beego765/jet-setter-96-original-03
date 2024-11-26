@@ -12,6 +12,7 @@ import Admin from "./pages/Admin";
 import { Navbar } from "./components/Navbar";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "./components/ui/use-toast";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -43,16 +45,27 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   }, []);
 
   const checkAdminRole = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .single();
-    
-    if (data && data.role === 'admin') {
-      setIsAdmin(true);
-    } else {
-      setIsAdmin(false);
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+      
+      if (error) throw error;
+      
+      if (data && data.role === 'admin') {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
+    } catch (error) {
+      console.error('Error checking admin role:', error);
+      toast({
+        title: "Error checking admin role",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -65,6 +78,11 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   }
 
   if (adminOnly && !isAdmin) {
+    toast({
+      title: "Access Denied",
+      description: "You need admin privileges to access this page",
+      variant: "destructive",
+    });
     return <Navigate to="/" />;
   }
 

@@ -38,16 +38,27 @@ export const Navbar = () => {
   }, []);
 
   const checkAdminRole = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .single();
-    
-    if (data && data.role === 'admin') {
-      setIsAdmin(true);
-    } else {
-      setIsAdmin(false);
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+      
+      if (error) throw error;
+      
+      if (data && data.role === 'admin') {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
+    } catch (error) {
+      console.error('Error checking admin role:', error);
+      toast({
+        title: "Error checking admin role",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 

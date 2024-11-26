@@ -31,23 +31,22 @@ export const AirportSelector = ({
 }: AirportSelectorProps) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [displayValue, setDisplayValue] = useState("");
   
-  // Debounce query to reduce unnecessary searches
   const debouncedQuery = useCallback((input: string) => {
-    // Only search if input is at least 2 characters
     return input.length >= 2 ? input : '';
   }, []);
 
   const { data: airports, isLoading } = useAirportSearch(debouncedQuery(query));
 
-  // Memoize filtered airports to prevent unnecessary re-renders
   const filteredAirports = useMemo(() => {
     return airports || [];
   }, [airports]);
 
   const handleSelect = (airport: any) => {
     onChange(airport.iata_code);
-    setQuery(airport.name); // Set the display name
+    setDisplayValue(`${airport.city} (${airport.iata_code})`);
+    setQuery("");
     setOpen(false);
   };
 
@@ -62,24 +61,21 @@ export const AirportSelector = ({
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className="w-full justify-start h-12 bg-gray-700/50 border-gray-600 text-white"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-start h-12 bg-gray-700/50 border-gray-600 text-white hover:bg-gray-700"
           >
-            {value || placeholder}
+            {displayValue || value || placeholder}
           </Button>
         </PopoverTrigger>
         
         <PopoverContent 
-          className="p-0 bg-gray-800 border-gray-700 w-full max-w-[400px]" 
+          className="p-0 bg-gray-800 border-gray-700 w-[400px]" 
           align="start"
           sideOffset={5}
+          style={{ zIndex: 100 }}
         >
-          <Command 
-            filter={(value, search) => {
-              // Custom filtering to improve search performance
-              const searchLower = search.toLowerCase();
-              return value.toLowerCase().includes(searchLower) ? 1 : 0;
-            }}
-          >
+          <Command>
             <CommandInput 
               placeholder="Search airports..." 
               value={query}
@@ -99,7 +95,7 @@ export const AirportSelector = ({
                       key={airport.iata_code}
                       value={`${airport.name} ${airport.city} ${airport.iata_code}`}
                       onSelect={() => handleSelect(airport)}
-                      className="hover:bg-gray-700 cursor-pointer"
+                      className="hover:bg-gray-700 cursor-pointer py-2"
                     >
                       <div className="flex flex-col">
                         <span className="font-medium">{airport.name}</span>

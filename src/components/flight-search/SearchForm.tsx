@@ -74,7 +74,7 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="relative z-10 space-y-6 w-full max-w-4xl mx-auto p-8 bg-gray-800/50 backdrop-blur-xl rounded-3xl border border-gray-700">
+    <form onSubmit={handleSubmit} className="relative space-y-6 w-full max-w-4xl mx-auto p-8 bg-gray-800/50 backdrop-blur-xl rounded-3xl border border-gray-700">
       <div className="flex items-center justify-center gap-4 mb-6">
         <Toggle
           pressed={tripType === "oneWay"}
@@ -92,7 +92,7 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
         </Toggle>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-20">
         <AirportSelector
           value={origin}
           onChange={setOrigin}
@@ -107,7 +107,7 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
             <CalendarIcon className="w-4 h-4" />
@@ -201,7 +201,7 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
 
       <Button 
         type="submit" 
-        className="w-full h-12 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-medium text-lg"
+        className="w-full h-12 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-medium text-lg relative z-0"
       >
         Search Flights
       </Button>

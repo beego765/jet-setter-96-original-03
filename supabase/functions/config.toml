@@ -1,9 +1,5 @@
 project_id = "yqzsdhoxnkjgmdjxbyos"
 
-[global]
-[global.env]
-DUFFEL_API_KEY = "env"
-
 [[functions]]
-name = "duffel-proxy"
+name = "import-airports"
 verify_jwt = false

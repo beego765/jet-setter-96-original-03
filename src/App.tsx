@@ -13,21 +13,19 @@ import { Navbar } from "./components/Navbar";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./components/ui/use-toast";
+import { useAdminCheck } from "./hooks/useAdminCheck";
 
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
+  const { isAdmin, isLoading: isAdminLoading } = useAdminCheck(session?.user?.id);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session?.user?.id) {
-        checkAdminRole(session.user.id);
-      }
       setLoading(false);
     });
 
@@ -35,41 +33,13 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session?.user?.id) {
-        checkAdminRole(session.user.id);
-      }
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkAdminRole = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .single();
-      
-      if (error) throw error;
-      
-      if (data && data.role === 'admin') {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
-    } catch (error) {
-      console.error('Error checking admin role:', error);
-      toast({
-        title: "Error checking admin role",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (loading) {
+  if (loading || isAdminLoading) {
     return null;
   }
 
@@ -78,6 +48,7 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   }
 
   if (adminOnly && !isAdmin) {
+    // Only show toast when actually trying to access admin route
     toast({
       title: "Access Denied",
       description: "You need admin privileges to access this page",

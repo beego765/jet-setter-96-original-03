@@ -1,20 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@duffel/api'
 
 const DUFFEL_API_KEY = Deno.env.get('DUFFEL_API_KEY')
 if (!DUFFEL_API_KEY) {
   throw new Error('DUFFEL_API_KEY environment variable is not set')
 }
 
-const duffel = createClient({
-  token: DUFFEL_API_KEY
-})
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
+
+const DUFFEL_API_URL = 'https://api.duffel.com'
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -31,17 +28,47 @@ serve(async (req) => {
     console.log('Request body:', body)
 
     if (path === '/air/offer_requests' && method === 'POST') {
-      const offerRequest = await duffel.offerRequests.create(body.data)
-      
+      // Create offer request
+      const offerRequestResponse = await fetch(`${DUFFEL_API_URL}/air/offer_requests`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${DUFFEL_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Duffel-Version': 'v1'
+        },
+        body: JSON.stringify(body)
+      })
+
+      if (!offerRequestResponse.ok) {
+        throw new Error(`Duffel API error: ${offerRequestResponse.statusText}`)
+      }
+
+      const offerRequest = await offerRequestResponse.json()
+      console.log('Offer request created:', offerRequest)
+
       if (!offerRequest.data?.id) {
         throw new Error('No offer request ID received')
       }
 
-      const offers = await duffel.offers.list({
-        offer_request_id: offerRequest.data.id,
-        sort: 'total_amount',
-        limit: 10,
-      })
+      // Get offers for the request
+      const offersResponse = await fetch(
+        `${DUFFEL_API_URL}/air/offers?offer_request_id=${offerRequest.data.id}&sort=total_amount&limit=10`,
+        {
+          headers: {
+            'Authorization': `Bearer ${DUFFEL_API_KEY}`,
+            'Accept': 'application/json',
+            'Duffel-Version': 'v1'
+          }
+        }
+      )
+
+      if (!offersResponse.ok) {
+        throw new Error(`Duffel API error: ${offersResponse.statusText}`)
+      }
+
+      const offers = await offersResponse.json()
+      console.log(`Found ${offers.data?.length || 0} offers`)
 
       return new Response(
         JSON.stringify({ offers: offers.data }), 
@@ -53,7 +80,24 @@ serve(async (req) => {
     }
 
     if (path === '/air/orders' && method === 'POST') {
-      const order = await duffel.orders.create(body.data)
+      const orderResponse = await fetch(`${DUFFEL_API_URL}/air/orders`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${DUFFEL_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Duffel-Version': 'v1'
+        },
+        body: JSON.stringify(body)
+      })
+
+      if (!orderResponse.ok) {
+        throw new Error(`Duffel API error: ${orderResponse.statusText}`)
+      }
+
+      const order = await orderResponse.json()
+      console.log('Order created:', order)
+
       return new Response(
         JSON.stringify(order.data), 
         {

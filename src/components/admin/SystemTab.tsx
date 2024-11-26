@@ -3,17 +3,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SystemHealth } from "./SystemHealth";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Database, HardDrive, Network, Settings, Shield } from "lucide-react";
+import { AlertCircle, Database, HardDrive, Network, Settings, Shield, Plane } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const SystemTab = () => {
+  const importAirports = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('import-airports');
+      if (error) throw error;
+      toast.success('Airport data import started successfully');
+    } catch (error) {
+      console.error('Error importing airports:', error);
+      toast.error('Failed to import airport data');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <SystemHealth />
       
       <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6">
         <h2 className="text-xl font-semibold text-gray-100 mb-6">System Maintenance</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <Database className="w-5 h-5 text-blue-400" />
@@ -32,6 +45,20 @@ export const SystemTab = () => {
             </div>
             <Progress value={65} className="bg-gray-700 [&>div]:bg-green-500" />
             <p className="text-sm text-gray-300">65% used (650GB/1TB)</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Plane className="w-5 h-5 text-purple-400" />
+              <span className="text-gray-200">Airport Data</span>
+            </div>
+            <p className="text-sm text-gray-400">Import airports data from source</p>
+            <Button 
+              onClick={importAirports}
+              className="w-full bg-purple-500 hover:bg-purple-600"
+            >
+              Import Airports
+            </Button>
           </div>
         </div>
       </Card>

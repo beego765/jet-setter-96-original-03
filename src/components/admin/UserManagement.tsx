@@ -36,7 +36,6 @@ export const UserManagement = () => {
   const [roleFilter, setRoleFilter] = useState<"all" | UserRole>("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Fetch users with their roles
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
@@ -58,7 +57,6 @@ export const UserManagement = () => {
     }
   });
 
-  // Set up real-time subscription
   useEffect(() => {
     const profilesChannel = supabase
       .channel('profiles-changes')
@@ -75,7 +73,6 @@ export const UserManagement = () => {
     };
   }, [queryClient]);
 
-  // Update user status mutation
   const updateUserStatus = useMutation({
     mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
       const { error } = await supabase
@@ -130,7 +127,6 @@ export const UserManagement = () => {
     }
   });
 
-  // Filter users based on search term and filters
   const filteredUsers = users.filter((user: UserProfile) => {
     const matchesSearch = 
       searchTerm === "" ||
@@ -199,7 +195,10 @@ export const UserManagement = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="bg-gray-700/50 border-gray-600 text-gray-200 placeholder:text-gray-400"
           />
-          <Select value={roleFilter} onValueChange={setRoleFilter}>
+          <Select 
+            value={roleFilter} 
+            onValueChange={(value: "all" | UserRole) => setRoleFilter(value)}
+          >
             <SelectTrigger className="bg-gray-700/50 border-gray-600 text-gray-200">
               <SelectValue placeholder="Filter by role" />
             </SelectTrigger>

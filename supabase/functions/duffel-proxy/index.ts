@@ -3,14 +3,18 @@ import { Duffel } from 'npm:@duffel/api'
 
 const DUFFEL_API_KEY = Deno.env.get('DUFFEL_API_KEY')
 
+if (!DUFFEL_API_KEY) {
+  throw new Error('DUFFEL_API_KEY environment variable is not set')
+}
+
+const duffel = new Duffel({
+  token: DUFFEL_API_KEY
+})
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
-
-const duffel = new Duffel({
-  token: DUFFEL_API_KEY || ''
-})
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -33,11 +37,14 @@ serve(async (req) => {
     }
 
     if (path === '/offer_requests' && method === 'POST') {
+      console.log('Creating offer request with data:', body.data)
       const offerRequest = await duffel.offerRequests.create(body.data)
+      
       if (!offerRequest.data?.id) {
         throw new Error('No offer request ID received')
       }
 
+      console.log('Fetching offers for request:', offerRequest.data.id)
       const offers = await duffel.offers.list({
         offer_request_id: offerRequest.data.id,
         sort: 'total_amount',

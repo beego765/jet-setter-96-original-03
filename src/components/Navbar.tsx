@@ -48,6 +48,11 @@ export const Navbar = () => {
     }
   };
 
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setIsOpen(false);
+  };
+
   return (
     <nav className="bg-gray-900/80 backdrop-blur-lg border-b border-gray-700 sticky top-0 z-50">
       <div className="container max-w-7xl mx-auto px-4">
@@ -75,22 +80,28 @@ export const Navbar = () => {
               Support
             </Link>
             {isAdmin && (
-              <Link to="/admin" className="text-gray-300 hover:text-white flex items-center gap-2">
+              <Button
+                variant="ghost"
+                className="text-gray-300 hover:text-white flex items-center gap-2"
+                onClick={() => handleNavigation('/admin')}
+              >
                 <Settings className="w-4 h-4" />
                 Admin
-              </Link>
+              </Button>
             )}
           </div>
 
           <div className="flex items-center gap-4">
-            <Link to="/auth" className="hidden md:block">
-              <Button variant="ghost" className="text-gray-300 hover:text-white">
-                <User className="w-4 h-4 mr-2" />
-                {session ? 'Account' : 'Sign In'}
-              </Button>
-            </Link>
+            <Button
+              variant="ghost"
+              className="hidden md:flex text-gray-300 hover:text-white"
+              onClick={() => handleNavigation('/auth')}
+            >
+              <User className="w-4 h-4 mr-2" />
+              {session ? 'Account' : 'Sign In'}
+            </Button>
 
-            <Sheet>
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild className="md:hidden">
                 <Button variant="ghost" size="icon">
                   <Menu className="h-6 w-6 text-gray-300" />
@@ -98,30 +109,50 @@ export const Navbar = () => {
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] bg-gray-900/95 border-gray-700">
                 <div className="flex flex-col gap-4 mt-8">
-                  <Link to="/deals" className="text-gray-300 hover:text-white flex items-center gap-2 p-2">
+                  <Button
+                    variant="ghost"
+                    className="text-gray-300 hover:text-white flex items-center gap-2 justify-start"
+                    onClick={() => handleNavigation('/deals')}
+                  >
                     <Tag className="w-4 h-4" />
                     Deals
-                  </Link>
+                  </Button>
                   {session && (
-                    <Link to="/my-bookings" className="text-gray-300 hover:text-white flex items-center gap-2 p-2">
+                    <Button
+                      variant="ghost"
+                      className="text-gray-300 hover:text-white flex items-center gap-2 justify-start"
+                      onClick={() => handleNavigation('/my-bookings')}
+                    >
                       <BookOpen className="w-4 h-4" />
                       My Bookings
-                    </Link>
+                    </Button>
                   )}
-                  <Link to="/support" className="text-gray-300 hover:text-white flex items-center gap-2 p-2">
+                  <Button
+                    variant="ghost"
+                    className="text-gray-300 hover:text-white flex items-center gap-2 justify-start"
+                    onClick={() => handleNavigation('/support')}
+                  >
                     <HelpCircle className="w-4 h-4" />
                     Support
-                  </Link>
+                  </Button>
                   {isAdmin && (
-                    <Link to="/admin" className="text-gray-300 hover:text-white flex items-center gap-2 p-2">
+                    <Button
+                      variant="ghost"
+                      className="text-gray-300 hover:text-white flex items-center gap-2 justify-start"
+                      onClick={() => handleNavigation('/admin')}
+                    >
                       <Settings className="w-4 h-4" />
                       Admin
-                    </Link>
+                    </Button>
                   )}
-                  <Link to="/auth" className="text-gray-300 hover:text-white flex items-center gap-2 p-2">
+                  <Button
+                    variant="ghost"
+                    className="text-gray-300 hover:text-white flex items-center gap-2 justify-start"
+                    onClick={() => handleNavigation('/auth')}
+                  >
                     <User className="w-4 h-4" />
                     {session ? 'Account' : 'Sign In'}
-                  </Link>
+                  </Button>
                 </div>
               </SheetContent>
             </Sheet>

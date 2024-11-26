@@ -1,16 +1,18 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Plane, Tag, BookOpen, HelpCircle, User, Settings, Menu } from "lucide-react";
+import { Plane, Tag, BookOpen, HelpCircle, User, Settings, Menu, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [session, setSession] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -53,6 +55,25 @@ export const Navbar = () => {
     setIsOpen(false);
   };
 
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      toast({
+        title: "Signed out successfully",
+        duration: 2000,
+      });
+      navigate('/');
+      setIsOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <nav className="bg-gray-900/80 backdrop-blur-lg border-b border-gray-700 sticky top-0 z-50">
       <div className="container max-w-7xl mx-auto px-4">
@@ -92,14 +113,35 @@ export const Navbar = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              className="hidden md:flex text-gray-300 hover:text-white"
-              onClick={() => handleNavigation('/auth')}
-            >
-              <User className="w-4 h-4 mr-2" />
-              {session ? 'Account' : 'Sign In'}
-            </Button>
+            {session ? (
+              <div className="hidden md:flex gap-2">
+                <Button
+                  variant="ghost"
+                  className="text-gray-300 hover:text-white"
+                  onClick={() => handleNavigation('/auth')}
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  Account
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="text-gray-300 hover:text-white"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                className="hidden md:flex text-gray-300 hover:text-white"
+                onClick={() => handleNavigation('/auth')}
+              >
+                <User className="w-4 h-4 mr-2" />
+                Sign In
+              </Button>
+            )}
 
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild className="md:hidden">
@@ -145,14 +187,35 @@ export const Navbar = () => {
                       Admin
                     </Button>
                   )}
-                  <Button
-                    variant="ghost"
-                    className="text-gray-300 hover:text-white flex items-center gap-2 justify-start"
-                    onClick={() => handleNavigation('/auth')}
-                  >
-                    <User className="w-4 h-4" />
-                    {session ? 'Account' : 'Sign In'}
-                  </Button>
+                  {session ? (
+                    <>
+                      <Button
+                        variant="ghost"
+                        className="text-gray-300 hover:text-white flex items-center gap-2 justify-start"
+                        onClick={() => handleNavigation('/auth')}
+                      >
+                        <User className="w-4 h-4" />
+                        Account
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="text-gray-300 hover:text-white flex items-center gap-2 justify-start"
+                        onClick={handleSignOut}
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      className="text-gray-300 hover:text-white flex items-center gap-2 justify-start"
+                      onClick={() => handleNavigation('/auth')}
+                    >
+                      <User className="w-4 h-4" />
+                      Sign In
+                    </Button>
+                  )}
                 </div>
               </SheetContent>
             </Sheet>

@@ -1,11 +1,11 @@
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import { SystemHealth } from "./SystemHealth";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "../../components/ui/badge";
 import { AlertCircle, Database, HardDrive, Network, Settings, Shield, Plane } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
-import { supabase } from "@/integrations/supabase/client";
+import { Progress } from "../../components/ui/progress";
+import { supabase } from "../../integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 
@@ -20,7 +20,7 @@ export const SystemTab = () => {
         .limit(1);
       
       if (error) throw error;
-      return data[0];
+      return data[0] || null; // Return null if no data is found
     }
   });
 

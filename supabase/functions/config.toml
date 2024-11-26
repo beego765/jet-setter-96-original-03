@@ -1,0 +1,9 @@
+project_id = "yqzsdhoxnkjgmdjxbyos"
+
+[global]
+[global.env]
+DUFFEL_API_KEY = "env"
+
+[[functions]]
+name = "duffel-proxy"
+verify_jwt = false

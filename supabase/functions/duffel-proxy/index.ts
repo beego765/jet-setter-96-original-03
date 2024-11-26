@@ -1,13 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { Duffel } from 'npm:@duffel/api'
 
 const DUFFEL_API_KEY = Deno.env.get('DUFFEL_API_KEY')
-const DUFFEL_API = 'https://api.duffel.com/air/v1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 }
+
+const duffel = new Duffel({
+  token: DUFFEL_API_KEY || ''
+})
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -16,57 +19,44 @@ serve(async (req) => {
   }
 
   try {
-    const { path, method = 'GET', query = {}, body = null } = await req.json()
-    
-    // Construct URL with query parameters
-    const queryString = new URLSearchParams(query).toString()
-    const url = `${DUFFEL_API}${path}${queryString ? `?${queryString}` : ''}`
-    
-    console.log(`Making request to Duffel API:`, {
-      method,
-      url,
-      bodyPreview: body ? JSON.stringify(body).slice(0, 100) + '...' : 'No body'
-    })
-    
-    const response = await fetch(url, {
-      method,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DUFFEL_API_KEY}`,
-        'Duffel-Version': 'beta',
-      },
-      body: body ? JSON.stringify(body) : undefined
-    })
+    const { path, method, query = {}, body = null } = await req.json()
 
-    const data = await response.json()
-    
-    if (!response.ok) {
-      console.error('Duffel API error:', {
-        status: response.status,
-        url,
-        error: data.errors?.[0] || data.error,
-        headers: Object.fromEntries(response.headers)
+    console.log(`Duffel API request: ${method} ${path}`)
+    console.log('Query:', query)
+    console.log('Body:', body)
+
+    if (path === '/places/suggestions') {
+      const places = await duffel.placesSuggestions.list({ query: query.query })
+      return new Response(JSON.stringify({ data: places.data }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
-      throw new Error(`Duffel API error: ${response.status} - ${data.errors?.[0]?.message || data.error?.message || 'Unknown error'}`)
     }
 
-    return new Response(JSON.stringify(data), {
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders
+    if (path === '/offer_requests' && method === 'POST') {
+      const offerRequest = await duffel.offerRequests.create(body.data)
+      if (!offerRequest.data?.id) {
+        throw new Error('No offer request ID received')
       }
-    })
+
+      const offers = await duffel.offers.list({
+        offer_request_id: offerRequest.data.id,
+        sort: 'total_amount',
+        limit: 10,
+      })
+
+      return new Response(JSON.stringify({ data: offers.data }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    throw new Error(`Unsupported path: ${path}`)
   } catch (error) {
-    console.error('Error in Duffel proxy:', error)
+    console.error('Duffel API error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: `Duffel API error: ${error.message}` }),
       { 
         status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders
-        }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     )
   }

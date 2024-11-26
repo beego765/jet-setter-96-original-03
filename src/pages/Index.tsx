@@ -3,42 +3,7 @@ import { SearchForm, type SearchFormData } from "@/components/flight-search/Sear
 import { FlightCard, type Flight } from "@/components/flight-search/FlightCard";
 import { useToast } from "@/components/ui/use-toast";
 import { Plane, MapPin, Clock, CreditCard } from "lucide-react";
-
-const mockFlights: Flight[] = [
-  {
-    id: "1",
-    airline: "SkyWings",
-    flightNumber: "SW123",
-    departureTime: "08:00",
-    arrivalTime: "10:30",
-    duration: "2h 30m",
-    price: 299,
-    origin: "LAX",
-    destination: "SFO",
-  },
-  {
-    id: "2",
-    airline: "AirGlobe",
-    flightNumber: "AG456",
-    departureTime: "10:15",
-    arrivalTime: "12:45",
-    duration: "2h 30m",
-    price: 329,
-    origin: "LAX",
-    destination: "SFO",
-  },
-  {
-    id: "3",
-    airline: "CloudLines",
-    flightNumber: "CL789",
-    departureTime: "14:30",
-    arrivalTime: "17:00",
-    duration: "2h 30m",
-    price: 279,
-    origin: "LAX",
-    destination: "SFO",
-  },
-];
+import { searchFlights } from "@/server/duffelService";
 
 const Index = () => {
   const [flights, setFlights] = useState<Flight[]>([]);
@@ -47,14 +12,44 @@ const Index = () => {
 
   const handleSearch = async (data: SearchFormData) => {
     setIsSearching(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setFlights(mockFlights);
-    setIsSearching(false);
-    
-    toast({
-      title: "Flights found!",
-      description: `Found ${mockFlights.length} flights matching your criteria.`,
-    });
+    try {
+      const results = await searchFlights({
+        origin: data.origin,
+        destination: data.destination,
+        departureDate: data.departureDate.toISOString().split('T')[0],
+        returnDate: data.returnDate?.toISOString().split('T')[0],
+        passengers: data.passengers,
+        cabinClass: data.class,
+      });
+
+      // Transform Duffel offers to our Flight type
+      const transformedFlights = results.map((offer: any) => ({
+        id: offer.id,
+        airline: offer.owner.name,
+        flightNumber: offer.slices[0].segments[0].operating_carrier_flight_number,
+        departureTime: new Date(offer.slices[0].segments[0].departing_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+        arrivalTime: new Date(offer.slices[0].segments[0].arriving_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+        duration: `${Math.floor(offer.slices[0].duration / 60)}h ${offer.slices[0].duration % 60}m`,
+        price: parseFloat(offer.total_amount),
+        origin: offer.slices[0].origin.iata_code,
+        destination: offer.slices[0].destination.iata_code,
+      }));
+
+      setFlights(transformedFlights);
+      toast({
+        title: "Flights found!",
+        description: `Found ${transformedFlights.length} flights matching your criteria.`,
+      });
+    } catch (error) {
+      console.error('Error fetching flights:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch flights. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const handleSelectFlight = (flight: Flight) => {

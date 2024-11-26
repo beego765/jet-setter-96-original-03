@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      airports: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          iata_code: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          iata_code: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          iata_code?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+        }
+        Relationships: []
+      }
       api_credentials: {
         Row: {
           api_key: string

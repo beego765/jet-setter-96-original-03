@@ -7,17 +7,37 @@ import { AlertCircle, Database, HardDrive, Network, Settings, Shield, Plane } fr
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 
 export const SystemTab = () => {
+  const { data: importHistory, refetch: refetchHistory } = useQuery({
+    queryKey: ['airport-imports'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('airport_imports')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      if (error) throw error;
+      return data[0];
+    }
+  });
+
   const importAirports = async () => {
     try {
       const { data, error } = await supabase.functions.invoke('import-airports');
       if (error) throw error;
       toast.success('Airport data import started successfully');
+      refetchHistory();
     } catch (error) {
       console.error('Error importing airports:', error);
       toast.error('Failed to import airport data');
     }
+  };
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleString();
   };
 
   return (
@@ -52,7 +72,26 @@ export const SystemTab = () => {
               <Plane className="w-5 h-5 text-purple-400" />
               <span className="text-gray-200">Airport Data</span>
             </div>
-            <p className="text-sm text-gray-400">Import airports data from source</p>
+            {importHistory ? (
+              <>
+                <p className="text-sm text-gray-400">
+                  Last import: {formatDate(importHistory.created_at)}
+                  <br />
+                  Status: <Badge className={
+                    importHistory.status === 'completed' 
+                      ? 'bg-green-500/20 text-green-400'
+                      : importHistory.status === 'error'
+                      ? 'bg-red-500/20 text-red-400'
+                      : 'bg-yellow-500/20 text-yellow-400'
+                  }>{importHistory.status}</Badge>
+                  {importHistory.imported_count && (
+                    <><br />Imported: {importHistory.imported_count} airports</>
+                  )}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-gray-400">No previous imports</p>
+            )}
             <Button 
               onClick={importAirports}
               className="w-full bg-purple-500 hover:bg-purple-600"

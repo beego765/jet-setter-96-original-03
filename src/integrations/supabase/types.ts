@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      airport_imports: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          imported_count: number | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          imported_count?: number | null
+          status: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          imported_count?: number | null
+          status?: string
+        }
+        Relationships: []
+      }
       airports: {
         Row: {
           city: string | null

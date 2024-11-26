@@ -13,12 +13,16 @@ const duffel = createClient({
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 204
+    })
   }
 
   try {
@@ -39,16 +43,24 @@ serve(async (req) => {
         limit: 10,
       })
 
-      return new Response(JSON.stringify({ offers: offers.data }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return new Response(
+        JSON.stringify({ offers: offers.data }), 
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        }
+      )
     }
 
     if (path === '/air/orders' && method === 'POST') {
       const order = await duffel.orders.create(body.data)
-      return new Response(JSON.stringify(order.data), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return new Response(
+        JSON.stringify(order.data), 
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        }
+      )
     }
 
     throw new Error(`Unsupported path: ${path}`)

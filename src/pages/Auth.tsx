@@ -26,10 +26,13 @@ const Auth = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session) {
+        navigate('/');
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) {
@@ -106,7 +109,8 @@ const Auth = () => {
                 },
               },
             }}
-            providers={[]}
+            providers={["google", "github"]}
+            redirectTo={window.location.origin}
           />
         </Card>
       </div>

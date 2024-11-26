@@ -24,11 +24,13 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { isAdmin, isLoading: isAdminLoading } = useAdminCheck(session?.user?.id);
 
   useEffect(() => {
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
+    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -37,24 +39,23 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, []); // Empty dependency array since we want this to run only once
 
-  if (loading || isAdminLoading) {
+  if (loading || (adminOnly && isAdminLoading)) {
     return null;
   }
 
   if (!session) {
-    return <Navigate to="/auth" />;
+    return <Navigate to="/auth" replace />;
   }
 
   if (adminOnly && !isAdmin) {
-    // Only show toast when actually trying to access admin route
     toast({
       title: "Access Denied",
       description: "You need admin privileges to access this page",
       variant: "destructive",
     });
-    return <Navigate to="/" />;
+    return <Navigate to="/" replace />;
   }
 
   return children;

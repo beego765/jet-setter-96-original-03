@@ -38,8 +38,10 @@ export const useAdminCheck = (userId: string | undefined) => {
       }
     };
 
-    checkAdminRole();
-  }, [userId]);
+    if (userId) {
+      checkAdminRole();
+    }
+  }, [userId]); // Only re-run when userId changes
 
   return { isAdmin, isLoading };
 };

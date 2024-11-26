@@ -3,9 +3,28 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Plane, Tag, BookOpen, HelpCircle, User, Settings, Menu } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [session, setSession] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <nav className="bg-gray-900/80 backdrop-blur-lg border-b border-gray-700 sticky top-0 z-50">
@@ -23,25 +42,29 @@ export const Navbar = () => {
               <Tag className="w-4 h-4" />
               Deals
             </Link>
-            <Link to="/my-bookings" className="text-gray-300 hover:text-white flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              My Bookings
-            </Link>
+            {session && (
+              <Link to="/my-bookings" className="text-gray-300 hover:text-white flex items-center gap-2">
+                <BookOpen className="w-4 h-4" />
+                My Bookings
+              </Link>
+            )}
             <Link to="/support" className="text-gray-300 hover:text-white flex items-center gap-2">
               <HelpCircle className="w-4 h-4" />
               Support
             </Link>
-            <Link to="/admin" className="text-gray-300 hover:text-white flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              Admin
-            </Link>
+            {session?.user?.email === 'admin@opustravels.com' && (
+              <Link to="/admin" className="text-gray-300 hover:text-white flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                Admin
+              </Link>
+            )}
           </div>
 
           <div className="flex items-center gap-4">
             <Link to="/auth" className="hidden md:block">
               <Button variant="ghost" className="text-gray-300 hover:text-white">
                 <User className="w-4 h-4 mr-2" />
-                Sign In
+                {session ? 'Account' : 'Sign In'}
               </Button>
             </Link>
 
@@ -57,21 +80,25 @@ export const Navbar = () => {
                     <Tag className="w-4 h-4" />
                     Deals
                   </Link>
-                  <Link to="/my-bookings" className="text-gray-300 hover:text-white flex items-center gap-2 p-2">
-                    <BookOpen className="w-4 h-4" />
-                    My Bookings
-                  </Link>
+                  {session && (
+                    <Link to="/my-bookings" className="text-gray-300 hover:text-white flex items-center gap-2 p-2">
+                      <BookOpen className="w-4 h-4" />
+                      My Bookings
+                    </Link>
+                  )}
                   <Link to="/support" className="text-gray-300 hover:text-white flex items-center gap-2 p-2">
                     <HelpCircle className="w-4 h-4" />
                     Support
                   </Link>
-                  <Link to="/admin" className="text-gray-300 hover:text-white flex items-center gap-2 p-2">
-                    <Settings className="w-4 h-4" />
-                    Admin
-                  </Link>
+                  {session?.user?.email === 'admin@opustravels.com' && (
+                    <Link to="/admin" className="text-gray-300 hover:text-white flex items-center gap-2 p-2">
+                      <Settings className="w-4 h-4" />
+                      Admin
+                    </Link>
+                  )}
                   <Link to="/auth" className="text-gray-300 hover:text-white flex items-center gap-2 p-2">
                     <User className="w-4 h-4" />
-                    Sign In
+                    {session ? 'Account' : 'Sign In'}
                   </Link>
                 </div>
               </SheetContent>

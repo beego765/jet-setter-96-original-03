@@ -17,6 +17,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
+type UserRole = 'user' | 'admin';
+
 type UserProfile = {
   id: string;
   email: string | null;
@@ -24,14 +26,14 @@ type UserProfile = {
   last_name: string | null;
   status: string | null;
   last_login: string | null;
-  role?: string;
+  role?: UserRole;
 };
 
 export const UserManagement = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
+  const [roleFilter, setRoleFilter] = useState<"all" | UserRole>("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
   // Fetch users with their roles
@@ -99,12 +101,16 @@ export const UserManagement = () => {
     }
   });
 
-  // Update user role mutation
+  // Update user role mutation with proper typing
   const updateUserRole = useMutation({
-    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+    mutationFn: async ({ userId, role }: { userId: string; role: UserRole }) => {
       const { error } = await supabase
         .from('user_roles')
-        .upsert({ user_id: userId, role }, { onConflict: 'user_id' });
+        .upsert({ 
+          user_id: userId, 
+          role: role 
+        }, 
+        { onConflict: 'user_id' });
       
       if (error) throw error;
     },

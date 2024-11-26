@@ -2,29 +2,51 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Plane, Tag, BookOpen, HelpCircle, User, Settings, Menu } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [session, setSession] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      if (session?.user?.id) {
+        checkAdminRole(session.user.id);
+      }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session?.user?.id) {
+        checkAdminRole(session.user.id);
+      } else {
+        setIsAdmin(false);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const checkAdminRole = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .single();
+    
+    if (data && data.role === 'admin') {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
+  };
 
   return (
     <nav className="bg-gray-900/80 backdrop-blur-lg border-b border-gray-700 sticky top-0 z-50">
@@ -52,7 +74,7 @@ export const Navbar = () => {
               <HelpCircle className="w-4 h-4" />
               Support
             </Link>
-            {session?.user?.email === 'admin@opustravels.com' && (
+            {isAdmin && (
               <Link to="/admin" className="text-gray-300 hover:text-white flex items-center gap-2">
                 <Settings className="w-4 h-4" />
                 Admin
@@ -90,7 +112,7 @@ export const Navbar = () => {
                     <HelpCircle className="w-4 h-4" />
                     Support
                   </Link>
-                  {session?.user?.email === 'admin@opustravels.com' && (
+                  {isAdmin && (
                     <Link to="/admin" className="text-gray-300 hover:text-white flex items-center gap-2 p-2">
                       <Settings className="w-4 h-4" />
                       Admin

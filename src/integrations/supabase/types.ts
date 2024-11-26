@@ -87,6 +87,54 @@ export type Database = {
         }
         Relationships: []
       }
+      bookings: {
+        Row: {
+          booking_reference: string | null
+          cabin_class: string
+          created_at: string
+          departure_date: string
+          destination: string
+          id: string
+          origin: string
+          passengers: number
+          return_date: string | null
+          status: Database["public"]["Enums"]["booking_status"]
+          total_price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_reference?: string | null
+          cabin_class: string
+          created_at?: string
+          departure_date: string
+          destination: string
+          id?: string
+          origin: string
+          passengers?: number
+          return_date?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          total_price: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_reference?: string | null
+          cabin_class?: string
+          created_at?: string
+          departure_date?: string
+          destination?: string
+          id?: string
+          origin?: string
+          passengers?: number
+          return_date?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          total_price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       client_analysis: {
         Row: {
           description: string | null
@@ -116,6 +164,44 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      passenger_details: {
+        Row: {
+          booking_id: string
+          created_at: string
+          date_of_birth: string
+          first_name: string
+          id: string
+          last_name: string
+          passport_number: string | null
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          date_of_birth: string
+          first_name: string
+          id?: string
+          last_name: string
+          passport_number?: string | null
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          date_of_birth?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          passport_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passenger_details_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -167,6 +253,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      booking_status: "pending" | "confirmed" | "cancelled"
       user_role: "user" | "admin"
     }
     CompositeTypes: {

@@ -19,10 +19,14 @@ const queryClient = new QueryClient();
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      if (session?.user?.id) {
+        checkAdminRole(session.user.id);
+      }
       setLoading(false);
     });
 
@@ -30,11 +34,28 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session?.user?.id) {
+        checkAdminRole(session.user.id);
+      }
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const checkAdminRole = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .single();
+    
+    if (data && data.role === 'admin') {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
+  };
 
   if (loading) {
     return null;
@@ -44,7 +65,7 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
     return <Navigate to="/auth" />;
   }
 
-  if (adminOnly && session?.user?.email !== 'admin@opustravels.com') {
+  if (adminOnly && !isAdmin) {
     return <Navigate to="/" />;
   }
 

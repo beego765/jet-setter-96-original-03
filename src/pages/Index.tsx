@@ -18,7 +18,11 @@ const Index = () => {
         destination: data.destination,
         departureDate: data.departureDate.toISOString().split('T')[0],
         returnDate: data.returnDate?.toISOString().split('T')[0],
-        passengers: data.passengers,
+        passengers: {
+          adults: data.passengers.adults,
+          children: data.passengers.children,
+          infants: data.passengers.infants,
+        },
         cabinClass: data.class,
       });
 

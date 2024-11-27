@@ -1,16 +1,40 @@
 import { supabase } from '@/integrations/supabase/client';
 
+interface Passengers {
+  adults: number;
+  children: number;
+  infants: number;
+}
+
 interface SearchParams {
   origin: string;
   destination: string;
   departureDate: string;
   returnDate?: string;
-  passengers: number;
+  passengers: Passengers;
   cabinClass: string;
 }
 
 export const searchFlights = async (params: SearchParams) => {
   try {
+    // Map passengers to Duffel's expected format
+    const mappedPassengers = [];
+    
+    // Add adult passengers
+    for (let i = 0; i < params.passengers.adults; i++) {
+      mappedPassengers.push({ type: 'adult' });
+    }
+    
+    // Add child passengers (age 2-11)
+    for (let i = 0; i < params.passengers.children; i++) {
+      mappedPassengers.push({ type: 'child' });
+    }
+    
+    // Add infant passengers (under 2)
+    for (let i = 0; i < params.passengers.infants; i++) {
+      mappedPassengers.push({ type: 'infant_without_seat' });
+    }
+
     const { data, error } = await supabase.functions.invoke('duffel-proxy', {
       body: {
         path: '/air/offer_requests',
@@ -29,9 +53,7 @@ export const searchFlights = async (params: SearchParams) => {
                 departure_date: params.returnDate,
               }] : []),
             ],
-            passengers: Array(params.passengers).fill({
-              type: 'adult',
-            }),
+            passengers: mappedPassengers,
             cabin_class: params.cabinClass?.toLowerCase(),
           }
         }

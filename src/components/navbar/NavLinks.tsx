@@ -25,7 +25,7 @@ export const NavLinks = ({ session, isAdmin, onNavigate, className = "" }: NavLi
         <HelpCircle className="w-4 h-4" />
         Support
       </Link>
-      {isAdmin && (
+      {session && isAdmin && (
         <Link
           to="/admin"
           className="text-gray-300 hover:text-white flex items-center gap-2"

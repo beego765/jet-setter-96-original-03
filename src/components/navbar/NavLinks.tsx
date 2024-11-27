@@ -9,19 +9,37 @@ interface NavLinksProps {
 }
 
 export const NavLinks = ({ session, isAdmin, onNavigate, className = "" }: NavLinksProps) => {
+  const handleClick = (path: string) => {
+    if (onNavigate) {
+      onNavigate(path);
+    }
+  };
+
   return (
     <div className={className}>
-      <Link to="/deals" className="text-gray-300 hover:text-white flex items-center gap-2">
+      <Link 
+        to="/deals" 
+        className="text-gray-300 hover:text-white flex items-center gap-2"
+        onClick={() => handleClick('/deals')}
+      >
         <Tag className="w-4 h-4" />
         Deals
       </Link>
       {session && (
-        <Link to="/my-bookings" className="text-gray-300 hover:text-white flex items-center gap-2">
+        <Link 
+          to="/my-bookings" 
+          className="text-gray-300 hover:text-white flex items-center gap-2"
+          onClick={() => handleClick('/my-bookings')}
+        >
           <BookOpen className="w-4 h-4" />
           My Bookings
         </Link>
       )}
-      <Link to="/support" className="text-gray-300 hover:text-white flex items-center gap-2">
+      <Link 
+        to="/support" 
+        className="text-gray-300 hover:text-white flex items-center gap-2"
+        onClick={() => handleClick('/support')}
+      >
         <HelpCircle className="w-4 h-4" />
         Support
       </Link>
@@ -29,7 +47,7 @@ export const NavLinks = ({ session, isAdmin, onNavigate, className = "" }: NavLi
         <Link
           to="/admin"
           className="text-gray-300 hover:text-white flex items-center gap-2"
-          onClick={() => onNavigate?.('/admin')}
+          onClick={() => handleClick('/admin')}
         >
           <Settings className="w-4 h-4" />
           Admin

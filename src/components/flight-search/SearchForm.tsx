@@ -39,8 +39,18 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
   const [flightClass, setFlightClass] = useState<"economy" | "business" | "first">("economy");
   const [tripType, setTripType] = useState<"oneWay" | "roundTrip">("oneWay");
   const [searchParams, setSearchParams] = useState(null);
+  const [departureDateOpen, setDepartureDateOpen] = useState(false);
+  const [returnDateOpen, setReturnDateOpen] = useState(false);
 
-  const { data: flights, isLoading } = useFlightSearch(searchParams);
+  const handleDepartureDateSelect = (date: Date | undefined) => {
+    setDepartureDate(date);
+    setDepartureDateOpen(false);
+  };
+
+  const handleReturnDateSelect = (date: Date | undefined) => {
+    setReturnDate(date);
+    setReturnDateOpen(false);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,7 +123,7 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
             <CalendarIcon className="w-4 h-4" />
             Departure Date
           </label>
-          <Popover>
+          <Popover open={departureDateOpen} onOpenChange={setDepartureDateOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -130,7 +140,7 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
               <Calendar
                 mode="single"
                 selected={departureDate}
-                onSelect={setDepartureDate}
+                onSelect={handleDepartureDateSelect}
                 initialFocus
                 className="rounded-md border border-gray-700 bg-gray-800"
               />
@@ -144,7 +154,7 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
               <CalendarIcon className="w-4 h-4" />
               Return Date
             </label>
-            <Popover>
+            <Popover open={returnDateOpen} onOpenChange={setReturnDateOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -161,7 +171,7 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
                 <Calendar
                   mode="single"
                   selected={returnDate}
-                  onSelect={setReturnDate}
+                  onSelect={handleReturnDateSelect}
                   initialFocus
                   className="rounded-md border border-gray-700 bg-gray-800"
                 />

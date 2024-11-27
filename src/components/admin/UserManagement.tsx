@@ -18,20 +18,24 @@ export const UserManagement = () => {
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
+      // First, fetch all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_roles (
-            role
-          )
-        `);
+        .select('*');
 
       if (profilesError) throw profilesError;
 
+      // Then, fetch all user roles
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('*');
+
+      if (rolesError) throw rolesError;
+
+      // Combine the data
       return profiles.map(profile => ({
         ...profile,
-        role: profile.user_roles?.[0]?.role || 'user'
+        role: userRoles.find(role => role.user_id === profile.id)?.role || 'user'
       }));
     }
   });

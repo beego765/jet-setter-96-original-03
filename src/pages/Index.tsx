@@ -74,7 +74,7 @@ const Index = () => {
         <div className="text-center mb-12 space-y-4 animate-fadeIn">
           <div className="relative h-64 md:h-96 mb-8 rounded-2xl overflow-hidden">
             <img
-              src="https://images.unsplash.com/photo-1501854140801-50d01698950b"
+              src="/otl1.png"
               alt="Scenic travel destination"
               className="w-full h-full object-cover"
             />

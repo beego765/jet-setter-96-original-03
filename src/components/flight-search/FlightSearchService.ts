@@ -8,7 +8,11 @@ interface FlightSearchParams {
   destination: string;
   departureDate: string;
   returnDate?: string;
-  passengers: number;
+  passengers: {
+    adults: number;
+    children: number;
+    infants: number;
+  };
   cabinClass: 'economy' | 'business' | 'first';
 }
 

@@ -27,8 +27,29 @@ serve(async (req) => {
     console.log(`Duffel API request: ${method} ${path}`)
     console.log('Request body:', body)
 
+    const mapPassengers = (passengers) => {
+      const mappedPassengers = [];
+      
+      // Add adult passengers
+      for (let i = 0; i < passengers.adults; i++) {
+        mappedPassengers.push({ type: 'adult' });
+      }
+      
+      // Add child passengers
+      for (let i = 0; i < passengers.children; i++) {
+        mappedPassengers.push({ type: 'child' });
+      }
+      
+      // Add infant passengers
+      for (let i = 0; i < passengers.infants; i++) {
+        mappedPassengers.push({ type: 'infant_without_seat' });
+      }
+      
+      return mappedPassengers;
+    };
+
     if (path === '/air/offer_requests' && method === 'POST') {
-      // Create offer request
+      // Create offer request with mapped passengers
       const offerRequestResponse = await fetch(`${DUFFEL_API_URL}/air/offer_requests`, {
         method: 'POST',
         headers: {
@@ -37,8 +58,14 @@ serve(async (req) => {
           'Accept': 'application/json',
           'Duffel-Version': 'v1'
         },
-        body: JSON.stringify(body)
-      })
+        body: JSON.stringify({
+          ...body,
+          data: {
+            ...body.data,
+            passengers: mapPassengers(body.data.passengers)
+          }
+        })
+      });
 
       if (!offerRequestResponse.ok) {
         throw new Error(`Duffel API error: ${offerRequestResponse.statusText}`)

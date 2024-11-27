@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";
 import {
   Popover,
@@ -9,18 +8,18 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Users } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useFlightSearch } from "./FlightSearchService";
 import { useToast } from "@/components/ui/use-toast";
 import { AirportSelector } from "./AirportSelector";
+import { PassengerSelector, PassengerCount } from "./PassengerSelector";
 
 export interface SearchFormData {
   origin: string;
   destination: string;
   departureDate: Date;
   returnDate?: Date;
-  passengers: number;
+  passengers: PassengerCount;
   class: "economy" | "business" | "first";
   tripType: "oneWay" | "roundTrip";
 }
@@ -35,10 +34,13 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
   const [returnDate, setReturnDate] = useState<Date>();
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
-  const [passengers, setPassengers] = useState(1);
+  const [passengers, setPassengers] = useState<PassengerCount>({
+    adults: 1,
+    children: 0,
+    infants: 0,
+  });
   const [flightClass, setFlightClass] = useState<"economy" | "business" | "first">("economy");
   const [tripType, setTripType] = useState<"oneWay" | "roundTrip">("oneWay");
-  const [searchParams, setSearchParams] = useState(null);
   const [departureDateOpen, setDepartureDateOpen] = useState(false);
   const [returnDateOpen, setReturnDateOpen] = useState(false);
 
@@ -62,15 +64,6 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
       });
       return;
     }
-
-    setSearchParams({
-      origin,
-      destination,
-      departureDate: departureDate.toISOString().split('T')[0],
-      returnDate: returnDate?.toISOString().split('T')[0],
-      passengers,
-      cabinClass: flightClass,
-    });
 
     onSearch({
       origin,
@@ -180,20 +173,7 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
           </div>
         )}
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            Passengers
-          </label>
-          <Input
-            type="number"
-            min={1}
-            max={9}
-            value={passengers}
-            onChange={(e) => setPassengers(parseInt(e.target.value))}
-            className="h-12 bg-gray-700/50 border-gray-600 text-white"
-          />
-        </div>
+        <PassengerSelector value={passengers} onChange={setPassengers} />
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Class</label>

@@ -1,17 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Plane, Clock, Calendar, Users, Luggage } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format } from "date-fns";
 import { FlightSummary } from "@/components/booking/FlightSummary";
 import { PaymentOptions } from "@/components/booking/PaymentOptions";
 import { PassengerForm } from "@/components/booking/PassengerForm";
+import { FlightInfo } from "@/components/booking/FlightInfo";
 
 const BookingDetails = () => {
   const { flightId } = useParams();
@@ -29,9 +25,21 @@ const BookingDetails = () => {
           throw new Error('No flight ID provided');
         }
 
+        // Fetch booking with payment details
         const { data: bookingData, error: bookingError } = await supabase
           .from('bookings')
-          .select('*')
+          .select(`
+            *,
+            booking_payments (
+              amount,
+              base_amount,
+              fees_amount,
+              taxes_amount,
+              status,
+              currency
+            ),
+            passenger_details (*)
+          `)
           .eq('id', flightId)
           .single();
 
@@ -84,7 +92,6 @@ const BookingDetails = () => {
 
   const handlePayNow = async () => {
     try {
-      // Implementation moved to PaymentOptions component
       navigate('/my-bookings');
     } catch (error: any) {
       toast({
@@ -97,7 +104,6 @@ const BookingDetails = () => {
 
   const handleHoldOrder = async () => {
     try {
-      // Implementation moved to PaymentOptions component
       navigate('/my-bookings');
     } catch (error: any) {
       toast({
@@ -131,9 +137,11 @@ const BookingDetails = () => {
       <div className="container max-w-4xl mx-auto px-4 py-8">
         <div className="space-y-6">
           <Card className="p-6 bg-gray-800/50 backdrop-blur-sm border-gray-700">
-            <h1 className="text-2xl font-bold mb-4">Checkout</h1>
+            <h1 className="text-2xl font-bold mb-4">Booking Details</h1>
             <FlightSummary booking={booking} flightDetails={flightDetails} />
           </Card>
+
+          <FlightInfo booking={booking} />
 
           {/* Passenger Forms */}
           {Array.from({ length: booking.passengers || 1 }).map((_, index) => (
@@ -142,6 +150,7 @@ const BookingDetails = () => {
               index={index}
               type="adult"
               onChange={handlePassengerDetailsChange}
+              initialData={booking.passenger_details?.[index]}
             />
           ))}
 

@@ -46,9 +46,9 @@ export const searchFlights = async (params: SearchParams) => {
 
     console.log('Duffel API request body:', requestBody);
 
-    const { data, error } = await supabase.functions.invoke('duffel-proxy', {
+    const { data: response, error } = await supabase.functions.invoke('duffel-proxy', {
       body: {
-        path: '/air/offer_requests',  // Updated endpoint
+        path: '/air/offer_requests',
         method: 'POST',
         body: requestBody
       }
@@ -59,13 +59,31 @@ export const searchFlights = async (params: SearchParams) => {
       throw new DuffelApiException('Failed to connect to Duffel API');
     }
 
-    console.log('Duffel API response:', data);
+    console.log('Raw Duffel API response:', response);
 
-    if (!data || !data.data || !data.data.offers) {
-      throw new DuffelApiException('No flight offers available');
+    // Check for API errors first
+    if (response.errors && response.errors.length > 0) {
+      const apiError = response.errors[0];
+      throw new DuffelApiException(
+        `Duffel API Error: ${apiError.message || 'Unknown error'}`,
+        response.errors,
+        response.meta?.status
+      );
     }
 
-    return data.data.offers;
+    // Validate response structure
+    if (!response?.data?.offers || !Array.isArray(response.data.offers)) {
+      console.error('Invalid response structure:', response);
+      throw new DuffelApiException('Invalid response format from Duffel API');
+    }
+
+    // If we have no offers but the response was valid, return an empty array
+    if (response.data.offers.length === 0) {
+      console.log('No flight offers found for the given criteria');
+      return [];
+    }
+
+    return response.data.offers;
   } catch (error) {
     console.error('Error searching flights:', error);
     if (error instanceof DuffelApiException) {

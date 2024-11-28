@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Clock, Plane } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Clock, Plane, Luggage, CreditCard, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +17,11 @@ export interface Flight {
   price: number;
   origin: string;
   destination: string;
+  aircraft?: string;
+  baggageAllowance?: string;
+  fareConditions?: string;
+  cabinClass?: string;
+  operatingCarrier?: string;
 }
 
 interface FlightCardProps {
@@ -103,6 +109,14 @@ export const FlightCard = ({ flight, onSelect, passengers }: FlightCardProps) =>
             </span>
             <span className="text-xs text-gray-400">•</span>
             <span className="text-sm text-gray-400 font-mono">{flight.flightNumber}</span>
+            {flight.operatingCarrier && flight.operatingCarrier !== flight.airline && (
+              <>
+                <span className="text-xs text-gray-400">•</span>
+                <span className="text-sm text-gray-400">
+                  Operated by {flight.operatingCarrier}
+                </span>
+              </>
+            )}
           </div>
           
           <div className="flex items-center gap-8">
@@ -134,6 +148,35 @@ export const FlightCard = ({ flight, onSelect, passengers }: FlightCardProps) =>
               </p>
             </div>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            {flight.aircraft && (
+              <div className="flex items-center gap-2 text-gray-400">
+                <Building2 className="w-4 h-4" />
+                <span className="text-sm">{flight.aircraft}</span>
+              </div>
+            )}
+            {flight.baggageAllowance && (
+              <div className="flex items-center gap-2 text-gray-400">
+                <Luggage className="w-4 h-4" />
+                <span className="text-sm">{flight.baggageAllowance}</span>
+              </div>
+            )}
+            {flight.cabinClass && (
+              <div className="flex items-center gap-2 text-gray-400">
+                <CreditCard className="w-4 h-4" />
+                <Badge variant="outline" className="text-sm">
+                  {flight.cabinClass}
+                </Badge>
+              </div>
+            )}
+          </div>
+
+          {flight.fareConditions && (
+            <p className="text-sm text-gray-400 mt-2">
+              {flight.fareConditions}
+            </p>
+          )}
         </div>
         
         <div className="flex flex-col items-end gap-3 w-full md:w-auto">

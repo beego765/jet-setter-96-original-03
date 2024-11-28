@@ -47,25 +47,42 @@ const Index = () => {
         throw new Error('Invalid response format from API');
       }
 
-      // Transform Duffel offers to our Flight type
+      // Transform Duffel offers to our Flight type with additional data
       const transformedFlights = results.map((offer: any) => {
         if (!offer?.slices?.[0]?.segments?.[0]) {
           console.warn('Invalid offer structure:', offer);
           return null;
         }
 
+        const segment = offer.slices[0].segments[0];
+        const aircraft = segment.aircraft?.name;
+        const baggageAllowance = offer.passengers?.[0]?.baggages?.[0]?.quantity 
+          ? `${offer.passengers[0].baggages[0].quantity} checked bags included` 
+          : 'No checked bags included';
+        
+        const fareConditions = offer.conditions?.refund_before_departure?.allowed
+          ? `Refundable (Fee: ${offer.conditions.refund_before_departure.penalty_amount || 'N/A'})`
+          : 'Non-refundable';
+
         return {
           id: offer.id,
           airline: offer.owner?.name || 'Unknown Airline',
-          flightNumber: offer.slices[0].segments[0].operating_carrier_flight_number,
-          departureTime: new Date(offer.slices[0].segments[0].departing_at)
+          flightNumber: segment.operating_carrier_flight_number,
+          departureTime: new Date(segment.departing_at)
             .toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-          arrivalTime: new Date(offer.slices[0].segments[0].arriving_at)
+          arrivalTime: new Date(segment.arriving_at)
             .toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
           duration: `${Math.floor(offer.slices[0].duration / 60)}h ${offer.slices[0].duration % 60}m`,
           price: parseFloat(offer.total_amount),
           origin: offer.slices[0].origin.iata_code,
           destination: offer.slices[0].destination.iata_code,
+          aircraft,
+          baggageAllowance,
+          fareConditions,
+          cabinClass: offer.cabin_class?.replace('_', ' '),
+          operatingCarrier: segment.operating_carrier?.name !== offer.owner?.name 
+            ? segment.operating_carrier?.name 
+            : undefined,
         };
       }).filter(Boolean);
 

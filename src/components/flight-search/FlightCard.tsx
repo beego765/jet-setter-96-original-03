@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Clock, Plane } from "lucide-react";
-import { useCreateBooking } from "./FlightSearchService";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,7 +31,7 @@ interface FlightCardProps {
 export const FlightCard = ({ flight, onSelect, passengers }: FlightCardProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const createBookingMutation = useCreateBooking(flight.id);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSelect = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -48,27 +47,34 @@ export const FlightCard = ({ flight, onSelect, passengers }: FlightCardProps) =>
     }
 
     try {
-      const defaultPassengerDetails = Array(passengers.adults + passengers.children).fill({
-        first_name: "",
-        last_name: "",
-        date_of_birth: "",
-        passport_number: ""
-      });
-
-      const { data: booking } = await createBookingMutation.mutateAsync({
-        offerId: flight.id,
-        passengers: defaultPassengerDetails
-      });
+      setIsLoading(true);
       
-      if (booking?.id) {
+      // Create a booking record in our database first
+      const { data: booking, error: bookingError } = await supabase
+        .from('bookings')
+        .insert({
+          user_id: session.user.id,
+          origin: flight.origin,
+          destination: flight.destination,
+          departure_date: new Date().toISOString().split('T')[0], // You might want to get this from flight data
+          passengers: passengers.adults + passengers.children + passengers.infants,
+          cabin_class: 'economy', // Default to economy, adjust if you have this info
+          total_price: flight.price,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (bookingError) throw bookingError;
+
+      if (booking) {
         navigate(`/booking/${booking.id}`);
         toast({
-          title: "Booking Created",
-          description: "Please complete your booking details."
+          title: "Booking Started",
+          description: "Please complete your passenger details to confirm your booking."
         });
+        onSelect(flight);
       }
-      
-      onSelect(flight);
     } catch (error: any) {
       console.error('Error creating booking:', error);
       toast({
@@ -76,6 +82,8 @@ export const FlightCard = ({ flight, onSelect, passengers }: FlightCardProps) =>
         description: "There was an error creating your booking. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -132,9 +140,10 @@ export const FlightCard = ({ flight, onSelect, passengers }: FlightCardProps) =>
           <p className="text-3xl font-bold text-purple-400">{formattedPrice}</p>
           <Button 
             onClick={handleSelect}
+            disabled={isLoading}
             className="w-full md:w-auto bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white px-8"
           >
-            Select
+            {isLoading ? "Processing..." : "Select"}
           </Button>
         </div>
       </div>

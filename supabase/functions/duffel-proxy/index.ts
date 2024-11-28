@@ -30,7 +30,7 @@ serve(async (req) => {
         'Authorization': `Bearer ${duffelApiKey}`,
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Duffel-Version': 'beta'
+        'Duffel-Version': 'v1'
       },
       ...(body && { body: JSON.stringify(body) })
     })

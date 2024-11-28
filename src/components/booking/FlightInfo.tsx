@@ -48,7 +48,7 @@ export const FlightInfo = ({ booking }: FlightInfoProps) => {
                 <div className="flex items-center gap-2 text-gray-400">
                   <Clock className="w-4 h-4" />
                   <span>Status: </span>
-                  <Badge variant={booking?.status === 'confirmed' ? 'success' : 'secondary'}>
+                  <Badge variant={booking?.status === 'confirmed' ? 'secondary' : 'default'}>
                     {booking?.status}
                   </Badge>
                 </div>

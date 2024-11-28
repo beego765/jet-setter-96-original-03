@@ -87,6 +87,50 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_addons: {
+        Row: {
+          booking_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          price: number
+          status: string | null
+          type: Database["public"]["Enums"]["booking_addon_type"]
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          price: number
+          status?: string | null
+          type: Database["public"]["Enums"]["booking_addon_type"]
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          price?: number
+          status?: string | null
+          type?: Database["public"]["Enums"]["booking_addon_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_addons_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           booking_reference: string | null
@@ -289,7 +333,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      booking_status: "pending" | "confirmed" | "cancelled"
+      booking_addon_type:
+        | "baggage"
+        | "meal"
+        | "seat"
+        | "cancellation"
+        | "change"
+      booking_status: "pending" | "confirmed" | "cancelled" | "draft"
       user_role: "user" | "admin"
     }
     CompositeTypes: {

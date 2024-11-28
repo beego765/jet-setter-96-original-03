@@ -66,17 +66,21 @@ export const FlightCard = ({ flight, onSelect, passengers }: FlightCardProps) =>
         return;
       }
 
-      await createBookingMutation.mutateAsync({
+      const { data: booking } = await createBookingMutation.mutateAsync({
         offerId: flight.id,
         passengers: passengerDetails
       });
       
+      if (booking?.id) {
+        navigate(`/booking/${booking.id}`);
+      }
+      
       onSelect(flight);
       toast({
         title: "Booking Created",
-        description: "Your flight has been successfully booked!",
+        description: "Your flight has been booked! Please complete the additional details."
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating booking:', error);
       toast({
         title: "Booking Failed",

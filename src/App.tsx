@@ -9,6 +9,7 @@ import MyBookings from "./pages/MyBookings";
 import Support from "./pages/Support";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
+import BookingDetails from "./pages/BookingDetails";
 import { Navbar } from "./components/Navbar";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,6 +75,11 @@ const App = () => (
           <Route path="/my-bookings" element={
             <ProtectedRoute>
               <MyBookings />
+            </ProtectedRoute>
+          } />
+          <Route path="/booking/:flightId" element={
+            <ProtectedRoute>
+              <BookingDetails />
             </ProtectedRoute>
           } />
           <Route path="/support" element={<Support />} />

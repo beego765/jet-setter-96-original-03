@@ -5,7 +5,7 @@ import { TravelStats } from "@/components/bookings/TravelStats";
 import { BoardingPass } from "@/components/bookings/BoardingPass";
 import { BookingsCalendar } from "@/components/bookings/BookingsCalendar";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 const MyBookings = () => {
@@ -28,15 +28,16 @@ const MyBookings = () => {
         const { data: statsData, error: statsError } = await supabase
           .from('travel_stats')
           .select('*')
-          .eq('user_id', user.id)
-          .single();
+          .eq('user_id', user.id);
 
         if (statsError) throw statsError;
-        if (statsData) {
+        
+        // If stats exist, use them. Otherwise, use defaults
+        if (statsData && statsData.length > 0) {
           setTravelStats({
-            totalMiles: statsData.total_miles || 0,
-            visitedDestinations: statsData.visited_destinations || 0,
-            totalBookings: statsData.total_bookings || 0
+            totalMiles: statsData[0].total_miles || 0,
+            visitedDestinations: statsData[0].visited_destinations || 0,
+            totalBookings: statsData[0].total_bookings || 0
           });
         }
 
@@ -72,7 +73,7 @@ const MyBookings = () => {
   const upcomingBooking = bookings.find(b => b.status === 'confirmed' && new Date(b.departure_date) > new Date());
   const upcomingBoardingPass = upcomingBooking ? {
     flightNumber: upcomingBooking.booking_reference || 'N/A',
-    seat: "12A", // This would come from passenger_details in a full implementation
+    seat: "12A",
     gate: "B22",
     boardingTime: "10:30",
     departureTime: upcomingBooking.departure_date,

@@ -84,11 +84,7 @@ const BookingDetails = () => {
 
   const handlePayNow = async () => {
     try {
-      // Implementation of pay now logic
-      toast({
-        title: "Success",
-        description: "Payment processed successfully"
-      });
+      // Implementation moved to PaymentOptions component
       navigate('/my-bookings');
     } catch (error: any) {
       toast({
@@ -101,11 +97,7 @@ const BookingDetails = () => {
 
   const handleHoldOrder = async () => {
     try {
-      // Implementation of hold order logic
-      toast({
-        title: "Success",
-        description: "Order held successfully"
-      });
+      // Implementation moved to PaymentOptions component
       navigate('/my-bookings');
     } catch (error: any) {
       toast({
@@ -157,6 +149,7 @@ const BookingDetails = () => {
           <Card className="p-6 bg-gray-800/50 backdrop-blur-sm border-gray-700">
             <PaymentOptions
               booking={booking}
+              flightDetails={flightDetails}
               onPayNow={handlePayNow}
               onHoldOrder={handleHoldOrder}
             />

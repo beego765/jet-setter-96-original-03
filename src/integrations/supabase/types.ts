@@ -131,6 +131,59 @@ export type Database = {
           },
         ]
       }
+      booking_payments: {
+        Row: {
+          amount: number
+          base_amount: number
+          booking_id: string
+          created_at: string
+          currency: string
+          duffel_payment_id: string | null
+          fees_amount: number
+          id: string
+          payment_method: string | null
+          status: Database["public"]["Enums"]["payment_status"]
+          taxes_amount: number
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          base_amount: number
+          booking_id: string
+          created_at?: string
+          currency?: string
+          duffel_payment_id?: string | null
+          fees_amount?: number
+          id?: string
+          payment_method?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          taxes_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          base_amount?: number
+          booking_id?: string
+          created_at?: string
+          currency?: string
+          duffel_payment_id?: string | null
+          fees_amount?: number
+          id?: string
+          payment_method?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          taxes_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           booking_reference: string | null
@@ -361,6 +414,7 @@ export type Database = {
         | "cancellation"
         | "change"
       booking_status: "pending" | "confirmed" | "cancelled" | "draft"
+      payment_status: "pending" | "processing" | "completed" | "failed" | "held"
       user_role: "user" | "admin"
     }
     CompositeTypes: {

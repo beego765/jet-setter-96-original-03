@@ -6,6 +6,9 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Plus, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type BookingAddonType = Database['public']['Enums']['booking_addon_type'];
 
 interface PassengerDetail {
   first_name: string;
@@ -16,7 +19,7 @@ interface PassengerDetail {
 
 interface BookingAddon {
   id: string;
-  type: string;
+  type: BookingAddonType;
   name: string;
   description: string | null;
   price: number;
@@ -76,7 +79,7 @@ const BookingDetails = () => {
     }
   }, [flightId, toast]);
 
-  const handleAddAddon = async (type: string) => {
+  const handleAddAddon = async (type: BookingAddonType) => {
     try {
       const { data, error } = await supabase
         .from('booking_addons')
@@ -84,7 +87,7 @@ const BookingDetails = () => {
           booking_id: flightId,
           type,
           name: `${type.charAt(0).toUpperCase() + type.slice(1)} Add-on`,
-          price: 50, // Default price, should be fetched from Duffel API
+          price: 50,
           status: 'pending'
         })
         .select()

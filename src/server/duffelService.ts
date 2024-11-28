@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/integrations/supabase/types';
 
 interface Passengers {
   adults: number;

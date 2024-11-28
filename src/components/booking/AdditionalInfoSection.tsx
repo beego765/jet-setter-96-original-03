@@ -14,10 +14,17 @@ export const AdditionalInfoSection = ({ flightDetails }: AdditionalInfoSectionPr
     navigate(`/seat-selection/${flightDetails.data?.id}`);
   };
 
+  const formatPrice = (amount: number) => {
+    return new Intl.NumberFormat('en-GB', {
+      style: 'currency',
+      currency: 'GBP'
+    }).format(amount);
+  };
+
   return (
     <div className="space-y-6">
       {/* Seat Selection */}
-      <div className="mt-6 p-4 bg-gray-800/40 rounded-lg">
+      <div className="p-4 bg-gray-800/40 rounded-lg">
         <h3 className="font-semibold mb-2 text-lg">Seat Selection</h3>
         <p className="text-gray-400 mb-4">Choose your preferred seat before flight</p>
         <Button 
@@ -35,32 +42,51 @@ export const AdditionalInfoSection = ({ flightDetails }: AdditionalInfoSectionPr
           <h3 className="font-semibold mb-2">Meals</h3>
           <div className="flex items-center gap-2">
             {flightDetails.data?.services?.some((s: any) => s.category === 'meal') ? (
-              <Check className="text-green-500" />
+              <>
+                <Check className="text-green-500" />
+                <span className="text-gray-400">
+                  {flightDetails.data?.services
+                    ?.filter((s: any) => s.category === 'meal')
+                    .map((s: any) => s.name)
+                    .join(', ')}
+                </span>
+              </>
             ) : (
-              <X className="text-red-500" />
+              <>
+                <X className="text-red-500" />
+                <span className="text-gray-400">No meal included</span>
+              </>
             )}
-            <span className="text-gray-400">
-              {flightDetails.data?.services?.some((s: any) => s.category === 'meal') 
-                ? 'Meal included' 
-                : 'No meal included'}
-            </span>
           </div>
         </div>
 
         {/* Baggage */}
         <div className="p-4 bg-gray-800/40 rounded-lg">
           <h3 className="font-semibold mb-2">Baggage</h3>
-          <div className="flex items-center gap-2">
-            {flightDetails.data?.passengers?.[0]?.bags?.[0]?.quantity > 0 ? (
+          <div className="space-y-2">
+            {/* Carry-on */}
+            <div className="flex items-center gap-2">
               <Check className="text-green-500" />
-            ) : (
-              <X className="text-red-500" />
-            )}
-            <span className="text-gray-400">
-              {flightDetails.data?.passengers?.[0]?.bags?.[0]?.quantity > 0
-                ? `${flightDetails.data?.passengers?.[0]?.bags?.[0]?.quantity} checked bags included`
-                : 'No checked bags included'}
-            </span>
+              <span className="text-gray-400">Carry-on included</span>
+            </div>
+            {/* Checked bags */}
+            <div className="flex items-center gap-2">
+              {flightDetails.data?.passengers?.[0]?.bags?.[0]?.quantity > 0 ? (
+                <>
+                  <Check className="text-green-500" />
+                  <span className="text-gray-400">
+                    {flightDetails.data?.passengers[0].bags[0].quantity} checked {
+                      flightDetails.data?.passengers[0].bags[0].quantity === 1 ? 'bag' : 'bags'
+                    } included
+                  </span>
+                </>
+              ) : (
+                <>
+                  <X className="text-red-500" />
+                  <span className="text-gray-400">No checked bags included</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -69,15 +95,18 @@ export const AdditionalInfoSection = ({ flightDetails }: AdditionalInfoSectionPr
           <h3 className="font-semibold mb-2">Refund Policy</h3>
           <div className="flex items-center gap-2">
             {flightDetails.data?.conditions?.refund_before_departure?.allowed ? (
-              <Check className="text-green-500" />
+              <>
+                <Check className="text-green-500" />
+                <span className="text-gray-400">
+                  Refundable (Fee: {formatPrice(flightDetails.data?.conditions?.refund_before_departure?.penalty_amount || 0)})
+                </span>
+              </>
             ) : (
-              <X className="text-red-500" />
+              <>
+                <X className="text-red-500" />
+                <span className="text-gray-400">Non-refundable</span>
+              </>
             )}
-            <span className="text-gray-400">
-              {flightDetails.data?.conditions?.refund_before_departure?.allowed
-                ? `Refundable (Fee: £${flightDetails.data?.conditions?.refund_before_departure?.penalty_amount || '0.00'})`
-                : 'Non-refundable'}
-            </span>
           </div>
         </div>
 
@@ -86,15 +115,18 @@ export const AdditionalInfoSection = ({ flightDetails }: AdditionalInfoSectionPr
           <h3 className="font-semibold mb-2">Changes</h3>
           <div className="flex items-center gap-2">
             {flightDetails.data?.conditions?.change_before_departure?.allowed ? (
-              <Check className="text-green-500" />
+              <>
+                <Check className="text-green-500" />
+                <span className="text-gray-400">
+                  Changes allowed (Fee: {formatPrice(flightDetails.data?.conditions?.change_before_departure?.penalty_amount || 0)})
+                </span>
+              </>
             ) : (
-              <X className="text-red-500" />
+              <>
+                <X className="text-red-500" />
+                <span className="text-gray-400">Changes not allowed</span>
+              </>
             )}
-            <span className="text-gray-400">
-              {flightDetails.data?.conditions?.change_before_departure?.allowed
-                ? `Changes allowed (Fee: £${flightDetails.data?.conditions?.change_before_departure?.penalty_amount || '0.00'})`
-                : 'Changes not allowed'}
-            </span>
           </div>
         </div>
       </div>
@@ -109,6 +141,14 @@ export const AdditionalInfoSection = ({ flightDetails }: AdditionalInfoSectionPr
         </div>
       )}
 
+      {/* Total Price */}
+      <div className="p-4 bg-gray-800/40 rounded-lg">
+        <h3 className="font-semibold mb-2">Total Price</h3>
+        <div className="text-2xl font-bold">
+          {formatPrice(flightDetails.data?.total_amount || 0)}
+        </div>
+      </div>
+
       {/* Additional Services */}
       {flightDetails.data?.services && flightDetails.data?.services.length > 0 && (
         <div className="mt-6">
@@ -117,7 +157,7 @@ export const AdditionalInfoSection = ({ flightDetails }: AdditionalInfoSectionPr
             {flightDetails.data?.services.map((service: any) => (
               <div key={service.id} className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
                 <span className="text-gray-300">{service.name}</span>
-                <Badge variant="outline">£{service.amount}</Badge>
+                <Badge variant="outline">{formatPrice(service.amount)}</Badge>
               </div>
             ))}
           </div>

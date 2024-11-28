@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/integrations/supabase/types';
 
 interface Passengers {
   adults: number;
@@ -100,8 +101,8 @@ export const createBooking = async (offerId: string, passengers: any[]) => {
 
     if (duffelError) throw duffelError;
     
-    // Save booking to Supabase
-    const bookingData = {
+    // Save booking to Supabase with proper typing for the status
+    const bookingData: Database['public']['Tables']['bookings']['Insert'] = {
       user_id: userData.user.id,
       booking_reference: duffelData.booking_reference,
       status: 'confirmed',

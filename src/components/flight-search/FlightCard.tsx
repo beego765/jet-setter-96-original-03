@@ -2,13 +2,31 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Plane, Luggage, CreditCard, Building2, Calendar, Users } from "lucide-react";
+import { 
+  Clock, 
+  Plane, 
+  Luggage, 
+  CreditCard, 
+  Building2, 
+  Calendar, 
+  Users,
+  Leaf,
+  UtensilsCrossed,
+  AlertCircle,
+  ArrowRight
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AirlineInfo } from "./AirlineInfo";
 import { FlightDetails } from "./FlightDetails";
 import { FlightPricing } from "./FlightPricing";
+import { Separator } from "@/components/ui/separator";
+import { 
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 export interface Flight {
   id: string;
@@ -29,6 +47,27 @@ export interface Flight {
   operatingCarrier?: string;
   departureDate?: string;
   passengers?: number;
+  carbonEmissions?: {
+    amount: number;
+    unit: string;
+  };
+  segments?: Array<{
+    origin: string;
+    destination: string;
+    departureTime: string;
+    arrivalTime: string;
+    duration: string;
+    layoverDuration?: string;
+  }>;
+  conditions?: {
+    refundable: boolean;
+    changeable: boolean;
+    penaltyAmount?: number;
+  };
+  amenities?: {
+    seatSelection?: boolean;
+    meals?: string[];
+  };
 }
 
 interface FlightCardProps {
@@ -45,6 +84,7 @@ export const FlightCard = ({ flight, onSelect, passengers }: FlightCardProps) =>
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleSelect = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -138,11 +178,86 @@ export const FlightCard = ({ flight, onSelect, passengers }: FlightCardProps) =>
           )}
         </div>
 
-        {flight.fareConditions && (
-          <p className="text-sm text-gray-400 mt-2">
-            {flight.fareConditions}
-          </p>
-        )}
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="w-full justify-between">
+              Show more details
+              <ArrowRight className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-4 mt-4">
+            {flight.carbonEmissions && (
+              <div className="flex items-center gap-2 text-gray-400">
+                <Leaf className="w-4 h-4 text-green-400" />
+                <span className="text-sm">
+                  Carbon emissions: {flight.carbonEmissions.amount} {flight.carbonEmissions.unit}
+                </span>
+              </div>
+            )}
+
+            {flight.segments && flight.segments.length > 1 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Flight Connections</h4>
+                {flight.segments.map((segment, index) => (
+                  <div key={index} className="text-sm text-gray-400">
+                    <div className="flex items-center gap-2">
+                      <Plane className="w-4 h-4" />
+                      {segment.origin} → {segment.destination}
+                    </div>
+                    {segment.layoverDuration && (
+                      <div className="ml-6 text-amber-400">
+                        Layover: {segment.layoverDuration}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {flight.conditions && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Fare Conditions</h4>
+                <div className="flex items-center gap-2 text-gray-400">
+                  <AlertCircle className="w-4 h-4" />
+                  <span className="text-sm">
+                    {flight.conditions.refundable ? 'Refundable' : 'Non-refundable'}
+                    {flight.conditions.penaltyAmount && ` (Fee: £${flight.conditions.penaltyAmount})`}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-400">
+                  <Clock className="w-4 h-4" />
+                  <span className="text-sm">
+                    {flight.conditions.changeable ? 'Changes allowed' : 'Changes not allowed'}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {flight.amenities && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Amenities</h4>
+                {flight.amenities.seatSelection !== undefined && (
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <Users className="w-4 h-4" />
+                    <span className="text-sm">
+                      {flight.amenities.seatSelection ? 'Seat selection available' : 'No seat selection'}
+                    </span>
+                  </div>
+                )}
+                {flight.amenities.meals && flight.amenities.meals.length > 0 && (
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <UtensilsCrossed className="w-4 h-4" />
+                    <span className="text-sm">
+                      Meals: {flight.amenities.meals.join(', ')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
+
+        <Separator className="bg-gray-700" />
 
         <FlightPricing price={flight.price} onSelect={handleSelect} isLoading={isLoading} />
       </div>

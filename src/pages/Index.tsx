@@ -53,38 +53,66 @@ const Index = () => {
           return null;
         }
 
-        const segment = offer.slices[0].segments[0];
-        const aircraft = segment.aircraft?.name;
-        const baggageAllowance = offer.passengers?.[0]?.baggages?.[0]?.quantity 
-          ? `${offer.passengers[0].baggages[0].quantity} checked bags included` 
-          : 'No checked bags included';
-        
-        const fareConditions = offer.conditions?.refund_before_departure?.allowed
-          ? `Refundable (Fee: ${offer.conditions.refund_before_departure.penalty_amount || 'N/A'})`
-          : 'Non-refundable';
+        const segments = offer.slices[0].segments.map((segment: any, index: number, arr: any[]) => ({
+          origin: segment.origin.iata_code,
+          destination: segment.destination.iata_code,
+          departureTime: new Date(segment.departing_at)
+            .toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+          arrivalTime: new Date(segment.arriving_at)
+            .toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+          duration: `${Math.floor(segment.duration / 60)}h ${segment.duration % 60}m`,
+          layoverDuration: index < arr.length - 1 
+            ? `${Math.floor((new Date(arr[index + 1].departing_at).getTime() - new Date(segment.arriving_at).getTime()) / (1000 * 60))}m`
+            : undefined
+        }));
+
+        const carbonEmissions = offer.slices[0].segments[0].carbon_emissions
+          ? {
+              amount: Math.round(offer.slices[0].segments[0].carbon_emissions.amount),
+              unit: offer.slices[0].segments[0].carbon_emissions.unit
+            }
+          : undefined;
+
+        const conditions = {
+          refundable: offer.conditions?.refund_before_departure?.allowed || false,
+          changeable: offer.conditions?.change_before_departure?.allowed || false,
+          penaltyAmount: offer.conditions?.refund_before_departure?.penalty_amount || 
+                        offer.conditions?.change_before_departure?.penalty_amount
+        };
+
+        const amenities = {
+          seatSelection: offer.passenger_identity_documents_required !== undefined,
+          meals: offer.slices[0].segments[0].meal_service || []
+        };
 
         return {
           id: offer.id,
           airline: offer.owner?.name || 'Unknown Airline',
           airlineLogoUrl: offer.owner?.logo_symbol_url || offer.owner?.logo_url,
           airlineCode: offer.owner?.iata_code,
-          flightNumber: segment.operating_carrier_flight_number,
-          departureTime: new Date(segment.departing_at)
-            .toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-          arrivalTime: new Date(segment.arriving_at)
-            .toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+          flightNumber: offer.slices[0].segments[0].operating_carrier_flight_number,
+          departureTime: segments[0].departureTime,
+          arrivalTime: segments[segments.length - 1].arrivalTime,
           duration: `${Math.floor(offer.slices[0].duration / 60)}h ${offer.slices[0].duration % 60}m`,
           price: parseFloat(offer.total_amount),
           origin: offer.slices[0].origin.iata_code,
           destination: offer.slices[0].destination.iata_code,
-          aircraft,
-          baggageAllowance,
-          fareConditions,
+          aircraft: offer.slices[0].segments[0].aircraft?.name,
+          baggageAllowance: offer.passengers?.[0]?.baggages?.[0]?.quantity 
+            ? `${offer.passengers[0].baggages[0].quantity} checked bags included` 
+            : 'No checked bags included',
+          fareConditions: offer.conditions?.refund_before_departure?.allowed
+            ? `Refundable (Fee: ${offer.conditions.refund_before_departure.penalty_amount || 'N/A'})`
+            : 'Non-refundable',
           cabinClass: offer.cabin_class?.replace('_', ' '),
-          operatingCarrier: segment.operating_carrier?.name !== offer.owner?.name 
-            ? segment.operating_carrier?.name 
+          operatingCarrier: offer.slices[0].segments[0].operating_carrier?.name !== offer.owner?.name 
+            ? offer.slices[0].segments[0].operating_carrier?.name 
             : undefined,
-          departureDate: new Date(segment.departing_at).toISOString().split('T')[0],
+          departureDate: new Date(offer.slices[0].segments[0].departing_at).toISOString().split('T')[0],
+          segments,
+          carbonEmissions,
+          conditions,
+          amenities
         };
       }).filter(Boolean);
 

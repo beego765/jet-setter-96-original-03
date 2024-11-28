@@ -2,7 +2,7 @@ import { useState } from "react";
 import { SearchForm, type SearchFormData } from "@/components/flight-search/SearchForm";
 import { FlightCard, type Flight } from "@/components/flight-search/FlightCard";
 import { useToast } from "@/components/ui/use-toast";
-import { Plane, MapPin, Clock, CreditCard } from "lucide-react";
+import { Plane, MapPin, Clock, CreditCard, Shield, Award } from "lucide-react";
 import { searchFlights } from "@/server/duffelService";
 
 const Index = () => {
@@ -156,6 +156,20 @@ const Index = () => {
               </div>
               <h3 className="text-xl font-semibold mb-2">Secure Booking</h3>
               <p className="text-gray-400">Book with confidence using our secure payment system and get instant confirmation.</p>
+            </div>
+            <div className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl">
+              <div className="p-3 bg-amber-500/20 rounded-lg w-fit mb-4">
+                <Shield className="w-6 h-6 text-amber-400" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">ATOL Protected</h3>
+              <p className="text-gray-400">Your holiday is protected under the ATOL scheme, ensuring complete financial security.</p>
+            </div>
+            <div className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl">
+              <div className="p-3 bg-indigo-500/20 rounded-lg w-fit mb-4">
+                <Award className="w-6 h-6 text-indigo-400" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">IATA Accredited</h3>
+              <p className="text-gray-400">We're an IATA accredited travel provider, meeting international standards for airline ticket sales.</p>
             </div>
           </div>
         )}

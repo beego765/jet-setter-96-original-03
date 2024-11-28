@@ -25,31 +25,12 @@ serve(async (req) => {
   try {
     const { path, method, body } = await req.json()
     console.log(`Duffel API request: ${method} ${path}`)
-    console.log('Request body:', body)
-
-    const mapPassengers = (passengers) => {
-      const mappedPassengers = [];
-      
-      // Add adult passengers
-      for (let i = 0; i < passengers.adults; i++) {
-        mappedPassengers.push({ type: 'adult' });
-      }
-      
-      // Add child passengers
-      for (let i = 0; i < passengers.children; i++) {
-        mappedPassengers.push({ type: 'child' });
-      }
-      
-      // Add infant passengers
-      for (let i = 0; i < passengers.infants; i++) {
-        mappedPassengers.push({ type: 'infant_without_seat' });
-      }
-      
-      return mappedPassengers;
-    };
+    console.log('Request body:', JSON.stringify(body, null, 2))
 
     if (path === '/air/offer_requests' && method === 'POST') {
-      // Create offer request with mapped passengers
+      console.log('Creating offer request...')
+      
+      // Create offer request
       const offerRequestResponse = await fetch(`${DUFFEL_API_URL}/air/offer_requests`, {
         method: 'POST',
         headers: {
@@ -58,17 +39,13 @@ serve(async (req) => {
           'Accept': 'application/json',
           'Duffel-Version': 'v1'
         },
-        body: JSON.stringify({
-          ...body,
-          data: {
-            ...body.data,
-            passengers: mapPassengers(body.data.passengers)
-          }
-        })
+        body: JSON.stringify(body)
       });
 
       if (!offerRequestResponse.ok) {
-        throw new Error(`Duffel API error: ${offerRequestResponse.statusText}`)
+        const errorData = await offerRequestResponse.text()
+        console.error('Duffel API error response:', errorData)
+        throw new Error(`Duffel API error: ${offerRequestResponse.status} - ${errorData}`)
       }
 
       const offerRequest = await offerRequestResponse.json()
@@ -79,6 +56,7 @@ serve(async (req) => {
       }
 
       // Get offers for the request
+      console.log('Fetching offers...')
       const offersResponse = await fetch(
         `${DUFFEL_API_URL}/air/offers?offer_request_id=${offerRequest.data.id}&sort=total_amount&limit=10`,
         {
@@ -91,7 +69,9 @@ serve(async (req) => {
       )
 
       if (!offersResponse.ok) {
-        throw new Error(`Duffel API error: ${offersResponse.statusText}`)
+        const errorData = await offersResponse.text()
+        console.error('Duffel API error response:', errorData)
+        throw new Error(`Duffel API error: ${offersResponse.status} - ${errorData}`)
       }
 
       const offers = await offersResponse.json()
@@ -107,6 +87,7 @@ serve(async (req) => {
     }
 
     if (path === '/air/orders' && method === 'POST') {
+      console.log('Creating order...')
       const orderResponse = await fetch(`${DUFFEL_API_URL}/air/orders`, {
         method: 'POST',
         headers: {
@@ -119,7 +100,9 @@ serve(async (req) => {
       })
 
       if (!orderResponse.ok) {
-        throw new Error(`Duffel API error: ${orderResponse.statusText}`)
+        const errorData = await orderResponse.text()
+        console.error('Duffel API error response:', errorData)
+        throw new Error(`Duffel API error: ${orderResponse.status} - ${errorData}`)
       }
 
       const order = await orderResponse.json()
@@ -136,7 +119,7 @@ serve(async (req) => {
 
     throw new Error(`Unsupported path: ${path}`)
   } catch (error) {
-    console.error('Duffel API error:', error)
+    console.error('Error in duffel-proxy:', error)
     return new Response(
       JSON.stringify({ 
         error: error.message,

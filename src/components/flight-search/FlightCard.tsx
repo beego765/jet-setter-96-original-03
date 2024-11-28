@@ -5,6 +5,8 @@ import { Clock, Plane } from "lucide-react";
 import { useCreateBooking } from "./FlightSearchService";
 import { useToast } from "@/hooks/use-toast";
 import { PassengerDetailsForm } from "./PassengerDetailsForm";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface Flight {
   id: string;
@@ -30,15 +32,40 @@ interface FlightCardProps {
 
 export const FlightCard = ({ flight, onSelect, passengers }: FlightCardProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [showPassengerForm, setShowPassengerForm] = useState(false);
   const createBookingMutation = useCreateBooking(flight.id);
 
-  const handleSelect = () => {
+  const handleSelect = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to book a flight.",
+        variant: "destructive",
+      });
+      navigate('/auth');
+      return;
+    }
+    
     setShowPassengerForm(true);
   };
 
   const handlePassengerDetailsComplete = async (passengerDetails: any[]) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to complete your booking.",
+          variant: "destructive",
+        });
+        navigate('/auth');
+        return;
+      }
+
       await createBookingMutation.mutateAsync({
         offerId: flight.id,
         passengers: passengerDetails
@@ -50,6 +77,7 @@ export const FlightCard = ({ flight, onSelect, passengers }: FlightCardProps) =>
         description: "Your flight has been successfully booked!",
       });
     } catch (error) {
+      console.error('Error creating booking:', error);
       toast({
         title: "Booking Failed",
         description: "There was an error creating your booking. Please try again.",

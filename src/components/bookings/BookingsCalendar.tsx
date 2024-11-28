@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Flight {
   date: Date;
@@ -21,11 +22,29 @@ export const BookingsCalendar = ({ flights }: BookingsCalendarProps) => {
       (flight) => flight.date.toDateString() === day.toDateString()
     );
     
-    return flightsOnDay.length > 0 ? (
-      <Badge variant="secondary" className="absolute bottom-0 right-0">
-        {flightsOnDay.length}
-      </Badge>
-    ) : null;
+    if (flightsOnDay.length === 0) return null;
+
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge 
+              variant="secondary" 
+              className="absolute bottom-0 right-0 bg-blue-500/20 hover:bg-blue-500/30 transition-colors"
+            >
+              {flightsOnDay.length}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>
+            {flightsOnDay.map((flight, index) => (
+              <div key={index} className="text-sm">
+                {flight.destination} ({flight.flightNumber})
+              </div>
+            ))}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
   };
 
   return (
@@ -34,10 +53,10 @@ export const BookingsCalendar = ({ flights }: BookingsCalendarProps) => {
         mode="single"
         selected={date}
         onSelect={setDate}
-        className="text-white"
+        className="text-white rounded-lg"
         components={{
           DayContent: ({ date }) => (
-            <div className="relative w-full h-full">
+            <div className="relative w-full h-full flex items-center justify-center">
               <span>{date.getDate()}</span>
               {getDayContent(date)}
             </div>

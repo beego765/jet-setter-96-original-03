@@ -1,56 +1,98 @@
+import { useEffect, useState } from "react";
 import { LoyaltyCard } from "@/components/bookings/LoyaltyCard";
 import { BookingCard } from "@/components/bookings/BookingCard";
 import { TravelStats } from "@/components/bookings/TravelStats";
 import { BoardingPass } from "@/components/bookings/BoardingPass";
 import { BookingsCalendar } from "@/components/bookings/BookingsCalendar";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
+import { Loader2 } from "lucide-react";
 
 const MyBookings = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [travelStats, setTravelStats] = useState({
+    totalMiles: 0,
+    visitedDestinations: 0,
+    totalBookings: 0
+  });
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Fetch travel stats
+        const { data: statsData, error: statsError } = await supabase
+          .from('travel_stats')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (statsError) throw statsError;
+        if (statsData) {
+          setTravelStats({
+            totalMiles: statsData.total_miles || 0,
+            visitedDestinations: statsData.visited_destinations || 0,
+            totalBookings: statsData.total_bookings || 0
+          });
+        }
+
+        // Fetch bookings
+        const { data: bookingsData, error: bookingsError } = await supabase
+          .from('bookings')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('departure_date', { ascending: true });
+
+        if (bookingsError) throw bookingsError;
+        setBookings(bookingsData || []);
+      } catch (error: any) {
+        toast({
+          title: "Error fetching data",
+          description: error.message,
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [toast]);
+
   const loyaltyInfo = {
     points: 750,
     tier: "Gold",
     nextTierPoints: 1000
   };
 
-  const travelStats = {
-    totalMiles: 24500,
-    visitedDestinations: 8,
-    totalBookings: 12
-  };
-
-  const bookings = [
-    {
-      id: 1,
-      flightNumber: "FL123",
-      from: "New York",
-      to: "London",
-      date: "2024-04-15",
-      status: "Upcoming",
-    },
-    {
-      id: 2,
-      flightNumber: "FL456",
-      from: "Paris",
-      to: "Tokyo",
-      date: "2024-05-20",
-      status: "Completed",
-    },
-  ];
-
-  const upcomingBoardingPass = {
-    flightNumber: "FL123",
-    seat: "12A",
+  const upcomingBooking = bookings.find(b => b.status === 'confirmed' && new Date(b.departure_date) > new Date());
+  const upcomingBoardingPass = upcomingBooking ? {
+    flightNumber: upcomingBooking.booking_reference || 'N/A',
+    seat: "12A", // This would come from passenger_details in a full implementation
     gate: "B22",
     boardingTime: "10:30",
-    departureTime: "2024-04-15T11:30:00",
+    departureTime: upcomingBooking.departure_date,
     terminal: "T2",
     qrCode: "boarding-pass-qr"
-  };
+  } : null;
 
   const flights = bookings.map(booking => ({
-    date: new Date(booking.date),
-    flightNumber: booking.flightNumber,
-    destination: booking.to
+    date: new Date(booking.departure_date),
+    flightNumber: booking.booking_reference || 'N/A',
+    destination: booking.destination
   }));
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
@@ -72,7 +114,7 @@ const MyBookings = () => {
           </div>
         </div>
 
-        {bookings.some(b => b.status === "Upcoming") && (
+        {upcomingBoardingPass && (
           <div className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">Digital Boarding Pass</h2>
             <BoardingPass {...upcomingBoardingPass} />
@@ -81,9 +123,25 @@ const MyBookings = () => {
 
         <div className="space-y-6">
           <h2 className="text-2xl font-semibold mb-4">Your Bookings</h2>
-          {bookings.map((booking) => (
-            <BookingCard key={booking.id} booking={booking} />
-          ))}
+          {bookings.length > 0 ? (
+            bookings.map((booking) => (
+              <BookingCard
+                key={booking.id}
+                booking={{
+                  id: booking.id,
+                  flightNumber: booking.booking_reference || 'N/A',
+                  from: booking.origin,
+                  to: booking.destination,
+                  date: booking.departure_date,
+                  status: booking.status
+                }}
+              />
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-400">
+              No bookings found. Start planning your next adventure!
+            </div>
+          )}
         </div>
       </div>
     </div>

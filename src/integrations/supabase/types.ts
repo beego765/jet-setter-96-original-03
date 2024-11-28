@@ -233,6 +233,33 @@ export type Database = {
         }
         Relationships: []
       }
+      travel_stats: {
+        Row: {
+          created_at: string
+          total_bookings: number | null
+          total_miles: number | null
+          updated_at: string
+          user_id: string
+          visited_destinations: number | null
+        }
+        Insert: {
+          created_at?: string
+          total_bookings?: number | null
+          total_miles?: number | null
+          updated_at?: string
+          user_id: string
+          visited_destinations?: number | null
+        }
+        Update: {
+          created_at?: string
+          total_bookings?: number | null
+          total_miles?: number | null
+          updated_at?: string
+          user_id?: string
+          visited_destinations?: number | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

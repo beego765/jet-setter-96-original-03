@@ -1,70 +1,56 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-const DUFFEL_API_KEY = Deno.env.get('DUFFEL_API_KEY')
-if (!DUFFEL_API_KEY) {
-  throw new Error('DUFFEL_API_KEY environment variable is not set')
-}
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 }
 
-const DUFFEL_API_URL = 'https://api.duffel.com'
-
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { 
-      headers: corsHeaders,
-      status: 204
-    })
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
     const { path, method, body } = await req.json()
-    console.log(`Duffel API request: ${method} ${path}`)
-    console.log('Request body:', JSON.stringify(body, null, 2))
+    const duffelApiKey = Deno.env.get('DUFFEL_API_KEY')
+    
+    if (!duffelApiKey) {
+      throw new Error('DUFFEL_API_KEY is not set')
+    }
 
-    const response = await fetch(`${DUFFEL_API_URL}${path}`, {
-      method,
+    const response = await fetch(`https://api.duffel.com/air${path}`, {
+      method: method || 'GET',
       headers: {
-        'Authorization': `Bearer ${DUFFEL_API_KEY}`,
-        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${duffelApiKey}`,
         'Accept': 'application/json',
+        'Content-Type': 'application/json',
         'Duffel-Version': 'v1'
       },
       ...(body && { body: JSON.stringify(body) })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.text()
-      console.error('Duffel API error response:', errorData)
-      throw new Error(`Duffel API error: ${response.status} - ${errorData}`)
-    }
+    })
 
     const data = await response.json()
-    console.log('Duffel API response:', data)
 
     return new Response(
-      JSON.stringify(data.data || data),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
-      }
+      JSON.stringify(data),
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      },
     )
   } catch (error) {
-    console.error('Error in duffel-proxy:', error)
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        details: error.stack
-      }),
+      JSON.stringify({ error: error.message }),
       { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+        status: 400,
+      },
     )
   }
 })

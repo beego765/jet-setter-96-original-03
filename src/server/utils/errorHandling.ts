@@ -12,17 +12,22 @@ export class DuffelApiException extends Error {
 }
 
 export const handleDuffelApiResponse = (response: DuffelApiResponse) => {
+  if (!response) {
+    throw new DuffelApiException('No response received from Duffel API');
+  }
+
   if (response.errors && response.errors.length > 0) {
     const error = response.errors[0];
+    const errorMessage = error.message || 'Unknown Duffel API error';
     throw new DuffelApiException(
-      `Duffel API Error: ${error.message}`,
+      `Duffel API Error: ${errorMessage}`,
       response.errors,
       response.meta?.status
     );
   }
 
   if (!response.data) {
-    throw new DuffelApiException('No data received from Duffel API');
+    throw new DuffelApiException('Invalid response format from Duffel API');
   }
 
   return response.data;

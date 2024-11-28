@@ -48,7 +48,7 @@ export const searchFlights = async (params: SearchParams) => {
 
     const { data, error } = await supabase.functions.invoke('duffel-proxy', {
       body: {
-        path: '/air/offers/request',
+        path: '/air/offer_requests',  // Updated endpoint
         method: 'POST',
         body: requestBody
       }
@@ -61,16 +61,17 @@ export const searchFlights = async (params: SearchParams) => {
 
     console.log('Duffel API response:', data);
 
-    const processedData = handleDuffelApiResponse(data);
-    
-    if (!processedData.offers || !Array.isArray(processedData.offers)) {
+    if (!data || !data.data || !data.data.offers) {
       throw new DuffelApiException('No flight offers available');
     }
 
-    return processedData.offers;
+    return data.data.offers;
   } catch (error) {
     console.error('Error searching flights:', error);
-    throw error;
+    if (error instanceof DuffelApiException) {
+      throw error;
+    }
+    throw new DuffelApiException('Failed to search flights');
   }
 };
 

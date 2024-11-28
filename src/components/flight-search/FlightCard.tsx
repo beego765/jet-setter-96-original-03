@@ -2,14 +2,19 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Plane, Luggage, CreditCard, Building2 } from "lucide-react";
+import { Clock, Plane, Luggage, CreditCard, Building2, Calendar, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { AirlineInfo } from "./AirlineInfo";
+import { FlightDetails } from "./FlightDetails";
+import { FlightPricing } from "./FlightPricing";
 
 export interface Flight {
   id: string;
   airline: string;
+  airlineLogoUrl?: string;
+  airlineCode?: string;
   flightNumber: string;
   departureTime: string;
   arrivalTime: string;
@@ -22,6 +27,8 @@ export interface Flight {
   fareConditions?: string;
   cabinClass?: string;
   operatingCarrier?: string;
+  departureDate?: string;
+  passengers?: number;
 }
 
 interface FlightCardProps {
@@ -55,16 +62,15 @@ export const FlightCard = ({ flight, onSelect, passengers }: FlightCardProps) =>
     try {
       setIsLoading(true);
       
-      // Create a booking record in our database first
       const { data: booking, error: bookingError } = await supabase
         .from('bookings')
         .insert({
           user_id: session.user.id,
           origin: flight.origin,
           destination: flight.destination,
-          departure_date: new Date().toISOString().split('T')[0], // You might want to get this from flight data
+          departure_date: flight.departureDate || new Date().toISOString().split('T')[0],
           passengers: passengers.adults + passengers.children + passengers.infants,
-          cabin_class: 'economy', // Default to economy, adjust if you have this info
+          cabin_class: flight.cabinClass || 'economy',
           total_price: flight.price,
           status: 'pending'
         })
@@ -93,102 +99,52 @@ export const FlightCard = ({ flight, onSelect, passengers }: FlightCardProps) =>
     }
   };
 
-  // Format price to GBP
-  const formattedPrice = new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency: 'GBP',
-  }).format(flight.price);
-
   return (
     <Card className="p-6 hover:shadow-xl transition-all duration-300 animate-fadeIn bg-gray-800/50 backdrop-blur-sm border-gray-700 hover:bg-gray-800/70">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-sm font-medium px-3 py-1 rounded-full bg-blue-500/20 text-blue-400">
-              {flight.airline}
-            </span>
-            <span className="text-xs text-gray-400">•</span>
-            <span className="text-sm text-gray-400 font-mono">{flight.flightNumber}</span>
-            {flight.operatingCarrier && flight.operatingCarrier !== flight.airline && (
-              <>
-                <span className="text-xs text-gray-400">•</span>
-                <span className="text-sm text-gray-400">
-                  Operated by {flight.operatingCarrier}
-                </span>
-              </>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-8">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-white mb-1">{flight.departureTime}</p>
-              <p className="text-sm font-medium text-gray-400 bg-gray-700/50 px-3 py-1 rounded-full">
-                {flight.origin}
-              </p>
-            </div>
-            
-            <div className="flex-1 flex flex-col items-center">
-              <div className="w-full flex items-center gap-2">
-                <div className="h-[2px] flex-1 bg-gradient-to-r from-blue-500/20 to-blue-400"></div>
-                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-                  <Plane className="w-4 h-4 text-blue-400 rotate-90" />
-                </div>
-                <div className="h-[2px] flex-1 bg-gradient-to-r from-blue-400 to-blue-500/20"></div>
-              </div>
-              <div className="flex items-center gap-1 mt-2">
-                <Clock className="w-4 h-4 text-gray-400" />
-                <span className="text-sm font-medium text-gray-400">{flight.duration}</span>
-              </div>
-            </div>
-            
-            <div className="text-center">
-              <p className="text-3xl font-bold text-white mb-1">{flight.arrivalTime}</p>
-              <p className="text-sm font-medium text-gray-400 bg-gray-700/50 px-3 py-1 rounded-full">
-                {flight.destination}
-              </p>
-            </div>
-          </div>
+      <div className="flex flex-col space-y-6">
+        <div className="flex items-center justify-between">
+          <AirlineInfo 
+            name={flight.airline}
+            logoUrl={flight.airlineLogoUrl}
+            iataCode={flight.airlineCode}
+          />
+          <Badge variant="outline" className="text-sm">
+            {flight.flightNumber}
+          </Badge>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-            {flight.aircraft && (
-              <div className="flex items-center gap-2 text-gray-400">
-                <Building2 className="w-4 h-4" />
-                <span className="text-sm">{flight.aircraft}</span>
-              </div>
-            )}
-            {flight.baggageAllowance && (
-              <div className="flex items-center gap-2 text-gray-400">
-                <Luggage className="w-4 h-4" />
-                <span className="text-sm">{flight.baggageAllowance}</span>
-              </div>
-            )}
-            {flight.cabinClass && (
-              <div className="flex items-center gap-2 text-gray-400">
-                <CreditCard className="w-4 h-4" />
-                <Badge variant="outline" className="text-sm">
-                  {flight.cabinClass}
-                </Badge>
-              </div>
-            )}
-          </div>
-
-          {flight.fareConditions && (
-            <p className="text-sm text-gray-400 mt-2">
-              {flight.fareConditions}
-            </p>
+        <FlightDetails flight={flight} />
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {flight.aircraft && (
+            <div className="flex items-center gap-2 text-gray-400">
+              <Building2 className="w-4 h-4" />
+              <span className="text-sm">{flight.aircraft}</span>
+            </div>
+          )}
+          {flight.baggageAllowance && (
+            <div className="flex items-center gap-2 text-gray-400">
+              <Luggage className="w-4 h-4" />
+              <span className="text-sm">{flight.baggageAllowance}</span>
+            </div>
+          )}
+          {flight.cabinClass && (
+            <div className="flex items-center gap-2 text-gray-400">
+              <Users className="w-4 h-4" />
+              <Badge variant="outline" className="text-sm">
+                {flight.cabinClass}
+              </Badge>
+            </div>
           )}
         </div>
-        
-        <div className="flex flex-col items-end gap-3 w-full md:w-auto">
-          <p className="text-3xl font-bold text-purple-400">{formattedPrice}</p>
-          <Button 
-            onClick={handleSelect}
-            disabled={isLoading}
-            className="w-full md:w-auto bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white px-8"
-          >
-            {isLoading ? "Processing..." : "Select"}
-          </Button>
-        </div>
+
+        {flight.fareConditions && (
+          <p className="text-sm text-gray-400 mt-2">
+            {flight.fareConditions}
+          </p>
+        )}
+
+        <FlightPricing price={flight.price} onSelect={handleSelect} isLoading={isLoading} />
       </div>
     </Card>
   );

@@ -47,7 +47,6 @@ const Index = () => {
         throw new Error('Invalid response format from API');
       }
 
-      // Transform Duffel offers to our Flight type with additional data
       const transformedFlights = results.map((offer: any) => {
         if (!offer?.slices?.[0]?.segments?.[0]) {
           console.warn('Invalid offer structure:', offer);
@@ -67,6 +66,8 @@ const Index = () => {
         return {
           id: offer.id,
           airline: offer.owner?.name || 'Unknown Airline',
+          airlineLogoUrl: offer.owner?.logo_symbol_url || offer.owner?.logo_url,
+          airlineCode: offer.owner?.iata_code,
           flightNumber: segment.operating_carrier_flight_number,
           departureTime: new Date(segment.departing_at)
             .toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
@@ -83,6 +84,7 @@ const Index = () => {
           operatingCarrier: segment.operating_carrier?.name !== offer.owner?.name 
             ? segment.operating_carrier?.name 
             : undefined,
+          departureDate: new Date(segment.departing_at).toISOString().split('T')[0],
         };
       }).filter(Boolean);
 

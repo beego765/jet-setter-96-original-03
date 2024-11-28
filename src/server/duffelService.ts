@@ -70,7 +70,10 @@ export const searchFlights = async (params: SearchParams) => {
 
 export const createBooking = async (offerId: string, passengers: any[]) => {
   try {
-    const { data, error } = await supabase.functions.invoke('duffel-proxy', {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) throw new Error('User not authenticated');
+
+    const { data: duffelData, error: duffelError } = await supabase.functions.invoke('duffel-proxy', {
       body: {
         path: '/air/orders',
         method: 'POST',
@@ -95,26 +98,29 @@ export const createBooking = async (offerId: string, passengers: any[]) => {
       }
     });
 
-    if (error) throw error;
+    if (duffelError) throw duffelError;
     
     // Save booking to Supabase
-    const { user } = await supabase.auth.getUser();
-    if (user) {
-      const bookingData = {
-        user_id: user.id,
-        booking_reference: data.booking_reference,
-        status: 'confirmed',
-        // Add other relevant booking data
-      };
+    const bookingData = {
+      user_id: userData.user.id,
+      booking_reference: duffelData.booking_reference,
+      status: 'confirmed',
+      origin: duffelData.slices[0].origin.iata_code,
+      destination: duffelData.slices[0].destination.iata_code,
+      departure_date: duffelData.slices[0].departing_at.split('T')[0],
+      return_date: duffelData.slices[1]?.departing_at.split('T')[0] || null,
+      passengers: passengers.length,
+      cabin_class: duffelData.cabin_class,
+      total_price: parseFloat(duffelData.total_amount)
+    };
       
-      const { error: bookingError } = await supabase
-        .from('bookings')
-        .insert(bookingData);
+    const { error: bookingError } = await supabase
+      .from('bookings')
+      .insert(bookingData);
 
-      if (bookingError) throw bookingError;
-    }
+    if (bookingError) throw bookingError;
 
-    return data;
+    return duffelData;
   } catch (error) {
     console.error('Error creating booking:', error);
     throw error;

@@ -8,10 +8,16 @@ import { searchFlights } from "@/server/duffelService";
 const Index = () => {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [currentPassengers, setCurrentPassengers] = useState({
+    adults: 1,
+    children: 0,
+    infants: 0,
+  });
   const { toast } = useToast();
 
   const handleSearch = async (data: SearchFormData) => {
     setIsSearching(true);
+    setCurrentPassengers(data.passengers);
     try {
       const results = await searchFlights({
         origin: data.origin,
@@ -135,6 +141,7 @@ const Index = () => {
                 key={flight.id}
                 flight={flight}
                 onSelect={handleSelectFlight}
+                passengers={currentPassengers}
               />
             ))}
           </div>

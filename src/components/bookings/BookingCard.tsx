@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plane, Calendar, MapPin } from "lucide-react";
+import { format } from "date-fns";
 
 interface BookingCardProps {
   booking: {
@@ -51,7 +52,7 @@ export const BookingCard = ({ booking }: BookingCardProps) => (
       <div className="flex flex-col md:flex-row items-center gap-4">
         <div className="flex items-center gap-2 text-gray-400">
           <Calendar className="w-4 h-4" />
-          <span>{booking.date}</span>
+          <span>{format(new Date(booking.date), 'dd/MM/yyyy')}</span>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" className="border-gray-700 hover:bg-gray-700">

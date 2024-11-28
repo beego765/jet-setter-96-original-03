@@ -76,7 +76,7 @@ export const FlightInfo = ({ booking }: FlightInfoProps) => {
           <Separator className="bg-gray-700" />
 
           {flightDetails && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FlightDetailsSection 
                   flightDetails={flightDetails}

@@ -117,7 +117,10 @@ const BookingDetails = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+          <p className="text-blue-400">Loading booking details...</p>
+        </div>
       </div>
     );
   }
@@ -126,7 +129,9 @@ const BookingDetails = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
         <Card className="p-6 bg-gray-800/50 backdrop-blur-sm border-gray-700">
-          <div className="text-red-400">Booking not found</div>
+          <div className="text-red-400 flex items-center gap-2">
+            <span className="text-lg">Booking not found</span>
+          </div>
         </Card>
       </div>
     );
@@ -134,28 +139,36 @@ const BookingDetails = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-      <div className="container max-w-4xl mx-auto px-4 py-8">
+      <div className="container max-w-4xl mx-auto px-4 py-8 space-y-8">
         <div className="space-y-6">
-          <Card className="p-6 bg-gray-800/50 backdrop-blur-sm border-gray-700">
-            <h1 className="text-2xl font-bold mb-4">Booking Details</h1>
+          <Card className="p-8 bg-gray-800/50 backdrop-blur-sm border-gray-700 shadow-xl rounded-xl">
+            <h1 className="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Booking Details
+            </h1>
             <FlightSummary booking={booking} flightDetails={flightDetails} />
           </Card>
 
-          <FlightInfo booking={booking} />
+          <Card className="p-8 bg-gray-800/50 backdrop-blur-sm border-gray-700 shadow-xl rounded-xl">
+            <FlightInfo booking={booking} />
+          </Card>
 
           {/* Passenger Forms */}
           {Array.from({ length: booking.passengers || 1 }).map((_, index) => (
-            <PassengerForm
-              key={index}
-              index={index}
-              type="adult"
-              onChange={handlePassengerDetailsChange}
-              initialData={booking.passenger_details?.[index]}
-            />
+            <Card 
+              key={index} 
+              className="p-8 bg-gray-800/50 backdrop-blur-sm border-gray-700 shadow-xl rounded-xl"
+            >
+              <PassengerForm
+                index={index}
+                type="adult"
+                onChange={handlePassengerDetailsChange}
+                initialData={booking.passenger_details?.[index]}
+              />
+            </Card>
           ))}
 
           {/* Payment Options */}
-          <Card className="p-6 bg-gray-800/50 backdrop-blur-sm border-gray-700">
+          <Card className="p-8 bg-gray-800/50 backdrop-blur-sm border-gray-700 shadow-xl rounded-xl">
             <PaymentOptions
               booking={booking}
               flightDetails={flightDetails}

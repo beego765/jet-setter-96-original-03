@@ -1,6 +1,5 @@
 import { Badge } from "@/components/ui/badge";
 import { Plane, Calendar, Clock } from "lucide-react";
-import { format } from "date-fns";
 
 interface FlightInfoHeaderProps {
   booking: any;
@@ -23,7 +22,7 @@ export const FlightInfoHeader = ({ booking, status }: FlightInfoHeaderProps) => 
           </div>
           <div className="flex items-center gap-2 text-gray-400">
             <Calendar className="w-4 h-4" />
-            <span>Date: {booking?.departure_date ? format(new Date(booking.departure_date), 'dd/MM/yyyy') : 'N/A'}</span>
+            <span>Date: {new Date(booking?.departure_date).toLocaleDateString()}</span>
           </div>
           <div className="flex items-center gap-2 text-gray-400">
             <Clock className="w-4 h-4" />

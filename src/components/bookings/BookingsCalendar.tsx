@@ -3,7 +3,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { format } from "date-fns";
 
 interface Flight {
   date: Date;
@@ -39,7 +38,7 @@ export const BookingsCalendar = ({ flights }: BookingsCalendarProps) => {
           <TooltipContent>
             {flightsOnDay.map((flight, index) => (
               <div key={index} className="text-sm">
-                {flight.destination} ({flight.flightNumber}) - {format(flight.date, 'dd/MM/yyyy')}
+                {flight.destination} ({flight.flightNumber})
               </div>
             ))}
           </TooltipContent>

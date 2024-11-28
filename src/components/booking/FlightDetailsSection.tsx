@@ -1,6 +1,5 @@
 import { Building2, Timer, Clock, Users, Plane, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
 
 interface FlightDetailsSectionProps {
   flightDetails: any;
@@ -99,10 +98,10 @@ export const FlightDetailsSection = ({ flightDetails, formatDateTime, formatDura
       {flightDetails.data?.payment_requirements?.requires_instant_payment === false && (
         <div className="mt-4 p-4 bg-purple-500/20 rounded-lg">
           <p className="text-purple-300">
-            Hold space available until {format(
-              new Date(flightDetails.data?.payment_requirements?.payment_required_by),
-              'dd/MM/yyyy'
-            )}
+            Hold space available for {Math.floor(
+              (new Date(flightDetails.data?.payment_requirements?.payment_required_by).getTime() - 
+              new Date().getTime()) / (1000 * 60 * 60 * 24)
+            )} days
           </p>
         </div>
       )}

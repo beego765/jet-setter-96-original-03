@@ -18,6 +18,8 @@ interface SearchParams {
 
 export const searchFlights = async (params: SearchParams) => {
   try {
+    console.log('Searching flights with params:', params);
+    
     // Map passengers to Duffel's expected format
     const mappedPassengers = [];
     
@@ -61,8 +63,19 @@ export const searchFlights = async (params: SearchParams) => {
       }
     });
 
-    if (error) throw error;
-    return data?.offers || [];
+    if (error) {
+      console.error('Duffel API error:', error);
+      throw error;
+    }
+
+    console.log('Duffel API response:', data);
+
+    if (!data?.offers || !Array.isArray(data.offers)) {
+      console.error('Invalid response format:', data);
+      throw new Error('Invalid response format from Duffel API');
+    }
+
+    return data.offers;
   } catch (error) {
     console.error('Error searching flights:', error);
     throw error;

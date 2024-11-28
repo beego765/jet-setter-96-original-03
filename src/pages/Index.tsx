@@ -19,6 +19,15 @@ const Index = () => {
     setIsSearching(true);
     setCurrentPassengers(data.passengers);
     try {
+      console.log('Search params:', {
+        origin: data.origin,
+        destination: data.destination,
+        departureDate: data.departureDate.toISOString().split('T')[0],
+        returnDate: data.returnDate?.toISOString().split('T')[0],
+        passengers: data.passengers,
+        cabinClass: data.class,
+      });
+
       const results = await searchFlights({
         origin: data.origin,
         destination: data.destination,
@@ -32,24 +41,50 @@ const Index = () => {
         cabinClass: data.class,
       });
 
+      console.log('Raw API results:', results);
+
+      if (!results || !Array.isArray(results)) {
+        throw new Error('Invalid response format from API');
+      }
+
       // Transform Duffel offers to our Flight type
-      const transformedFlights = results.map((offer: any) => ({
-        id: offer.id,
-        airline: offer.owner.name,
-        flightNumber: offer.slices[0].segments[0].operating_carrier_flight_number,
-        departureTime: new Date(offer.slices[0].segments[0].departing_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-        arrivalTime: new Date(offer.slices[0].segments[0].arriving_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-        duration: `${Math.floor(offer.slices[0].duration / 60)}h ${offer.slices[0].duration % 60}m`,
-        price: parseFloat(offer.total_amount),
-        origin: offer.slices[0].origin.iata_code,
-        destination: offer.slices[0].destination.iata_code,
-      }));
+      const transformedFlights = results.map((offer: any) => {
+        if (!offer?.slices?.[0]?.segments?.[0]) {
+          console.warn('Invalid offer structure:', offer);
+          return null;
+        }
+
+        return {
+          id: offer.id,
+          airline: offer.owner?.name || 'Unknown Airline',
+          flightNumber: offer.slices[0].segments[0].operating_carrier_flight_number,
+          departureTime: new Date(offer.slices[0].segments[0].departing_at)
+            .toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+          arrivalTime: new Date(offer.slices[0].segments[0].arriving_at)
+            .toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+          duration: `${Math.floor(offer.slices[0].duration / 60)}h ${offer.slices[0].duration % 60}m`,
+          price: parseFloat(offer.total_amount),
+          origin: offer.slices[0].origin.iata_code,
+          destination: offer.slices[0].destination.iata_code,
+        };
+      }).filter(Boolean);
+
+      console.log('Transformed flights:', transformedFlights);
 
       setFlights(transformedFlights);
-      toast({
-        title: "Flights found!",
-        description: `Found ${transformedFlights.length} flights matching your criteria.`,
-      });
+      
+      if (transformedFlights.length === 0) {
+        toast({
+          title: "No flights found",
+          description: "No flights available for your search criteria. Please try different dates or destinations.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Flights found!",
+          description: `Found ${transformedFlights.length} flights matching your criteria.`,
+        });
+      }
     } catch (error) {
       console.error('Error fetching flights:', error);
       toast({

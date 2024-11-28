@@ -138,6 +138,8 @@ export type Database = {
           created_at: string
           departure_date: string
           destination: string
+          duffel_booking_id: string | null
+          duffel_offer_id: string | null
           id: string
           origin: string
           passengers: number
@@ -153,6 +155,8 @@ export type Database = {
           created_at?: string
           departure_date: string
           destination: string
+          duffel_booking_id?: string | null
+          duffel_offer_id?: string | null
           id?: string
           origin: string
           passengers?: number
@@ -168,6 +172,8 @@ export type Database = {
           created_at?: string
           departure_date?: string
           destination?: string
+          duffel_booking_id?: string | null
+          duffel_offer_id?: string | null
           id?: string
           origin?: string
           passengers?: number
@@ -214,28 +220,43 @@ export type Database = {
           booking_id: string
           created_at: string
           date_of_birth: string
+          email: string | null
           first_name: string
+          gender: string | null
           id: string
           last_name: string
+          passenger_id: string | null
           passport_number: string | null
+          phone_number: string | null
+          title: string | null
         }
         Insert: {
           booking_id: string
           created_at?: string
           date_of_birth: string
+          email?: string | null
           first_name: string
+          gender?: string | null
           id?: string
           last_name: string
+          passenger_id?: string | null
           passport_number?: string | null
+          phone_number?: string | null
+          title?: string | null
         }
         Update: {
           booking_id?: string
           created_at?: string
           date_of_birth?: string
+          email?: string | null
           first_name?: string
+          gender?: string | null
           id?: string
           last_name?: string
+          passenger_id?: string | null
           passport_number?: string | null
+          phone_number?: string | null
+          title?: string | null
         }
         Relationships: [
           {

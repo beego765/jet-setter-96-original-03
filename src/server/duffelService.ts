@@ -83,10 +83,14 @@ export const createBooking = async (offerId: string, passengers: any[]) => {
             type: 'instant',
             selected_offers: [offerId],
             passengers: passengers.map(passenger => ({
-              type: 'adult',
+              id: passenger.id,
+              title: passenger.title,
+              gender: passenger.gender,
               given_name: passenger.firstName,
               family_name: passenger.lastName,
               born_on: passenger.dateOfBirth,
+              email: passenger.email,
+              phone_number: passenger.phoneNumber,
               ...(passenger.passportNumber && {
                 documents: [{
                   type: 'passport',
@@ -101,7 +105,7 @@ export const createBooking = async (offerId: string, passengers: any[]) => {
 
     if (duffelError) throw duffelError;
     
-    // Save booking to Supabase with proper typing for the status
+    // Save booking to Supabase
     const bookingData: Database['public']['Tables']['bookings']['Insert'] = {
       user_id: userData.user.id,
       booking_reference: duffelData.booking_reference,
@@ -112,7 +116,9 @@ export const createBooking = async (offerId: string, passengers: any[]) => {
       return_date: duffelData.slices[1]?.departing_at.split('T')[0] || null,
       passengers: passengers.length,
       cabin_class: duffelData.cabin_class,
-      total_price: parseFloat(duffelData.total_amount)
+      total_price: parseFloat(duffelData.total_amount),
+      duffel_booking_id: duffelData.id,
+      duffel_offer_id: offerId
     };
       
     const { error: bookingError } = await supabase
@@ -124,6 +130,64 @@ export const createBooking = async (offerId: string, passengers: any[]) => {
     return duffelData;
   } catch (error) {
     console.error('Error creating booking:', error);
+    throw error;
+  }
+};
+
+export const cancelBooking = async (bookingId: string) => {
+  try {
+    const { data: bookingData, error: bookingError } = await supabase
+      .from('bookings')
+      .select('duffel_booking_id')
+      .eq('id', bookingId)
+      .single();
+
+    if (bookingError) throw bookingError;
+
+    const { data: duffelData, error: duffelError } = await supabase.functions.invoke('duffel-proxy', {
+      body: {
+        path: `/air/orders/${bookingData.duffel_booking_id}/actions/cancel`,
+        method: 'POST'
+      }
+    });
+
+    if (duffelError) throw duffelError;
+
+    const { error: updateError } = await supabase
+      .from('bookings')
+      .update({ status: 'cancelled' })
+      .eq('id', bookingId);
+
+    if (updateError) throw updateError;
+
+    return duffelData;
+  } catch (error) {
+    console.error('Error cancelling booking:', error);
+    throw error;
+  }
+};
+
+export const getBookingServices = async (bookingId: string) => {
+  try {
+    const { data: bookingData, error: bookingError } = await supabase
+      .from('bookings')
+      .select('duffel_booking_id')
+      .eq('id', bookingId)
+      .single();
+
+    if (bookingError) throw bookingError;
+
+    const { data, error } = await supabase.functions.invoke('duffel-proxy', {
+      body: {
+        path: `/air/orders/${bookingData.duffel_booking_id}/services`,
+        method: 'GET'
+      }
+    });
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error fetching booking services:', error);
     throw error;
   }
 };

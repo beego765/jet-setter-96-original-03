@@ -1,29 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Plus, Check } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
-
-type BookingAddonType = Database['public']['Enums']['booking_addon_type'];
-
-interface PassengerDetail {
-  first_name: string;
-  last_name: string;
-  date_of_birth: string;
-  passport_number: string | null;
-}
-
-interface BookingAddon {
-  id: string;
-  type: BookingAddonType;
-  name: string;
-  description: string | null;
-  price: number;
-  status: string;
-}
+import { BookingHeader } from "@/components/booking/BookingHeader";
+import { FlightInfo } from "@/components/booking/FlightInfo";
+import { PassengerForm } from "@/components/booking/PassengerForm";
+import { BookingActions } from "@/components/booking/BookingActions";
 
 const BookingDetails = () => {
   const { flightId } = useParams();
@@ -31,8 +14,7 @@ const BookingDetails = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState<any>(null);
-  const [passengers, setPassengers] = useState<PassengerDetail[]>([]);
-  const [addons, setAddons] = useState<BookingAddon[]>([]);
+  const [passengerDetails, setPassengerDetails] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchBookingDetails = async () => {
@@ -52,16 +34,8 @@ const BookingDetails = () => {
 
         if (passengerError) throw passengerError;
 
-        const { data: addonData, error: addonError } = await supabase
-          .from('booking_addons')
-          .select('*')
-          .eq('booking_id', flightId);
-
-        if (addonError) throw addonError;
-
         setBooking(bookingData);
-        setPassengers(passengerData);
-        setAddons(addonData || []);
+        setPassengerDetails(passengerData || []);
       } catch (error: any) {
         toast({
           title: "Error fetching booking details",
@@ -78,35 +52,74 @@ const BookingDetails = () => {
     }
   }, [flightId, toast]);
 
-  const handleAddAddon = async (type: BookingAddonType) => {
-    if (type === 'seat') {
-      navigate(`/booking/${flightId}/seat-selection`);
-      return;
+  const handlePassengerDetailsChange = (index: number, data: any) => {
+    const updatedDetails = [...passengerDetails];
+    if (!updatedDetails[index]) {
+      updatedDetails[index] = {};
     }
+    updatedDetails[index] = { ...updatedDetails[index], ...data };
+    setPassengerDetails(updatedDetails);
+  };
 
+  const handleSaveForLater = async () => {
     try {
-      const { data, error } = await supabase
-        .from('booking_addons')
-        .insert({
-          booking_id: flightId,
-          type,
-          name: `${type.charAt(0).toUpperCase() + type.slice(1)} Add-on`,
-          price: 50,
-          status: 'pending'
-        })
-        .select()
-        .single();
+      const { error } = await supabase
+        .from('passenger_details')
+        .upsert(
+          passengerDetails.map(passenger => ({
+            ...passenger,
+            booking_id: flightId
+          }))
+        );
 
       if (error) throw error;
 
-      setAddons([...addons, data]);
       toast({
-        title: "Add-on added",
-        description: "The add-on has been added to your booking."
+        title: "Progress Saved",
+        description: "Your booking details have been saved."
       });
+      
+      navigate('/my-bookings');
     } catch (error: any) {
       toast({
-        title: "Error adding add-on",
+        title: "Error saving details",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleConfirmBooking = async () => {
+    try {
+      // First save passenger details
+      const { error: saveError } = await supabase
+        .from('passenger_details')
+        .upsert(
+          passengerDetails.map(passenger => ({
+            ...passenger,
+            booking_id: flightId
+          }))
+        );
+
+      if (saveError) throw saveError;
+
+      // Then update booking status
+      const { error: updateError } = await supabase
+        .from('bookings')
+        .update({ status: 'confirmed' })
+        .eq('id', flightId);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Booking Confirmed",
+        description: "Your booking has been confirmed successfully!"
+      });
+      
+      navigate('/my-bookings');
+    } catch (error: any) {
+      toast({
+        title: "Error confirming booking",
         description: error.message,
         variant: "destructive"
       });
@@ -125,129 +138,25 @@ const BookingDetails = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
       <div className="container max-w-7xl mx-auto px-4 py-12">
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold">Booking Details</h1>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/my-bookings')}
-              className="border-gray-700"
-            >
-              Back to My Bookings
-            </Button>
+          <BookingHeader booking={booking} />
+          <FlightInfo booking={booking} />
+
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold">Passenger Details</h2>
+            {Array.from({ length: booking.passengers }).map((_, index) => (
+              <PassengerForm
+                key={index}
+                index={index}
+                type={index === 0 ? "Adult" : "Guest"}
+                onChange={handlePassengerDetailsChange}
+              />
+            ))}
           </div>
 
-          <Card className="p-6 bg-gray-800/50 backdrop-blur-sm border-gray-700">
-            <div className="space-y-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-xl font-semibold mb-2">Flight Information</h2>
-                  <p className="text-gray-400">Booking Reference: {booking?.booking_reference}</p>
-                  <p className="text-gray-400">From: {booking?.origin}</p>
-                  <p className="text-gray-400">To: {booking?.destination}</p>
-                  <p className="text-gray-400">Date: {new Date(booking?.departure_date).toLocaleDateString()}</p>
-                  <p className="text-gray-400">Status: {booking?.status}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold">£{booking?.total_price}</p>
-                  <p className="text-gray-400">{booking?.cabin_class}</p>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 bg-gray-800/50 backdrop-blur-sm border-gray-700">
-            <h2 className="text-xl font-semibold mb-4">Passenger Details</h2>
-            <div className="space-y-4">
-              {passengers.map((passenger, index) => (
-                <div key={index} className="p-4 bg-gray-700/30 rounded-lg">
-                  <p className="font-medium">{passenger.first_name} {passenger.last_name}</p>
-                  <p className="text-sm text-gray-400">DOB: {new Date(passenger.date_of_birth).toLocaleDateString()}</p>
-                  {passenger.passport_number && (
-                    <p className="text-sm text-gray-400">Passport: {passenger.passport_number}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card className="p-6 bg-gray-800/50 backdrop-blur-sm border-gray-700">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Add-ons and Changes</h2>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => handleAddAddon('baggage')}
-                  className="border-gray-700"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Baggage
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleAddAddon('meal')}
-                  className="border-gray-700"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Meal
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleAddAddon('seat')}
-                  className="border-gray-700"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Select Seat
-                </Button>
-              </div>
-            </div>
-
-            {addons.length > 0 ? (
-              <div className="space-y-4">
-                {addons.map((addon) => (
-                  <div key={addon.id} className="flex justify-between items-center p-4 bg-gray-700/30 rounded-lg">
-                    <div>
-                      <p className="font-medium">{addon.name}</p>
-                      {addon.description && <p className="text-sm text-gray-400">{addon.description}</p>}
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <p className="font-medium">£{addon.price}</p>
-                      {addon.status === 'confirmed' ? (
-                        <Check className="w-5 h-5 text-green-500" />
-                      ) : (
-                        <Button size="sm" variant="outline" className="border-gray-700">
-                          Confirm
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-400">No add-ons selected yet.</p>
-            )}
-          </Card>
-
-          <div className="flex justify-between items-center">
-            <Button
-              variant="outline"
-              className="border-gray-700"
-              onClick={() => navigate('/my-bookings')}
-            >
-              Save for Later
-            </Button>
-            <Button
-              className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
-              onClick={() => {
-                toast({
-                  title: "Booking Confirmed",
-                  description: "Your booking has been confirmed successfully!"
-                });
-                navigate('/my-bookings');
-              }}
-            >
-              Confirm Booking
-            </Button>
-          </div>
+          <BookingActions
+            onSave={handleSaveForLater}
+            onConfirm={handleConfirmBooking}
+          />
         </div>
       </div>
     </div>

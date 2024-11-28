@@ -80,7 +80,15 @@ export const createBooking = async (offerId: string, passengers: any[]) => {
             selected_offers: [offerId],
             passengers: passengers.map(passenger => ({
               type: 'adult',
-              ...passenger
+              given_name: passenger.firstName,
+              family_name: passenger.lastName,
+              born_on: passenger.dateOfBirth,
+              ...(passenger.passportNumber && {
+                documents: [{
+                  type: 'passport',
+                  number: passenger.passportNumber
+                }]
+              })
             }))
           }
         }
@@ -88,6 +96,24 @@ export const createBooking = async (offerId: string, passengers: any[]) => {
     });
 
     if (error) throw error;
+    
+    // Save booking to Supabase
+    const { user } = await supabase.auth.getUser();
+    if (user) {
+      const bookingData = {
+        user_id: user.id,
+        booking_reference: data.booking_reference,
+        status: 'confirmed',
+        // Add other relevant booking data
+      };
+      
+      const { error: bookingError } = await supabase
+        .from('bookings')
+        .insert(bookingData);
+
+      if (bookingError) throw bookingError;
+    }
+
     return data;
   } catch (error) {
     console.error('Error creating booking:', error);

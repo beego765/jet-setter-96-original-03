@@ -1,4 +1,4 @@
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import airportsData from '../../../airports.json';
 import { searchFlights, createBooking } from '../../server/duffelService';
 
@@ -27,6 +27,11 @@ interface Airport {
   };
 }
 
+interface CreateBookingParams {
+  offerId: string;
+  passengers: any[];
+}
+
 // Centralized error logging utility
 const logError = (context: string, error: any, additionalInfo?: any) => {
   console.error(`[${context}] Error:`, {
@@ -37,21 +42,18 @@ const logError = (context: string, error: any, additionalInfo?: any) => {
 };
 
 export const useAirportSearch = (query: string) => {
-  const queryOptions: UseQueryOptions<Airport[], Error> = {
+  const queryOptions = {
     queryKey: ['airports', query],
     queryFn: async () => {
-      // Early return for short queries
       if (query.length < 2) return [];
 
       try {
-        // Filter airports locally
         const filteredAirports = airportsData.filter(airport => 
           airport.iata_code.toLowerCase().includes(query.toLowerCase()) ||
           airport.name.toLowerCase().includes(query.toLowerCase()) ||
           airport.city.toLowerCase().includes(query.toLowerCase())
-        ).slice(0, 10); // Limit to 10 results
+        ).slice(0, 10);
 
-        // Log successful search results
         console.debug('Airport Search Results:', {
           query,
           resultsCount: filteredAirports.length,
@@ -65,25 +67,20 @@ export const useAirportSearch = (query: string) => {
       }
     },
     enabled: query.length > 1,
-    retry: 1, // Minimal retry
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 1000 * 60 * 5,
   };
 
   return useQuery(queryOptions);
 };
 
 export const useFlightSearch = (searchParams?: FlightSearchParams) => {
-  const queryOptions: UseQueryOptions<any, Error> = {
+  const queryOptions = {
     queryKey: ['flights', searchParams],
     queryFn: async () => {
-      // Validate input parameters
       if (!searchParams) {
-        const error = new Error('Search parameters are required');
-        logError('Flight Search', error);
-        throw error;
+        throw new Error('Search parameters are required');
       }
 
-      // Validate required fields
       const requiredFields: (keyof FlightSearchParams)[] = [
         'origin', 'destination', 'departureDate', 
         'passengers', 'cabinClass'
@@ -94,28 +91,15 @@ export const useFlightSearch = (searchParams?: FlightSearchParams) => {
       );
 
       if (missingFields.length > 0) {
-        const error = new Error(`Missing required fields: ${missingFields.join(', ')}`);
-        logError('Flight Search', error, { searchParams });
-        throw error;
+        throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
       }
 
       try {
-        // Log search parameters for debugging
         console.debug('Flight Search Parameters:', searchParams);
-
         const results = await searchFlights(searchParams);
 
-        // Log search results
-        console.debug('Flight Search Results:', {
-          totalOffers: results?.length || 0,
-          firstOffer: results?.[0]
-        });
-
-        // Handle no results scenario
         if (!results || results.length === 0) {
-          const error = new Error('No flights found matching your search criteria');
-          logError('Flight Search', error, { searchParams });
-          throw error;
+          throw new Error('No flights found matching your search criteria');
         }
 
         return results;
@@ -125,46 +109,33 @@ export const useFlightSearch = (searchParams?: FlightSearchParams) => {
       }
     },
     enabled: !!searchParams,
-    retry: 1, // Minimal retry
-    staleTime: 1000 * 60 * 5, // Cache results for 5 minutes
+    staleTime: 1000 * 60 * 5,
   };
 
   return useQuery(queryOptions);
 };
 
-export const useCreateBooking = (offerId: string, passengers: any[]) => {
-  const queryOptions: UseQueryOptions<any, Error> = {
-    queryKey: ['booking', offerId],
-    queryFn: async () => {
-      // Validate booking parameters
+export const useCreateBooking = (offerId: string) => {
+  return useMutation({
+    mutationFn: async ({ passengers }: CreateBookingParams) => {
       if (!offerId) {
-        const error = new Error('Offer ID is required for booking');
-        logError('Create Booking', error);
-        throw error;
+        throw new Error('Offer ID is required for booking');
       }
 
       if (!passengers || passengers.length === 0) {
-        const error = new Error('At least one passenger is required');
-        logError('Create Booking', error);
-        throw error;
+        throw new Error('At least one passenger is required');
       }
 
       try {
-        // Log booking attempt
-        console.debug('Booking Attempt:', { 
+        console.debug('Creating Booking:', { 
           offerId, 
           passengerCount: passengers.length 
         });
 
         const bookingResult = await createBooking(offerId, passengers);
 
-        // Log booking result
-        console.debug('Booking Result:', bookingResult);
-
         if (!bookingResult) {
-          const error = new Error('Booking creation failed');
-          logError('Create Booking', error, { offerId, passengers });
-          throw error;
+          throw new Error('Booking creation failed');
         }
 
         return bookingResult;
@@ -172,12 +143,8 @@ export const useCreateBooking = (offerId: string, passengers: any[]) => {
         logError('Create Booking', error, { offerId, passengers });
         throw error;
       }
-    },
-    enabled: false, // Manual trigger
-    retry: 1,
-  };
-
-  return useQuery(queryOptions);
+    }
+  });
 };
 
 // Utility function to get airport by code

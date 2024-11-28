@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Plane, Clock, Calendar, Users, BaggageIcon } from "lucide-react";
+import { Loader2, Plane, Clock, Calendar, Users, Luggage } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -251,7 +251,7 @@ const BookingDetails = () => {
                     
                     <div className="mt-4 space-y-2">
                       <div className="flex items-center gap-2">
-                        <BaggageIcon className="w-4 h-4 text-gray-400" />
+                        <Luggage className="w-4 h-4 text-gray-400" />
                         <span className="text-sm">
                           {slice?.passengers?.[0]?.baggages?.carry_on?.count || 1} carry-on bag
                           {slice?.passengers?.[0]?.baggages?.checked?.count || 1} checked bag

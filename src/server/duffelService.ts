@@ -1,5 +1,4 @@
 import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/integrations/supabase/types';
 
 interface Passengers {
   adults: number;
@@ -38,28 +37,33 @@ export const searchFlights = async (params: SearchParams) => {
       mappedPassengers.push({ type: 'infant_without_seat' });
     }
 
+    // Construct the request body according to Duffel API specifications
+    const requestBody = {
+      data: {
+        slices: [
+          {
+            origin: params.origin,
+            destination: params.destination,
+            departure_date: params.departureDate,
+          },
+          ...(params.returnDate ? [{
+            origin: params.destination,
+            destination: params.origin,
+            departure_date: params.returnDate,
+          }] : []),
+        ],
+        passengers: mappedPassengers,
+        cabin_class: params.cabinClass?.toLowerCase(),
+      }
+    };
+
+    console.log('Duffel API request body:', requestBody);
+
     const { data, error } = await supabase.functions.invoke('duffel-proxy', {
       body: {
         path: '/air/offer_requests',
         method: 'POST',
-        body: {
-          data: {
-            slices: [
-              {
-                origin: params.origin,
-                destination: params.destination,
-                departure_date: params.departureDate,
-              },
-              ...(params.returnDate ? [{
-                origin: params.destination,
-                destination: params.origin,
-                departure_date: params.returnDate,
-              }] : []),
-            ],
-            passengers: mappedPassengers,
-            cabin_class: params.cabinClass?.toLowerCase(),
-          }
-        }
+        body: requestBody
       }
     });
 
@@ -70,12 +74,20 @@ export const searchFlights = async (params: SearchParams) => {
 
     console.log('Duffel API response:', data);
 
-    if (!data?.offers || !Array.isArray(data.offers)) {
+    // Check if we have the offers in the response
+    if (!data?.data?.offers && !data?.offers) {
       console.error('Invalid response format:', data);
-      throw new Error('Invalid response format from Duffel API');
+      throw new Error('No flight offers found');
     }
 
-    return data.offers;
+    // The offers might be in data.data.offers or data.offers depending on the response format
+    const offers = data?.data?.offers || data?.offers || [];
+    
+    if (!Array.isArray(offers)) {
+      throw new Error('Invalid offers format from Duffel API');
+    }
+
+    return offers;
   } catch (error) {
     console.error('Error searching flights:', error);
     throw error;

@@ -19,15 +19,6 @@ const Index = () => {
     setIsSearching(true);
     setCurrentPassengers(data.passengers);
     try {
-      console.log('Search params:', {
-        origin: data.origin,
-        destination: data.destination,
-        departureDate: data.departureDate.toISOString().split('T')[0],
-        returnDate: data.returnDate?.toISOString().split('T')[0],
-        passengers: data.passengers,
-        cabinClass: data.class,
-      });
-
       const results = await searchFlights({
         origin: data.origin,
         destination: data.destination,
@@ -40,8 +31,6 @@ const Index = () => {
         },
         cabinClass: data.class,
       });
-
-      console.log('Raw API results:', results);
 
       if (!results || !Array.isArray(results)) {
         throw new Error('Invalid response format from API');
@@ -66,24 +55,32 @@ const Index = () => {
             : undefined
         }));
 
+        // Enhanced data transformation for services and conditions
+        const services = {
+          seatSelection: true, // Always available in our app
+          meals: offer.slices[0].segments[0].meal_service || [],
+          baggage: {
+            included: offer.passengers?.[0]?.baggages?.length > 0,
+            details: offer.passengers?.[0]?.baggages?.[0]?.quantity 
+              ? `${offer.passengers[0].baggages[0].quantity} checked bags included` 
+              : 'No checked bags included'
+          },
+          refund: {
+            allowed: offer.conditions?.refund_before_departure?.allowed || false,
+            penalty: offer.conditions?.refund_before_departure?.penalty_amount
+          },
+          changes: {
+            allowed: offer.conditions?.change_before_departure?.allowed || false,
+            penalty: offer.conditions?.change_before_departure?.penalty_amount
+          }
+        };
+
         const carbonEmissions = offer.slices[0].segments[0].carbon_emissions
           ? {
               amount: Math.round(offer.slices[0].segments[0].carbon_emissions.amount),
               unit: offer.slices[0].segments[0].carbon_emissions.unit
             }
           : undefined;
-
-        const conditions = {
-          refundable: offer.conditions?.refund_before_departure?.allowed || false,
-          changeable: offer.conditions?.change_before_departure?.allowed || false,
-          penaltyAmount: offer.conditions?.refund_before_departure?.penalty_amount || 
-                        offer.conditions?.change_before_departure?.penalty_amount
-        };
-
-        const amenities = {
-          seatSelection: offer.passenger_identity_documents_required !== undefined,
-          meals: offer.slices[0].segments[0].meal_service || []
-        };
 
         return {
           id: offer.id,
@@ -98,25 +95,16 @@ const Index = () => {
           origin: offer.slices[0].origin.iata_code,
           destination: offer.slices[0].destination.iata_code,
           aircraft: offer.slices[0].segments[0].aircraft?.name,
-          baggageAllowance: offer.passengers?.[0]?.baggages?.[0]?.quantity 
-            ? `${offer.passengers[0].baggages[0].quantity} checked bags included` 
-            : 'No checked bags included',
-          fareConditions: offer.conditions?.refund_before_departure?.allowed
-            ? `Refundable (Fee: ${offer.conditions.refund_before_departure.penalty_amount || 'N/A'})`
-            : 'Non-refundable',
+          services,
+          carbonEmissions,
           cabinClass: offer.cabin_class?.replace('_', ' '),
           operatingCarrier: offer.slices[0].segments[0].operating_carrier?.name !== offer.owner?.name 
             ? offer.slices[0].segments[0].operating_carrier?.name 
             : undefined,
           departureDate: new Date(offer.slices[0].segments[0].departing_at).toISOString().split('T')[0],
-          segments,
-          carbonEmissions,
-          conditions,
-          amenities
+          segments
         };
       }).filter(Boolean);
-
-      console.log('Transformed flights:', transformedFlights);
 
       setFlights(transformedFlights);
       

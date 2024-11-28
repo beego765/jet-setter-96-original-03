@@ -2,11 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Clock, 
-  Plane,
-  ArrowRight
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,16 +30,9 @@ export interface Flight {
   origin: string;
   destination: string;
   aircraft?: string;
-  baggageAllowance?: string;
-  fareConditions?: string;
   cabinClass?: string;
   operatingCarrier?: string;
   departureDate?: string;
-  passengers?: number;
-  carbonEmissions?: {
-    amount: number;
-    unit: string;
-  };
   segments?: Array<{
     origin: string;
     destination: string;
@@ -52,14 +41,25 @@ export interface Flight {
     duration: string;
     layoverDuration?: string;
   }>;
-  conditions?: {
-    refundable: boolean;
-    changeable: boolean;
-    penaltyAmount?: number;
+  services: {
+    seatSelection: boolean;
+    meals: string[];
+    baggage: {
+      included: boolean;
+      details: string;
+    };
+    refund: {
+      allowed: boolean;
+      penalty?: number;
+    };
+    changes: {
+      allowed: boolean;
+      penalty?: number;
+    };
   };
-  amenities?: {
-    seatSelection?: boolean;
-    meals?: string[];
+  carbonEmissions?: {
+    amount: number;
+    unit: string;
   };
 }
 
@@ -132,44 +132,6 @@ export const FlightCard = ({ flight, onSelect, passengers }: FlightCardProps) =>
     }
   };
 
-  const getIncludedServices = () => {
-    return [
-      {
-        name: "Seat Selection",
-        included: flight.amenities?.seatSelection ?? false,
-        description: "Choose your preferred seat before flight"
-      },
-      {
-        name: "Meals",
-        included: (flight.amenities?.meals?.length ?? 0) > 0,
-        description: flight.amenities?.meals?.join(", ")
-      },
-      {
-        name: "Baggage",
-        included: !!flight.baggageAllowance,
-        description: flight.baggageAllowance
-      },
-      {
-        name: "Refundable",
-        included: flight.conditions?.refundable ?? false,
-        description: flight.conditions?.penaltyAmount 
-          ? `Change fee: £${flight.conditions.penaltyAmount}`
-          : undefined
-      },
-      {
-        name: "Changes Allowed",
-        included: flight.conditions?.changeable ?? false
-      },
-      {
-        name: "Carbon Offset",
-        included: !!flight.carbonEmissions,
-        description: flight.carbonEmissions 
-          ? `${flight.carbonEmissions.amount} ${flight.carbonEmissions.unit}`
-          : undefined
-      }
-    ];
-  };
-
   return (
     <Card className="p-6 hover:shadow-xl transition-all duration-300 animate-fadeIn bg-gray-800/50 backdrop-blur-sm border-gray-700 hover:bg-gray-800/70">
       <div className="flex flex-col space-y-6">
@@ -194,26 +156,10 @@ export const FlightCard = ({ flight, onSelect, passengers }: FlightCardProps) =>
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-4 mt-4">
-            <FlightServices services={getIncludedServices()} />
-            
-            {flight.segments && flight.segments.length > 1 && (
-              <div className="mt-6 space-y-2">
-                <h4 className="text-sm font-medium text-gray-300">Flight Connections</h4>
-                {flight.segments.map((segment, index) => (
-                  <div key={index} className="text-sm text-gray-400">
-                    <div className="flex items-center gap-2">
-                      <Plane className="w-4 h-4 text-purple-400" />
-                      {segment.origin} → {segment.destination}
-                    </div>
-                    {segment.layoverDuration && (
-                      <div className="ml-6 text-amber-400">
-                        Layover: {segment.layoverDuration}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+            <FlightServices 
+              services={flight.services}
+              carbonEmissions={flight.carbonEmissions}
+            />
           </CollapsibleContent>
         </Collapsible>
 

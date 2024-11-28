@@ -39,6 +39,7 @@ const SeatSelection = () => {
         description: `You have selected seat ${selectedSeat}`,
       });
       
+      // Navigate back to the booking details page
       navigate(`/booking/${flightId}`);
     } catch (error: any) {
       toast({

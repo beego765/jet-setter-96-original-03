@@ -10,16 +10,21 @@ interface FlightInfoProps {
 }
 
 export const FlightInfo = ({ booking }: FlightInfoProps) => {
-  const { data: flightDetails } = useQuery({
+  const { data: flightDetails, isLoading, error } = useQuery({
     queryKey: ['flight-details', booking?.duffel_booking_id],
     queryFn: async () => {
+      console.log('Fetching flight details for:', booking?.duffel_booking_id);
       const { data, error } = await supabase.functions.invoke('duffel-proxy', {
         body: {
           path: `/air/orders/${booking?.duffel_booking_id}`,
           method: 'GET'
         }
       });
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching flight details:', error);
+        throw error;
+      }
+      console.log('Flight details response:', data);
       return data;
     },
     enabled: !!booking?.duffel_booking_id
@@ -41,6 +46,24 @@ export const FlightInfo = ({ booking }: FlightInfoProps) => {
       hour12: true
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="animate-pulse space-y-4">
+        <Card className="p-6 bg-gray-800/50 backdrop-blur-sm border-gray-700">
+          <div className="h-40 bg-gray-700/50 rounded" />
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="p-6 bg-gray-800/50 backdrop-blur-sm border-gray-700">
+        <div className="text-red-400">Error loading flight details. Please try again later.</div>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -87,23 +110,23 @@ export const FlightInfo = ({ booking }: FlightInfoProps) => {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-gray-400">
                       <Building2 className="w-4 h-4" />
-                      <span>Carrier: {flightDetails.owner?.name || 'N/A'}</span>
+                      <span>Carrier: {flightDetails.data?.owner?.name || 'N/A'}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-400">
                       <Timer className="w-4 h-4" />
-                      <span>Duration: {formatDuration(flightDetails.slices?.[0]?.duration || 0)}</span>
+                      <span>Duration: {formatDuration(flightDetails.data?.slices?.[0]?.duration || 0)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-400">
                       <Clock className="w-4 h-4" />
-                      <span>Departure: {formatDateTime(flightDetails.slices?.[0]?.departing_at)}</span>
+                      <span>Departure: {formatDateTime(flightDetails.data?.slices?.[0]?.departing_at)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-400">
                       <Clock className="w-4 h-4" />
-                      <span>Arrival: {formatDateTime(flightDetails.slices?.[0]?.arriving_at)}</span>
+                      <span>Arrival: {formatDateTime(flightDetails.data?.slices?.[0]?.arriving_at)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-400">
                       <Users className="w-4 h-4" />
-                      <span>Passengers: {flightDetails.passengers?.length || 1}</span>
+                      <span>Passengers: {flightDetails.data?.passengers?.length || 1}</span>
                     </div>
                   </div>
                 </div>
@@ -114,54 +137,65 @@ export const FlightInfo = ({ booking }: FlightInfoProps) => {
                     <div className="flex items-center gap-2 text-gray-400">
                       <CreditCard className="w-4 h-4" />
                       <span>
-                        {flightDetails.refundable ? 
-                          `Refundable (£${flightDetails.refund_fee} fee)` : 
-                          'Non-refundable'}
+                        {flightDetails.data?.fare_brand_name || 'Standard Fare'}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-400">
                       <AlertCircle className="w-4 h-4" />
                       <span>
-                        {flightDetails.changeable ? 
-                          `Changes allowed (£${flightDetails.change_fee} fee)` : 
-                          'Not changeable'}
+                        {flightDetails.data?.conditions?.change_before_departure?.allowed ? 
+                          `Changes allowed (Fee: ${flightDetails.data?.conditions?.change_before_departure?.penalty_amount || 'N/A'})` : 
+                          'Changes not allowed'}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-400">
                       <Luggage className="w-4 h-4" />
                       <span>
-                        {flightDetails.bags_included ? 
-                          `Includes ${flightDetails.bags_count} checked bags` : 
+                        {flightDetails.data?.passengers?.[0]?.bags?.[0]?.quantity > 0 ? 
+                          `${flightDetails.data?.passengers?.[0]?.bags?.[0]?.quantity} checked bags included` : 
                           'No checked bags included'}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-400">
-                      <Plane className="w-4 h-4" />
-                      <span>CO2 emissions: {flightDetails.co2_emissions}kg</span>
-                    </div>
+                    {flightDetails.data?.slices?.[0]?.segments?.[0]?.aircraft?.name && (
+                      <div className="flex items-center gap-2 text-gray-400">
+                        <Plane className="w-4 h-4" />
+                        <span>Aircraft: {flightDetails.data?.slices?.[0]?.segments?.[0]?.aircraft?.name}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {flightDetails.services && flightDetails.services.length > 0 && (
+              {flightDetails.data?.services && flightDetails.data?.services.length > 0 && (
                 <div className="mt-6">
                   <h3 className="font-semibold mb-2">Additional Services</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {flightDetails.services.map((service: any) => (
+                    {flightDetails.data?.services.map((service: any) => (
                       <div key={service.id} className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
                         <span>{service.name}</span>
-                        <Badge variant="outline">£{service.price}</Badge>
+                        <Badge variant="outline">£{service.amount}</Badge>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {flightDetails.conditions && (
+              {flightDetails.data?.conditions?.refund_before_departure && (
                 <div className="mt-6">
-                  <h3 className="font-semibold mb-2">Terms and Conditions</h3>
+                  <h3 className="font-semibold mb-2">Refund Policy</h3>
                   <div className="text-sm text-gray-400">
-                    {flightDetails.conditions}
+                    {flightDetails.data?.conditions?.refund_before_departure?.allowed ? 
+                      `Refundable (Fee: ${flightDetails.data?.conditions?.refund_before_departure?.penalty_amount || 'N/A'})` : 
+                      'Non-refundable'}
+                  </div>
+                </div>
+              )}
+
+              {flightDetails.data?.slices?.[0]?.segments?.[0]?.carbon_emissions && (
+                <div className="mt-6">
+                  <h3 className="font-semibold mb-2">Environmental Impact</h3>
+                  <div className="text-sm text-gray-400">
+                    CO2 Emissions: {flightDetails.data?.slices?.[0]?.segments?.[0]?.carbon_emissions?.amount}kg CO2e
                   </div>
                 </div>
               )}

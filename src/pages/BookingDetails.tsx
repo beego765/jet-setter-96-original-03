@@ -167,7 +167,7 @@ const BookingDetails = () => {
             </Card>
           ))}
 
-          {/* Payment Options */}
+          {/* Payment Section */}
           <Card className="p-8 bg-gray-800/50 backdrop-blur-sm border-gray-700 shadow-xl rounded-xl">
             <PaymentOptions
               booking={booking}

@@ -9,16 +9,14 @@ interface PaymentOptionsProps {
 }
 
 export const PaymentOptions = ({ booking, flightDetails, onPayNow, onHoldOrder }: PaymentOptionsProps) => {
-  if (!booking || !flightDetails) return null;
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <PaymentSummary booking={booking} flightDetails={flightDetails} />
       <PaymentActions 
-        booking={booking} 
-        flightDetails={flightDetails} 
-        onPayNow={onPayNow} 
-        onHoldOrder={onHoldOrder} 
+        booking={booking}
+        flightDetails={flightDetails}
+        onPayNow={onPayNow}
+        onHoldOrder={onHoldOrder}
       />
     </div>
   );

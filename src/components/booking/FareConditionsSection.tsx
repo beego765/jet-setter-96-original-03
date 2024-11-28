@@ -1,4 +1,4 @@
-import { CreditCard, AlertCircle, Luggage, Plane } from "lucide-react";
+import { CreditCard, AlertCircle, Luggage, Plane, Clock } from "lucide-react";
 
 interface FareConditionsSectionProps {
   flightDetails: any;
@@ -24,8 +24,8 @@ export const FareConditionsSection = ({ flightDetails }: FareConditionsSectionPr
         <div className="flex items-center gap-2 text-gray-400">
           <Luggage className="w-4 h-4" />
           <span>
-            {flightDetails.data?.passengers?.[0]?.bags?.[0]?.quantity > 0 ? 
-              `${flightDetails.data?.passengers?.[0]?.bags?.[0]?.quantity} checked bags included` : 
+            {flightDetails.data?.passengers?.[0]?.checked_bags_count > 0 ? 
+              `${flightDetails.data?.passengers?.[0]?.checked_bags_count} checked bags included` : 
               'No checked bags included'}
           </span>
         </div>
@@ -33,6 +33,14 @@ export const FareConditionsSection = ({ flightDetails }: FareConditionsSectionPr
           <div className="flex items-center gap-2 text-gray-400">
             <Plane className="w-4 h-4" />
             <span>Aircraft: {flightDetails.data?.slices?.[0]?.segments?.[0]?.aircraft?.name}</span>
+          </div>
+        )}
+        {flightDetails.data?.payment_requirements?.requires_instant_payment === false && (
+          <div className="flex items-center gap-2 text-gray-400">
+            <Clock className="w-4 h-4" />
+            <span>
+              Hold available until: {new Date(flightDetails.data?.payment_requirements?.payment_required_by).toLocaleDateString()}
+            </span>
           </div>
         )}
       </div>

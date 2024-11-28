@@ -1,4 +1,4 @@
-import { Building2, Timer, Clock, Users, Plane } from "lucide-react";
+import { Building2, Timer, Clock, Users, Plane, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface FlightDetailsSectionProps {
@@ -29,7 +29,8 @@ export const FlightDetailsSection = ({ flightDetails, formatDateTime, formatDura
             <div className="flex items-center justify-between">
               <div className="text-center">
                 <p className="text-xl font-bold">{new Date(segment.departing_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
-                <Badge variant="outline">{segment.origin.iata_code}</Badge>
+                <Badge variant="outline" className="text-lg">{segment.origin.iata_code}</Badge>
+                <p className="text-sm text-gray-400 mt-1">{segment.origin.city?.name}</p>
               </div>
               
               <div className="flex-1 flex flex-col items-center mx-4">
@@ -42,22 +43,31 @@ export const FlightDetailsSection = ({ flightDetails, formatDateTime, formatDura
                 {segment.operating_carrier && (
                   <span className="text-xs text-gray-500">Operated by {segment.operating_carrier.name}</span>
                 )}
+                {index < segments.length - 1 && (
+                  <Badge variant="secondary" className="mt-2">
+                    Stop at {segment.destination.city?.name}
+                  </Badge>
+                )}
               </div>
 
               <div className="text-center">
                 <p className="text-xl font-bold">{new Date(segment.arriving_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
-                <Badge variant="outline">{segment.destination.iata_code}</Badge>
+                <Badge variant="outline" className="text-lg">{segment.destination.iata_code}</Badge>
+                <p className="text-sm text-gray-400 mt-1">{segment.destination.city?.name}</p>
               </div>
             </div>
 
             {index < segments.length - 1 && (
               <div className="ml-4 pl-4 border-l-2 border-gray-700">
-                <p className="text-sm text-gray-400">
-                  Layover: {formatDuration(
-                    (new Date(segments[index + 1].departing_at).getTime() - 
-                    new Date(segment.arriving_at).getTime()) / 60000
-                  )}
-                </p>
+                <div className="flex items-center gap-2 text-gray-400">
+                  <AlertCircle className="w-4 h-4" />
+                  <p className="text-sm">
+                    Layover: {formatDuration(
+                      (new Date(segments[index + 1].departing_at).getTime() - 
+                      new Date(segment.arriving_at).getTime()) / 60000
+                    )}
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -83,6 +93,18 @@ export const FlightDetailsSection = ({ flightDetails, formatDateTime, formatDura
           `${segment.operating_carrier_flight_number}`
         ).join(', ')}
       </div>
+
+      {/* Hold Time Info */}
+      {flightDetails.data?.payment_requirements?.requires_instant_payment === false && (
+        <div className="mt-4 p-4 bg-purple-500/20 rounded-lg">
+          <p className="text-purple-300">
+            Hold space available for {Math.floor(
+              (new Date(flightDetails.data?.payment_requirements?.payment_required_by).getTime() - 
+              new Date().getTime()) / (1000 * 60 * 60 * 24)
+            )} days
+          </p>
+        </div>
+      )}
     </div>
   );
 };

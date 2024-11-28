@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Check, X } from "lucide-react";
+import { Check, X, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -66,17 +66,30 @@ export const AdditionalInfoSection = ({ flightDetails }: AdditionalInfoSectionPr
           <div className="space-y-2">
             {/* Carry-on */}
             <div className="flex items-center gap-2">
-              <Check className="text-green-500" />
-              <span className="text-gray-400">Carry-on included</span>
-            </div>
-            {/* Checked bags */}
-            <div className="flex items-center gap-2">
-              {flightDetails.data?.passengers?.[0]?.bags?.[0]?.quantity > 0 ? (
+              {flightDetails.data?.passengers?.[0]?.cabin_bags_count > 0 ? (
                 <>
                   <Check className="text-green-500" />
                   <span className="text-gray-400">
-                    {flightDetails.data?.passengers[0].bags[0].quantity} checked {
-                      flightDetails.data?.passengers[0].bags[0].quantity === 1 ? 'bag' : 'bags'
+                    {flightDetails.data?.passengers[0].cabin_bags_count} carry-on {
+                      flightDetails.data?.passengers[0].cabin_bags_count === 1 ? 'bag' : 'bags'
+                    } included
+                  </span>
+                </>
+              ) : (
+                <>
+                  <X className="text-red-500" />
+                  <span className="text-gray-400">No carry-on bags included</span>
+                </>
+              )}
+            </div>
+            {/* Checked bags */}
+            <div className="flex items-center gap-2">
+              {flightDetails.data?.passengers?.[0]?.checked_bags_count > 0 ? (
+                <>
+                  <Check className="text-green-500" />
+                  <span className="text-gray-400">
+                    {flightDetails.data?.passengers[0].checked_bags_count} checked {
+                      flightDetails.data?.passengers[0].checked_bags_count === 1 ? 'bag' : 'bags'
                     } included
                   </span>
                 </>
@@ -108,6 +121,11 @@ export const AdditionalInfoSection = ({ flightDetails }: AdditionalInfoSectionPr
               </>
             )}
           </div>
+          {flightDetails.data?.conditions?.refund_before_departure?.notes && (
+            <p className="mt-2 text-sm text-gray-500">
+              {flightDetails.data?.conditions?.refund_before_departure?.notes}
+            </p>
+          )}
         </div>
 
         {/* Changes Policy */}
@@ -128,6 +146,11 @@ export const AdditionalInfoSection = ({ flightDetails }: AdditionalInfoSectionPr
               </>
             )}
           </div>
+          {flightDetails.data?.conditions?.change_before_departure?.notes && (
+            <p className="mt-2 text-sm text-gray-500">
+              {flightDetails.data?.conditions?.change_before_departure?.notes}
+            </p>
+          )}
         </div>
       </div>
 

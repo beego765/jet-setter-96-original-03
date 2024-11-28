@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Plus, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -80,6 +79,11 @@ const BookingDetails = () => {
   }, [flightId, toast]);
 
   const handleAddAddon = async (type: BookingAddonType) => {
+    if (type === 'seat') {
+      navigate(`/booking/${flightId}/seat-selection`);
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('booking_addons')

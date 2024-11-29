@@ -14,53 +14,48 @@ interface BookingCardProps {
 }
 
 export const BookingCard = ({ booking }: BookingCardProps) => (
-  <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6">
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-      <div className="flex-1">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-blue-500/20 rounded-lg">
-            <Plane className="w-5 h-5 text-blue-400" />
+  <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-4">
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 bg-blue-500/20 rounded-lg">
+            <Plane className="w-4 h-4 text-blue-400" />
           </div>
-          <span className="text-sm font-medium text-gray-300">Flight {booking.flightNumber}</span>
-          <span className={`px-3 py-1 rounded-full text-sm ${
-            booking.status === "Upcoming" ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"
-          }`}>
-            {booking.status}
-          </span>
+          <span className="text-sm font-medium text-gray-300">{booking.flightNumber}</span>
         </div>
-        
-        <div className="flex items-center gap-8">
-          <div>
-            <div className="flex items-center gap-2 text-gray-400 mb-1">
-              <MapPin className="w-4 h-4" />
-              <span>From</span>
-            </div>
-            <p className="text-lg font-semibold">{booking.from}</p>
+        <span className={`px-2 py-0.5 rounded-full text-xs ${
+          booking.status === "Upcoming" ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"
+        }`}>
+          {booking.status}
+        </span>
+      </div>
+      
+      <div className="flex items-center gap-4">
+        <div>
+          <div className="flex items-center gap-1 text-gray-400 text-xs mb-0.5">
+            <MapPin className="w-3 h-3" />
+            <span>From</span>
           </div>
-          <Plane className="w-5 h-5 text-gray-400 rotate-90" />
-          <div>
-            <div className="flex items-center gap-2 text-gray-400 mb-1">
-              <MapPin className="w-4 h-4" />
-              <span>To</span>
-            </div>
-            <p className="text-lg font-semibold">{booking.to}</p>
+          <p className="text-sm font-medium">{booking.from}</p>
+        </div>
+        <Plane className="w-4 h-4 text-gray-400 rotate-90" />
+        <div>
+          <div className="flex items-center gap-1 text-gray-400 text-xs mb-0.5">
+            <MapPin className="w-3 h-3" />
+            <span>To</span>
           </div>
+          <p className="text-sm font-medium">{booking.to}</p>
         </div>
       </div>
       
-      <div className="flex flex-col md:flex-row items-center gap-4">
-        <div className="flex items-center gap-2 text-gray-400">
-          <Calendar className="w-4 h-4" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1 text-xs text-gray-400">
+          <Calendar className="w-3 h-3" />
           <span>{booking.date}</span>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="border-gray-700 hover:bg-gray-700">
-            Modify
-          </Button>
-          <Button variant="outline" className="border-gray-700 hover:bg-gray-700">
-            View Details
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" className="text-xs h-7 border-gray-700 hover:bg-gray-700">
+          View
+        </Button>
       </div>
     </div>
   </Card>

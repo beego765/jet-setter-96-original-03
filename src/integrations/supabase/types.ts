@@ -396,6 +396,45 @@ export type Database = {
         }
         Relationships: []
       }
+      support_messages: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          phone: string | null
+          status: Database["public"]["Enums"]["support_message_status"] | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+          phone?: string | null
+          status?: Database["public"]["Enums"]["support_message_status"] | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          phone?: string | null
+          status?: Database["public"]["Enums"]["support_message_status"] | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       system_metrics: {
         Row: {
           created_at: string
@@ -482,6 +521,7 @@ export type Database = {
       booking_status: "pending" | "confirmed" | "cancelled" | "draft"
       deal_category: "weekend" | "seasonal" | "business" | "all"
       payment_status: "pending" | "processing" | "completed" | "failed" | "held"
+      support_message_status: "new" | "in_progress" | "resolved" | "closed"
       system_metric_type: "server" | "database" | "cpu"
       user_role: "user" | "admin"
     }

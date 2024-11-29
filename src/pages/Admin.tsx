@@ -8,6 +8,7 @@ import { UserManagement } from "@/components/admin/UserManagement";
 import { SystemTab } from "@/components/admin/SystemTab";
 import { SettingsTab } from "@/components/admin/SettingsTab";
 import { BookingsTab } from "@/components/admin/BookingsTab";
+import { SupportMessagesTab } from "@/components/admin/SupportMessagesTab";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
@@ -160,6 +161,12 @@ const Admin = () => {
               Users
             </TabsTrigger>
             <TabsTrigger 
+              value="support" 
+              className="flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700"
+            >
+              Support
+            </TabsTrigger>
+            <TabsTrigger 
               value="system" 
               className="flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700"
             >
@@ -186,6 +193,10 @@ const Admin = () => {
 
           <TabsContent value="users">
             <UserManagement />
+          </TabsContent>
+
+          <TabsContent value="support">
+            <SupportMessagesTab />
           </TabsContent>
 
           <TabsContent value="system">

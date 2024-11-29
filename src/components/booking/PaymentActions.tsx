@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Clock, CreditCard } from "lucide-react";
 
 interface PaymentActionsProps {
   booking: any;
@@ -16,10 +17,10 @@ const createPaymentRecord = async (bookingId: string, amounts: any) => {
     .from('booking_payments')
     .insert({
       booking_id: bookingId,
-      amount: amounts.total,
-      base_amount: amounts.base,
-      taxes_amount: amounts.taxes,
-      fees_amount: amounts.fees,
+      amount: amounts.totalAmount,
+      base_amount: amounts.baseAmount,
+      taxes_amount: amounts.taxesAmount,
+      fees_amount: amounts.feesAmount,
       status: 'processing'
     })
     .select()
@@ -29,7 +30,7 @@ const createPaymentRecord = async (bookingId: string, amounts: any) => {
   return data;
 };
 
-const updateBookingStatus = async (bookingId: string, status: string) => {
+const updateBookingStatus = async (bookingId: string, status: 'pending' | 'confirmed' | 'cancelled' | 'draft') => {
   const { error } = await supabase
     .from('bookings')
     .update({ status })
@@ -50,11 +51,11 @@ export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }
     try {
       setIsProcessing(true);
       const amounts = {
-        base: parseFloat(flightDetails.data.total_amount || booking.total_price),
-        taxes: parseFloat(flightDetails.data.tax_amount || 0),
-        fees: parseFloat(flightDetails.data.service_fees_amount || 0),
+        baseAmount: parseFloat(flightDetails.data.total_amount || booking.total_price),
+        taxesAmount: parseFloat(flightDetails.data.tax_amount || 0),
+        feesAmount: parseFloat(flightDetails.data.service_fees_amount || 0),
       };
-      amounts.total = amounts.base + amounts.taxes + amounts.fees;
+      amounts.totalAmount = amounts.baseAmount + amounts.taxesAmount + amounts.feesAmount;
 
       // Create initial payment record
       const paymentData = await createPaymentRecord(booking.id, amounts);
@@ -66,7 +67,7 @@ export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }
           method: 'POST',
           body: {
             data: {
-              amount: amounts.total.toString(),
+              amount: amounts.totalAmount.toString(),
               currency: flightDetails.data.total_currency || 'GBP',
               order_id: booking.duffel_booking_id,
               type: 'balance'
@@ -111,11 +112,11 @@ export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }
     try {
       setIsProcessing(true);
       const amounts = {
-        base: parseFloat(flightDetails.data.total_amount || booking.total_price),
-        taxes: parseFloat(flightDetails.data.tax_amount || 0),
-        fees: parseFloat(flightDetails.data.service_fees_amount || 0),
+        baseAmount: parseFloat(flightDetails.data.total_amount || booking.total_price),
+        taxesAmount: parseFloat(flightDetails.data.tax_amount || 0),
+        feesAmount: parseFloat(flightDetails.data.service_fees_amount || 0),
       };
-      amounts.total = amounts.base + amounts.taxes + amounts.fees;
+      amounts.totalAmount = amounts.baseAmount + amounts.taxesAmount + amounts.feesAmount;
 
       // Create hold order with Duffel
       const { data: duffelHold, error: duffelError } = await supabase.functions.invoke('duffel-proxy', {
@@ -159,25 +160,49 @@ export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }
     }
   };
 
+  const isHoldAvailable = flightDetails.data.payment_requirements?.requires_instant_payment === false;
+  const isHeld = booking.booking_payments?.[0]?.status === 'held';
+
   return (
-    <div className="flex justify-between items-center mt-6">
-      {flightDetails.data.payment_requirements?.requires_instant_payment === false && (
-        <Button
-          variant="outline"
-          className="border-gray-700"
-          onClick={handleHold}
-          disabled={isProcessing || booking.booking_payments?.[0]?.status === 'held'}
-        >
-          {isProcessing ? "Processing..." : "Hold for 24h"}
-        </Button>
-      )}
-      <Button
-        className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
-        onClick={handlePayNow}
-        disabled={isProcessing}
-      >
-        {isProcessing ? "Processing..." : "Pay Now"}
-      </Button>
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {isHoldAvailable && (
+          <div className="p-4 rounded-lg border border-gray-700 bg-gray-800/50 backdrop-blur-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <Clock className="w-5 h-5 text-blue-400" />
+              <h3 className="text-lg font-medium">Hold Booking</h3>
+            </div>
+            <p className="text-sm text-gray-400 mb-4">
+              Reserve your booking for 24 hours without payment
+            </p>
+            <Button
+              variant="outline"
+              className="w-full border-gray-700 hover:bg-gray-700/50"
+              onClick={handleHold}
+              disabled={isProcessing || isHeld}
+            >
+              {isProcessing ? "Processing..." : isHeld ? "Currently Held" : "Hold for 24h"}
+            </Button>
+          </div>
+        )}
+        
+        <div className="p-4 rounded-lg border border-gray-700 bg-gray-800/50 backdrop-blur-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <CreditCard className="w-5 h-5 text-purple-400" />
+            <h3 className="text-lg font-medium">Pay Now</h3>
+          </div>
+          <p className="text-sm text-gray-400 mb-4">
+            Secure your booking immediately with instant payment
+          </p>
+          <Button
+            className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+            onClick={handlePayNow}
+            disabled={isProcessing}
+          >
+            {isProcessing ? "Processing..." : "Pay Now"}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

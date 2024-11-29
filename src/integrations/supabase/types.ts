@@ -396,6 +396,27 @@ export type Database = {
         }
         Relationships: []
       }
+      system_metrics: {
+        Row: {
+          created_at: string
+          id: string
+          metric_type: Database["public"]["Enums"]["system_metric_type"]
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metric_type: Database["public"]["Enums"]["system_metric_type"]
+          value: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metric_type?: Database["public"]["Enums"]["system_metric_type"]
+          value?: number
+        }
+        Relationships: []
+      }
       travel_stats: {
         Row: {
           created_at: string
@@ -461,6 +482,7 @@ export type Database = {
       booking_status: "pending" | "confirmed" | "cancelled" | "draft"
       deal_category: "weekend" | "seasonal" | "business" | "all"
       payment_status: "pending" | "processing" | "completed" | "failed" | "held"
+      system_metric_type: "server" | "database" | "cpu"
       user_role: "user" | "admin"
     }
     CompositeTypes: {

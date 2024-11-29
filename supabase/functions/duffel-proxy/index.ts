@@ -27,6 +27,37 @@ serve(async (req) => {
 
     // Special handling for /air/offers endpoint
     if (path === '/air/offers' && method === 'GET') {
+      // Validate required fields for offer requests
+      if (!body?.slices || !Array.isArray(body.slices) || body.slices.length === 0) {
+        return new Response(
+          JSON.stringify({
+            error: "At least one flight slice (origin/destination) is required"
+          }),
+          { 
+            status: 400,
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json',
+            }
+          }
+        )
+      }
+
+      if (!body?.passengers || !Array.isArray(body.passengers) || body.passengers.length === 0) {
+        return new Response(
+          JSON.stringify({
+            error: "At least one passenger is required"
+          }),
+          { 
+            status: 400,
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json',
+            }
+          }
+        )
+      }
+
       // Create an offer request first
       const offerRequestResponse = await fetch('https://api.duffel.com/air/offer_requests', {
         method: 'POST',
@@ -38,9 +69,9 @@ serve(async (req) => {
         },
         body: JSON.stringify({ 
           data: {
-            slices: body?.slices || [],
-            passengers: body?.passengers || [],
-            cabin_class: body?.cabin_class || 'economy'
+            slices: body.slices,
+            passengers: body.passengers,
+            cabin_class: body.cabin_class || 'economy'
           }
         })
       });

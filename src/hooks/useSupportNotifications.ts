@@ -48,10 +48,10 @@ export const useSupportNotifications = () => {
   }, []);
 
   const resetUnreadCount = async () => {
-    // Update all new messages to viewed status
+    // Update all new messages to in_progress status
     await supabase
       .from('support_messages')
-      .update({ status: 'viewed' })
+      .update({ status: 'in_progress' })
       .eq('status', 'new');
     
     setUnreadCount(0);

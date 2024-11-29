@@ -366,6 +366,33 @@ export type Database = {
           },
         ]
       }
+      price_markup_settings: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          markup_type: Database["public"]["Enums"]["markup_type"]
+          markup_value: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          markup_type?: Database["public"]["Enums"]["markup_type"]
+          markup_value?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          markup_type?: Database["public"]["Enums"]["markup_type"]
+          markup_value?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -555,6 +582,7 @@ export type Database = {
         | "change"
       booking_status: "pending" | "confirmed" | "cancelled" | "draft"
       deal_category: "weekend" | "seasonal" | "business" | "all"
+      markup_type: "percentage" | "fixed"
       payment_status: "pending" | "processing" | "completed" | "failed" | "held"
       support_message_status: "new" | "in_progress" | "resolved" | "closed"
       system_metric_type: "server" | "database" | "cpu"

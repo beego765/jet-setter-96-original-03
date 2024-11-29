@@ -4,6 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { GeneralSettings } from "./settings/GeneralSettings";
 import { PreferencesSettings } from "./settings/PreferencesSettings";
 import { APISettings } from "./settings/APISettings";
+import { MarkupSettings } from "./settings/MarkupSettings";
 
 export const SettingsTab = () => {
   const { toast } = useToast();
@@ -25,6 +26,11 @@ export const SettingsTab = () => {
       <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6">
         <h2 className="text-xl font-semibold text-gray-100 mb-6">Preferences</h2>
         <PreferencesSettings />
+      </Card>
+
+      <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6">
+        <h2 className="text-xl font-semibold text-gray-100 mb-6">Price Markup</h2>
+        <MarkupSettings />
       </Card>
 
       <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6">

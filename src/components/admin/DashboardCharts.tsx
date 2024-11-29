@@ -16,6 +16,11 @@ interface DestinationData {
   value: number;
 }
 
+interface BookingStats {
+  trends: BookingTrend[];
+  destinations: DestinationData[];
+}
+
 const useBookingStats = () => {
   const [bookingTrends, setBookingTrends] = useState<BookingTrend[]>([]);
   const [destinationStats, setDestinationStats] = useState<DestinationData[]>([]);
@@ -59,7 +64,7 @@ const useBookingStats = () => {
         .sort((a, b) => b.value - a.value)
         .slice(0, 5);
 
-      return { trends, destinations };
+      return { trends, destinations } as BookingStats;
     }
   });
 
@@ -76,10 +81,42 @@ const useBookingStats = () => {
         { event: '*', schema: 'public', table: 'bookings' },
         async () => {
           // Refetch data when bookings change
-          const { data: refreshedData } = await supabase.rpc('get_booking_stats');
+          const { data: refreshedData } = await supabase
+            .from('bookings')
+            .select('departure_date, destination')
+            .gte('created_at', subMonths(startOfMonth(new Date()), 4).toISOString());
+
           if (refreshedData) {
-            setBookingTrends(refreshedData.trends);
-            setDestinationStats(refreshedData.destinations);
+            const months = Array.from({ length: 5 }, (_, i) => {
+              const date = subMonths(new Date(), i);
+              return startOfMonth(date);
+            }).reverse();
+
+            // Process booking trends
+            const trends = months.map(month => {
+              const count = refreshedData.filter(booking => 
+                startOfMonth(new Date(booking.departure_date)).getTime() === month.getTime()
+              ).length;
+
+              return {
+                x: format(month, 'MMM'),
+                y: count
+              };
+            });
+
+            // Process destination stats
+            const destinationCounts = refreshedData.reduce((acc: Record<string, number>, booking) => {
+              acc[booking.destination] = (acc[booking.destination] || 0) + 1;
+              return acc;
+            }, {});
+
+            const destinations = Object.entries(destinationCounts)
+              .map(([id, value]) => ({ id, value }))
+              .sort((a, b) => b.value - a.value)
+              .slice(0, 5);
+
+            setBookingTrends(trends);
+            setDestinationStats(destinations);
           }
         }
       )

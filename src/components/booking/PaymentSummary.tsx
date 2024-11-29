@@ -8,15 +8,15 @@ interface PaymentSummaryProps {
 }
 
 export const PaymentSummary = ({ booking, flightDetails }: PaymentSummaryProps) => {
-  if (!booking || !flightDetails) return null;
+  if (!booking) return null;
 
-  const baseAmount = parseFloat(flightDetails.data?.total_amount || booking.total_price);
-  const taxAmount = parseFloat(flightDetails.data?.tax_amount || 0);
-  const feesAmount = parseFloat(flightDetails.data?.service_fees_amount || 0);
+  const baseAmount = parseFloat(flightDetails?.data?.total_amount || booking.total_price);
+  const taxAmount = parseFloat(flightDetails?.data?.tax_amount || 0);
+  const feesAmount = parseFloat(flightDetails?.data?.service_fees_amount || 0);
   const totalAmount = baseAmount + taxAmount + feesAmount;
 
   // Calculate any additional fees from services
-  const additionalServices = flightDetails.data?.services || [];
+  const additionalServices = flightDetails?.data?.services || [];
   const servicesTotal = additionalServices.reduce((acc: number, service: any) => 
     acc + parseFloat(service.amount || 0), 0
   );

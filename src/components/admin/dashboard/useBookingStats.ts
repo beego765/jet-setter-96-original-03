@@ -45,18 +45,22 @@ export const useBookingStats = () => {
     return { trends, destinations };
   };
 
+  // Initial data fetch
   const { data: initialData } = useQuery({
     queryKey: ['booking-stats'],
     queryFn: async () => {
-      const { data: bookings } = await supabase
+      const { data: bookings, error } = await supabase
         .from('bookings')
         .select('departure_date, destination')
         .gte('created_at', subMonths(startOfMonth(new Date()), 4).toISOString());
 
+      if (error) throw error;
       if (!bookings) return { trends: [], destinations: [] };
 
       return processBookingData(bookings);
-    }
+    },
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    cacheTime: 60000, // Keep data in cache for 1 minute
   });
 
   useEffect(() => {
@@ -65,15 +69,28 @@ export const useBookingStats = () => {
       setDestinationStats(initialData.destinations);
     }
 
+    // Set up real-time subscription
     const channel = supabase
       .channel('booking-stats')
       .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'bookings' },
-        async () => {
-          const { data: refreshedData } = await supabase
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'bookings',
+          filter: `created_at.gte.${subMonths(startOfMonth(new Date()), 4).toISOString()}`
+        },
+        async (payload) => {
+          console.log('Received real-time update:', payload);
+          
+          const { data: refreshedData, error } = await supabase
             .from('bookings')
             .select('departure_date, destination')
             .gte('created_at', subMonths(startOfMonth(new Date()), 4).toISOString());
+
+          if (error) {
+            console.error('Error fetching updated data:', error);
+            return;
+          }
 
           if (refreshedData) {
             const { trends, destinations } = processBookingData(refreshedData);
@@ -82,9 +99,13 @@ export const useBookingStats = () => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+      });
 
+    // Cleanup subscription on unmount
     return () => {
+      console.log('Cleaning up subscription');
       channel.unsubscribe();
     };
   }, [initialData]);

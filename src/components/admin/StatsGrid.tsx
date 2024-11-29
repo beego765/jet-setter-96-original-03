@@ -1,10 +1,8 @@
-import { Card } from "@/components/ui/card";
 import { ArrowUpRight, Search, Users, Map, TrendingUp } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { StatCard } from "./stats/StatCard";
+import { useConversionStats } from "./stats/useConversionStats";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfMonth, subMonths } from "date-fns";
-import { useEffect, useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
 
 interface StatsGridProps {
   stats: {
@@ -12,90 +10,12 @@ interface StatsGridProps {
     searchesChange: string;
     uniqueUsers: number;
     usersChange: string;
-    conversionRate: string;
-    conversionChange: string;
     topSearchedRoute: string;
   };
 }
 
-const useStats = () => {
-  const { toast } = useToast();
-  const [realtimeStats, setRealtimeStats] = useState<{
-    conversionRate: string;
-    conversionChange: string;
-  } | null>(null);
-
-  const { data: queryStats, refetch } = useQuery({
-    queryKey: ['admin-stats'],
-    queryFn: async () => {
-      try {
-        const startDate = subMonths(startOfMonth(new Date()), 1);
-        const prevStartDate = subMonths(startDate, 1);
-
-        const [currentBookings, prevBookings, currentSearches, prevSearches] = await Promise.all([
-          supabase
-            .from('bookings')
-            .select('id')
-            .eq('status', 'confirmed')
-            .gte('created_at', startDate.toISOString()),
-          supabase
-            .from('bookings')
-            .select('id')
-            .eq('status', 'confirmed')
-            .gte('created_at', prevStartDate.toISOString())
-            .lt('created_at', startDate.toISOString()),
-          supabase
-            .from('system_metrics')
-            .select('value')
-            .eq('metric_type', 'server')
-            .gte('created_at', startDate.toISOString()),
-          supabase
-            .from('system_metrics')
-            .select('value')
-            .eq('metric_type', 'server')
-            .gte('created_at', prevStartDate.toISOString())
-            .lt('created_at', startDate.toISOString())
-        ]);
-
-        if (currentBookings.error || prevBookings.error || currentSearches.error || prevSearches.error) {
-          throw new Error('Error fetching stats data');
-        }
-
-        const currentBookingsCount = currentBookings.data?.length || 0;
-        const prevBookingsCount = prevBookings.data?.length || 0;
-        const currentSearchesCount = currentSearches.data?.reduce((sum, metric) => sum + metric.value, 0) || 0;
-        const prevSearchesCount = prevSearches.data?.reduce((sum, metric) => sum + metric.value, 0) || 0;
-
-        const currentConversionRate = currentSearchesCount > 0 
-          ? (currentBookingsCount / currentSearchesCount) * 100 
-          : 0;
-        const prevConversionRate = prevSearchesCount > 0 
-          ? (prevBookingsCount / prevSearchesCount) * 100 
-          : 0;
-
-        const conversionChange = prevConversionRate > 0 
-          ? ((currentConversionRate - prevConversionRate) / prevConversionRate) * 100 
-          : 0;
-
-        return {
-          conversionRate: `${currentConversionRate.toFixed(1)}%`,
-          conversionChange: `${conversionChange >= 0 ? '+' : ''}${conversionChange.toFixed(1)}%`,
-        };
-      } catch (error) {
-        toast({
-          title: "Error fetching stats",
-          description: "Failed to fetch conversion stats",
-          variant: "destructive",
-        });
-        return {
-          conversionRate: "0%",
-          conversionChange: "+0%",
-        };
-      }
-    },
-    staleTime: 30000,
-    gcTime: 60000,
-  });
+export const StatsGrid = ({ stats }: StatsGridProps) => {
+  const { conversionStats, refetch } = useConversionStats();
 
   useEffect(() => {
     const bookingsChannel = supabase
@@ -106,19 +26,8 @@ const useStats = () => {
           schema: 'public', 
           table: 'bookings' 
         },
-        async () => {
-          try {
-            const { data: stats } = await refetch();
-            if (stats) {
-              setRealtimeStats(stats);
-            }
-          } catch (error) {
-            toast({
-              title: "Error updating stats",
-              description: "Failed to update real-time stats",
-              variant: "destructive",
-            });
-          }
+        () => {
+          refetch();
         }
       )
       .subscribe();
@@ -126,76 +35,45 @@ const useStats = () => {
     return () => {
       bookingsChannel.unsubscribe();
     };
-  }, [refetch, toast]);
-
-  return realtimeStats || queryStats;
-};
-
-export const StatsGrid = ({ stats }: StatsGridProps) => {
-  const conversionStats = useStats();
+  }, [refetch]);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6 hover:bg-gray-800/70 transition-all">
-        <div className="flex items-center justify-between">
-          <div className="p-3 bg-blue-500/20 rounded-xl">
-            <Search className="w-6 h-6 text-blue-400" />
-          </div>
-          <span className="flex items-center text-green-400 text-sm">
-            <ArrowUpRight className="w-4 h-4 mr-1" />
-            {stats.searchesChange}
-          </span>
-        </div>
-        <div className="mt-4">
-          <p className="text-gray-400">Daily Searches</p>
-          <p className="text-2xl font-bold">{stats.totalSearches}</p>
-        </div>
-      </Card>
+      <StatCard
+        icon={Search}
+        iconBgColor="bg-blue-500/20"
+        iconColor="text-blue-400"
+        label="Daily Searches"
+        value={stats.totalSearches}
+        change={stats.searchesChange}
+      />
 
-      <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6 hover:bg-gray-800/70 transition-all">
-        <div className="flex items-center justify-between">
-          <div className="p-3 bg-purple-500/20 rounded-xl">
-            <Users className="w-6 h-6 text-purple-400" />
-          </div>
-          <span className="flex items-center text-green-400 text-sm">
-            <ArrowUpRight className="w-4 h-4 mr-1" />
-            {stats.usersChange}
-          </span>
-        </div>
-        <div className="mt-4">
-          <p className="text-gray-400">Unique Users</p>
-          <p className="text-2xl font-bold">{stats.uniqueUsers}</p>
-        </div>
-      </Card>
+      <StatCard
+        icon={Users}
+        iconBgColor="bg-purple-500/20"
+        iconColor="text-purple-400"
+        label="Unique Users"
+        value={stats.uniqueUsers}
+        change={stats.usersChange}
+      />
 
-      <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6 hover:bg-gray-800/70 transition-all">
-        <div className="flex items-center justify-between">
-          <div className="p-3 bg-green-500/20 rounded-xl">
-            <TrendingUp className="w-6 h-6 text-green-400" />
-          </div>
-          <span className="flex items-center text-green-400 text-sm">
-            <ArrowUpRight className="w-4 h-4 mr-1" />
-            {conversionStats?.conversionChange || stats.conversionChange}
-          </span>
-        </div>
-        <div className="mt-4">
-          <p className="text-gray-400">Conversion Rate</p>
-          <p className="text-2xl font-bold">{conversionStats?.conversionRate || stats.conversionRate}</p>
-        </div>
-      </Card>
+      <StatCard
+        icon={TrendingUp}
+        iconBgColor="bg-green-500/20"
+        iconColor="text-green-400"
+        label="Conversion Rate"
+        value={conversionStats?.conversionRate || "0%"}
+        change={conversionStats?.conversionChange || "+0%"}
+      />
 
-      <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6 hover:bg-gray-800/70 transition-all">
-        <div className="flex items-center justify-between">
-          <div className="p-3 bg-orange-500/20 rounded-xl">
-            <Map className="w-6 h-6 text-orange-400" />
-          </div>
-          <span className="text-sm text-gray-400">Most Searched</span>
-        </div>
-        <div className="mt-4">
-          <p className="text-gray-400">Popular Route</p>
-          <p className="text-2xl font-bold">{stats.topSearchedRoute}</p>
-        </div>
-      </Card>
+      <StatCard
+        icon={Map}
+        iconBgColor="bg-orange-500/20"
+        iconColor="text-orange-400"
+        label="Popular Route"
+        value={stats.topSearchedRoute}
+        additionalLabel="Most Searched"
+      />
     </div>
   );
 };

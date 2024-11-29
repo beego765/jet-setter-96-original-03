@@ -16,9 +16,10 @@ export const useBookingStats = () => {
 
     // Process booking trends
     const trends = months.map(month => {
-      const count = bookings.filter(booking => 
-        startOfMonth(new Date(booking.departure_date)).getTime() === month.getTime()
-      ).length;
+      const count = bookings.filter(booking => {
+        const bookingDate = new Date(booking.departure_date);
+        return startOfMonth(bookingDate).getTime() === month.getTime();
+      }).length;
 
       return {
         x: format(month, 'MMM'),
@@ -28,12 +29,16 @@ export const useBookingStats = () => {
 
     // Process destination stats
     const destinationCounts = bookings.reduce((acc: Record<string, number>, booking) => {
-      acc[booking.destination] = (acc[booking.destination] || 0) + 1;
+      const destination = booking.destination || 'Unknown';
+      acc[destination] = (acc[destination] || 0) + 1;
       return acc;
     }, {});
 
-    const destinations = Object.entries(destinationCounts)
-      .map(([id, value]) => ({ id, value }))
+    const destinations: DestinationData[] = Object.entries(destinationCounts)
+      .map(([id, value]) => ({ 
+        id, 
+        value: Number(value) 
+      }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 5);
 

@@ -6,6 +6,7 @@ import { BookingsCalendar } from "@/components/bookings/BookingsCalendar";
 import { BookingHeader } from "@/components/bookings/BookingHeader";
 import { ConfirmedBookings } from "@/components/bookings/ConfirmedBookings";
 import { PendingBookings } from "@/components/bookings/PendingBookings";
+import { UserProfileSection } from "@/components/bookings/UserProfileSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
@@ -117,6 +118,10 @@ const MyBookings = () => {
           <div>
             <BookingsCalendar flights={flights} />
           </div>
+        </div>
+
+        <div className="mb-8">
+          <UserProfileSection />
         </div>
 
         {upcomingBoardingPass && (

@@ -23,7 +23,7 @@ const useStats = () => {
     conversionChange: string;
   } | null>(null);
 
-  const { data: queryStats } = useQuery({
+  const { data: queryStats, refetch } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
       const startDate = subMonths(startOfMonth(new Date()), 1);
@@ -81,7 +81,6 @@ const useStats = () => {
   });
 
   useEffect(() => {
-    // Set up real-time subscription
     const bookingsChannel = supabase
       .channel('bookings-stats')
       .on('postgres_changes', 
@@ -91,8 +90,7 @@ const useStats = () => {
           table: 'bookings' 
         },
         async () => {
-          // Fetch updated stats when bookings change
-          const { data: stats } = await queryStats?.refetch();
+          const { data: stats } = await refetch();
           if (stats) {
             setRealtimeStats(stats);
           }
@@ -100,11 +98,10 @@ const useStats = () => {
       )
       .subscribe();
 
-    // Cleanup subscription
     return () => {
       bookingsChannel.unsubscribe();
     };
-  }, [queryStats]);
+  }, [refetch]);
 
   return realtimeStats || queryStats;
 };

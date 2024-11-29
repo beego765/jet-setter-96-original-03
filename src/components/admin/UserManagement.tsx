@@ -21,7 +21,7 @@ export const UserManagement = () => {
       // First, fetch all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, email, first_name, last_name, username, status, last_login');
+        .select('id, email, first_name, last_name, status, last_login');
 
       if (profilesError) throw profilesError;
 
@@ -97,7 +97,6 @@ export const UserManagement = () => {
     const matchesSearch = 
       searchTerm === "" ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesRole = roleFilter === "all" || user.role === roleFilter;

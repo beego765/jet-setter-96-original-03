@@ -5,7 +5,6 @@ export type UserProfile = {
   email: string | null;
   first_name: string | null;
   last_name: string | null;
-  username: string | null;
   status: string | null;
   last_login: string | null;
   role?: UserRole;

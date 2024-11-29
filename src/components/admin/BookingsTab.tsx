@@ -5,9 +5,11 @@ import { Table } from "@/components/ui/table";
 import { Calendar } from "@/components/ui/calendar";
 import { Search, Filter, Download } from "lucide-react";
 import { useState } from "react";
+import { useBookings } from "@/hooks/useBookings";
 
 export const BookingsTab = () => {
   const [selectedDate, setSelectedDate] = useState<Date>();
+  const { bookings } = useBookings();
 
   return (
     <div className="space-y-6">
@@ -59,22 +61,7 @@ export const BookingsTab = () => {
               </tr>
             </thead>
             <tbody>
-              {[
-                {
-                  id: "B001",
-                  customer: "John Doe",
-                  destination: "Paris",
-                  date: "2024-03-15",
-                  status: "Confirmed"
-                },
-                {
-                  id: "B002",
-                  customer: "Jane Smith",
-                  destination: "Tokyo",
-                  date: "2024-03-20",
-                  status: "Pending"
-                }
-              ].map((booking) => (
+              {bookings.map((booking) => (
                 <tr key={booking.id} className="border-t border-gray-700">
                   <td className="py-3 px-4 text-sm text-gray-300">{booking.id}</td>
                   <td className="py-3 px-4 text-sm text-gray-300">
@@ -89,7 +76,7 @@ export const BookingsTab = () => {
                   <td className="py-3 px-4 text-sm">
                     <span
                       className={`px-2 py-1 rounded-full text-xs ${
-                        booking.status === "Confirmed"
+                        booking.status === "confirmed"
                           ? "bg-green-500/20 text-green-400"
                           : "bg-yellow-500/20 text-yellow-400"
                       }`}

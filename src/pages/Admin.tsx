@@ -39,14 +39,21 @@ const Admin = () => {
       if (usersResult.error) throw usersResult.error;
 
       // Calculate top destination
-      const destinations = bookingsResult.data.reduce((acc, booking) => {
+      const destinations = bookingsResult.data.reduce<Record<string, number>>((acc, booking) => {
         acc[booking.destination] = (acc[booking.destination] || 0) + 1;
         return acc;
       }, {});
+      
       const topDestination = Object.entries(destinations)
         .sort(([,a], [,b]) => b - a)[0]?.[0] || "N/A";
 
-      const totalRevenue = paymentsResult.data.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+      // Ensure we're working with numbers for the total revenue calculation
+      const totalRevenue = paymentsResult.data.reduce((sum, payment) => {
+        const amount = typeof payment.amount === 'string' 
+          ? parseFloat(payment.amount) 
+          : (payment.amount || 0);
+        return sum + amount;
+      }, 0);
 
       return {
         totalBookings: bookingsResult.data.length,
@@ -113,7 +120,13 @@ const Admin = () => {
             return;
           }
 
-          const totalRevenue = paymentsData.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+          const totalRevenue = paymentsData.reduce((sum, payment) => {
+            const amount = typeof payment.amount === 'string' 
+              ? parseFloat(payment.amount) 
+              : (payment.amount || 0);
+            return sum + amount;
+          }, 0);
+
           setRealtimeStats(prev => ({
             ...prev,
             totalRevenue

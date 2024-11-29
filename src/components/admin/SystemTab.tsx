@@ -8,6 +8,7 @@ import { Progress } from "../../components/ui/progress";
 import { supabase } from "../../integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { DealsEditor } from "./DealsEditor";
 
 export const SystemTab = () => {
   const { data: importHistory, refetch: refetchHistory } = useQuery({
@@ -20,7 +21,7 @@ export const SystemTab = () => {
         .limit(1);
       
       if (error) throw error;
-      return data[0] || null; // Return null if no data is found
+      return data[0] || null;
     }
   });
 
@@ -101,6 +102,8 @@ export const SystemTab = () => {
           </div>
         </div>
       </Card>
+
+      <DealsEditor />
 
       <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6">
         <h2 className="text-xl font-semibold text-gray-100 mb-6">Security Overview</h2>

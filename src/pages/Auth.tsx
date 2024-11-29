@@ -105,12 +105,35 @@ const Auth = () => {
                   colors: {
                     brand: '#8B5CF6',
                     brandAccent: '#7C3AED',
+                    inputBackground: 'transparent',
+                    inputText: 'white',
+                    inputPlaceholder: 'gray',
+                    inputBorder: '#374151',
+                    inputBorderHover: '#4B5563',
+                    inputBorderFocus: '#6366F1',
                   },
+                },
+              },
+              style: {
+                input: {
+                  backgroundColor: 'transparent',
+                  border: '1px solid #374151',
+                  color: 'white',
+                },
+                label: {
+                  color: 'white',
+                },
+                button: {
+                  border: '1px solid #374151',
+                  backgroundColor: '#8B5CF6',
+                  color: 'white',
                 },
               },
             }}
             providers={["google", "github"]}
             redirectTo={window.location.origin}
+            view="sign_in"
+            showLinks={true}
           />
         </Card>
       </div>

@@ -15,54 +15,51 @@ import { useToast } from "@/components/ui/use-toast";
 const Admin = () => {
   const { toast } = useToast();
   const [realtimeStats, setRealtimeStats] = useState({
-    totalBookings: 0,
-    totalRevenue: 0,
-    activeUsers: 0,
-    bookingsChange: "+0%",
-    revenueChange: "+0%",
-    userChange: "+0%",
-    topDestination: "Loading..."
+    totalSearches: 0,
+    searchesChange: "+0%",
+    uniqueUsers: 0,
+    usersChange: "+0%",
+    conversionRate: "0%",
+    conversionChange: "+0%",
+    topSearchedRoute: "Loading..."
   });
 
   // Fetch initial stats
   const { data: initialStats } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      const [bookingsResult, paymentsResult, usersResult] = await Promise.all([
-        supabase.from('bookings').select('*'),
-        supabase.from('booking_payments').select('amount'),
+      const [searchesResult, uniqueUsersResult] = await Promise.all([
+        supabase.from('bookings').select('origin, destination').gte('created_at', new Date(Date.now() - 24*60*60*1000).toISOString()),
         supabase.from('profiles').select('*').eq('status', 'active')
       ]);
 
-      if (bookingsResult.error) throw bookingsResult.error;
-      if (paymentsResult.error) throw paymentsResult.error;
-      if (usersResult.error) throw usersResult.error;
+      if (searchesResult.error) throw searchesResult.error;
+      if (uniqueUsersResult.error) throw uniqueUsersResult.error;
 
-      // Calculate top destination
-      const destinations = bookingsResult.data.reduce<Record<string, number>>((acc, booking) => {
-        acc[booking.destination] = (acc[booking.destination] || 0) + 1;
+      // Calculate top searched route
+      const routes = searchesResult.data.reduce<Record<string, number>>((acc, search) => {
+        const route = `${search.origin}-${search.destination}`;
+        acc[route] = (acc[route] || 0) + 1;
         return acc;
       }, {});
       
-      const topDestination = Object.entries(destinations)
+      const topSearchedRoute = Object.entries(routes)
         .sort(([,a], [,b]) => b - a)[0]?.[0] || "N/A";
 
-      // Ensure we're working with numbers for the total revenue calculation
-      const totalRevenue = paymentsResult.data.reduce((sum, payment) => {
-        const amount = typeof payment.amount === 'string' 
-          ? parseFloat(payment.amount) 
-          : (payment.amount || 0);
-        return sum + amount;
-      }, 0);
+      const totalSearches = searchesResult.data.length;
+      const uniqueUsers = uniqueUsersResult.data.length;
+      const conversionRate = totalSearches > 0 
+        ? ((searchesResult.data.length / totalSearches) * 100).toFixed(1) + '%'
+        : '0%';
 
       return {
-        totalBookings: bookingsResult.data.length,
-        totalRevenue,
-        activeUsers: usersResult.data.length,
-        topDestination,
-        bookingsChange: "+15%", // You might want to calculate this based on historical data
-        revenueChange: "+8.3%",
-        userChange: "+5.2%"
+        totalSearches,
+        searchesChange: "+15%", // You might want to calculate this based on historical data
+        uniqueUsers,
+        usersChange: "+5.2%",
+        conversionRate,
+        conversionChange: "+8.3%",
+        topSearchedRoute
       };
     }
   });
@@ -75,20 +72,20 @@ const Admin = () => {
 
   // Set up real-time subscriptions
   useEffect(() => {
-    // Subscribe to bookings changes
-    const bookingsSubscription = supabase
-      .channel('bookings-channel')
+    // Subscribe to search changes
+    const searchesSubscription = supabase
+      .channel('searches-channel')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'bookings' },
-        async (payload) => {
-          // Fetch updated stats after any booking change
-          const { data: bookingsData, error: bookingsError } = await supabase
+        async () => {
+          const { data: searchesData, error: searchesError } = await supabase
             .from('bookings')
-            .select('*');
+            .select('*')
+            .gte('created_at', new Date(Date.now() - 24*60*60*1000).toISOString());
           
-          if (bookingsError) {
+          if (searchesError) {
             toast({
-              title: "Error updating bookings data",
+              title: "Error updating searches data",
               variant: "destructive"
             });
             return;
@@ -96,40 +93,7 @@ const Admin = () => {
 
           setRealtimeStats(prev => ({
             ...prev,
-            totalBookings: bookingsData.length
-          }));
-        }
-      )
-      .subscribe();
-
-    // Subscribe to payment changes
-    const paymentsSubscription = supabase
-      .channel('payments-channel')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'booking_payments' },
-        async (payload) => {
-          const { data: paymentsData, error: paymentsError } = await supabase
-            .from('booking_payments')
-            .select('amount');
-          
-          if (paymentsError) {
-            toast({
-              title: "Error updating revenue data",
-              variant: "destructive"
-            });
-            return;
-          }
-
-          const totalRevenue = paymentsData.reduce((sum, payment) => {
-            const amount = typeof payment.amount === 'string' 
-              ? parseFloat(payment.amount) 
-              : (payment.amount || 0);
-            return sum + amount;
-          }, 0);
-
-          setRealtimeStats(prev => ({
-            ...prev,
-            totalRevenue
+            totalSearches: searchesData.length
           }));
         }
       )
@@ -140,7 +104,7 @@ const Admin = () => {
       .channel('profiles-channel')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'profiles' },
-        async (payload) => {
+        async () => {
           const { data: usersData, error: usersError } = await supabase
             .from('profiles')
             .select('*')
@@ -156,7 +120,7 @@ const Admin = () => {
 
           setRealtimeStats(prev => ({
             ...prev,
-            activeUsers: usersData.length
+            uniqueUsers: usersData.length
           }));
         }
       )
@@ -164,8 +128,7 @@ const Admin = () => {
 
     // Cleanup subscriptions
     return () => {
-      bookingsSubscription.unsubscribe();
-      paymentsSubscription.unsubscribe();
+      searchesSubscription.unsubscribe();
       profilesSubscription.unsubscribe();
     };
   }, [toast]);

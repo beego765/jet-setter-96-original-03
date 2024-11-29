@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 interface FlightPricingProps {
   price: number;
@@ -7,20 +8,21 @@ interface FlightPricingProps {
 }
 
 export const FlightPricing = ({ price, onSelect, isLoading }: FlightPricingProps) => {
-  const formattedPrice = new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency: 'GBP',
-  }).format(price);
-
   return (
-    <div className="flex flex-col items-end gap-3 w-full md:w-auto">
-      <p className="text-3xl font-bold text-purple-400">{formattedPrice}</p>
-      <Button 
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-2xl font-bold">£{price.toFixed(2)}</p>
+        <p className="text-sm text-gray-400">per passenger</p>
+      </div>
+      <Button
         onClick={onSelect}
         disabled={isLoading}
-        className="w-full md:w-auto bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white px-8"
+        className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
       >
-        {isLoading ? "Processing..." : "Select"}
+        {isLoading ? (
+          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+        ) : null}
+        Select Flight
       </Button>
     </div>
   );

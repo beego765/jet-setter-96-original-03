@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { calculatePriceWithMarkup, useMarkupSettings } from "@/utils/priceCalculations";
 
 export interface Flight {
   id: string;
@@ -78,6 +79,11 @@ export const FlightCard = ({ flight, onSelect, passengers }: FlightCardProps) =>
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const { data: markupSettings } = useMarkupSettings();
+
+  const finalPrice = useMemo(() => {
+    return calculatePriceWithMarkup(flight.price, markupSettings);
+  }, [flight.price, markupSettings]);
 
   const handleSelect = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -165,7 +171,7 @@ export const FlightCard = ({ flight, onSelect, passengers }: FlightCardProps) =>
 
         <Separator className="bg-gray-700" />
 
-        <FlightPricing price={flight.price} onSelect={handleSelect} isLoading={isLoading} />
+        <FlightPricing price={finalPrice} onSelect={handleSelect} isLoading={isLoading} />
       </div>
     </Card>
   );

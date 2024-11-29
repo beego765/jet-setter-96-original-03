@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
@@ -10,6 +11,8 @@ import { Loader2 } from "lucide-react";
 export const MarkupSettings = () => {
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [markupType, setMarkupType] = useState<'percentage' | 'fixed'>('percentage');
+  const [markupValue, setMarkupValue] = useState(0);
 
   const { data: markupSettings, isLoading } = useQuery({
     queryKey: ['markup-settings'],
@@ -20,18 +23,20 @@ export const MarkupSettings = () => {
         .single();
       
       if (error) throw error;
+      setMarkupType(data.markup_type);
+      setMarkupValue(data.markup_value);
       return data;
     }
   });
 
-  const updateMarkupSettings = async (type: 'percentage' | 'fixed', value: number) => {
+  const handleSave = async () => {
     setIsUpdating(true);
     try {
       const { error } = await supabase
         .from('price_markup_settings')
         .update({ 
-          markup_type: type, 
-          markup_value: value,
+          markup_type: markupType, 
+          markup_value: markupValue,
           updated_at: new Date().toISOString()
         })
         .eq('id', markupSettings?.id);
@@ -65,10 +70,8 @@ export const MarkupSettings = () => {
       <div className="space-y-2">
         <Label>Markup Type</Label>
         <RadioGroup
-          defaultValue={markupSettings?.markup_type}
-          onValueChange={(value: 'percentage' | 'fixed') => 
-            updateMarkupSettings(value, markupSettings?.markup_value || 0)
-          }
+          value={markupType}
+          onValueChange={(value: 'percentage' | 'fixed') => setMarkupType(value)}
           className="flex gap-4"
         >
           <div className="flex items-center space-x-2">
@@ -84,26 +87,35 @@ export const MarkupSettings = () => {
 
       <div className="space-y-2">
         <Label>
-          {markupSettings?.markup_type === 'percentage' ? 'Percentage Value' : 'Fixed Amount'}
+          {markupType === 'percentage' ? 'Percentage Value' : 'Fixed Amount'}
         </Label>
         <div className="flex items-center gap-2">
           <Input
             type="number"
-            value={markupSettings?.markup_value || 0}
+            value={markupValue}
             onChange={(e) => {
               const value = parseFloat(e.target.value);
               if (!isNaN(value)) {
-                updateMarkupSettings(markupSettings?.markup_type || 'percentage', value);
+                setMarkupValue(value);
               }
             }}
             className="bg-gray-700/50 border-gray-600 text-gray-200"
             disabled={isUpdating}
           />
           <span className="text-gray-400">
-            {markupSettings?.markup_type === 'percentage' ? '%' : '£'}
+            {markupType === 'percentage' ? '%' : '£'}
           </span>
         </div>
       </div>
+
+      <Button 
+        onClick={handleSave}
+        disabled={isUpdating}
+        className="w-full"
+      >
+        {isUpdating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+        Save Markup Settings
+      </Button>
     </div>
   );
 };

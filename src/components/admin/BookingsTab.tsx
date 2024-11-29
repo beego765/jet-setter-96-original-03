@@ -19,7 +19,7 @@ export const BookingsTab = () => {
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search bookings..."
+                placeholder="Search confirmed bookings..."
                 className="pl-10 bg-gray-700/50 border-gray-600"
               />
             </div>
@@ -74,13 +74,7 @@ export const BookingsTab = () => {
                     {booking.date}
                   </td>
                   <td className="py-3 px-4 text-sm">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        booking.status === "confirmed"
-                          ? "bg-green-500/20 text-green-400"
-                          : "bg-yellow-500/20 text-yellow-400"
-                      }`}
-                    >
+                    <span className="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-400">
                       {booking.status}
                     </span>
                   </td>

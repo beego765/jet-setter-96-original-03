@@ -36,6 +36,7 @@ export const useBookings = () => {
           departure_date,
           status
         `)
+        .eq('status', 'confirmed')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -63,8 +64,16 @@ export const useBookings = () => {
       .channel('bookings-channel')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'bookings' },
-        async (payload: RealtimePostgresChangesPayload<BookingPayload>) => {
+        async (payload: RealtimePostgresChangesPayload<any>) => {
           if (!payload.new && !payload.old) return;
+
+          // Only proceed if the booking is confirmed or was confirmed
+          if (
+            (payload.new && payload.new.status !== 'confirmed') && 
+            (payload.old && payload.old.status !== 'confirmed')
+          ) {
+            return;
+          }
 
           // Fetch the complete booking data including passenger details
           const { data: newBooking, error } = await supabase
@@ -88,37 +97,41 @@ export const useBookings = () => {
             return;
           }
 
-          const formattedBooking = {
-            id: newBooking.id,
-            customer: newBooking.passenger_details?.[0] 
-              ? `${newBooking.passenger_details[0].first_name} ${newBooking.passenger_details[0].last_name}`
-              : 'N/A',
-            destination: newBooking.destination,
-            date: newBooking.departure_date,
-            status: newBooking.status
-          };
+          // Only proceed with confirmed bookings
+          if (newBooking && newBooking.status === 'confirmed') {
+            const formattedBooking = {
+              id: newBooking.id,
+              customer: newBooking.passenger_details?.[0] 
+                ? `${newBooking.passenger_details[0].first_name} ${newBooking.passenger_details[0].last_name}`
+                : 'N/A',
+              destination: newBooking.destination,
+              date: newBooking.departure_date,
+              status: newBooking.status
+            };
 
-          if (payload.eventType === 'INSERT') {
-            setBookings(prev => [formattedBooking, ...prev]);
-            toast({
-              title: "New booking received",
-              description: `Booking for ${formattedBooking.customer} has been added.`
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            setBookings(prev => 
-              prev.map(booking => 
-                booking.id === formattedBooking.id ? formattedBooking : booking
-              )
-            );
-            toast({
-              title: "Booking updated",
-              description: `Booking for ${formattedBooking.customer} has been updated.`
-            });
-          } else if (payload.eventType === 'DELETE') {
-            setBookings(prev => prev.filter(booking => booking.id !== payload.old?.id));
+            if (payload.eventType === 'INSERT') {
+              setBookings(prev => [formattedBooking, ...prev]);
+              toast({
+                title: "New booking received",
+                description: `Booking for ${formattedBooking.customer} has been added.`
+              });
+            } else if (payload.eventType === 'UPDATE') {
+              setBookings(prev => 
+                prev.map(booking => 
+                  booking.id === formattedBooking.id ? formattedBooking : booking
+                )
+              );
+              toast({
+                title: "Booking updated",
+                description: `Booking for ${formattedBooking.customer} has been updated.`
+              });
+            }
+          } else if (payload.eventType === 'DELETE' || (payload.eventType === 'UPDATE' && newBooking?.status !== 'confirmed')) {
+            // Remove booking if deleted or status changed from confirmed
+            setBookings(prev => prev.filter(booking => booking.id !== (payload.old?.id || payload.new?.id)));
             toast({
               title: "Booking removed",
-              description: "A booking has been removed from the system."
+              description: "A booking has been removed from the list."
             });
           }
         }

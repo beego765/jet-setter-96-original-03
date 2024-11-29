@@ -70,7 +70,7 @@ export const AirportSelector = ({
         </PopoverTrigger>
         
         <PopoverContent 
-          className="p-0 bg-gray-800 border-gray-700 w-[400px] shadow-none" 
+          className="p-0 bg-gray-800 border-gray-700 w-[400px]" 
           align="start"
           sideOffset={5}
           style={{ zIndex: 100 }}
@@ -80,7 +80,7 @@ export const AirportSelector = ({
               placeholder="Search airports..." 
               value={query}
               onValueChange={setQuery}
-              className="h-12 bg-transparent border-b border-gray-600 focus:outline-none focus:ring-0 focus:shadow-none placeholder-gray-400"
+              className="h-12 bg-transparent border-b border-gray-600 focus:outline-none focus:ring-0 placeholder-gray-400"
             />
             
             <CommandList className="max-h-[300px] overflow-auto">

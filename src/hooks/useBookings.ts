@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import { Database } from "@/integrations/supabase/types";
 
 export type Booking = {
   id: string;
@@ -19,6 +20,12 @@ type BookingPayload = {
   departure_date: string;
   status: string;
 };
+
+type RealtimeBookingPayload = RealtimePostgresChangesPayload<{
+  [key: string]: any;
+  id: string;
+  status: string;
+}>;
 
 export const useBookings = () => {
   const { toast } = useToast();
@@ -64,7 +71,7 @@ export const useBookings = () => {
       .channel('bookings-channel')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'bookings' },
-        async (payload: RealtimePostgresChangesPayload<any>) => {
+        async (payload: RealtimeBookingPayload) => {
           if (!payload.new && !payload.old) return;
 
           // Only proceed if the booking is confirmed or was confirmed

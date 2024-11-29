@@ -1,10 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { Clock, CreditCard } from "lucide-react";
+import { Clock, CreditCard, Loader2 } from "lucide-react";
 import { createPaymentRecord, updateBookingStatus } from "@/services/paymentService";
 import { calculatePaymentAmounts } from "@/utils/paymentCalculations";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface PaymentActionsProps {
   booking: any;
@@ -15,6 +23,7 @@ interface PaymentActionsProps {
 
 export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }: PaymentActionsProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const { toast } = useToast();
 
   if (!booking || !flightDetails?.data) {
@@ -24,6 +33,7 @@ export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }
   const handlePayNow = async () => {
     try {
       setIsProcessing(true);
+      setPaymentError(null);
       const amounts = calculatePaymentAmounts(flightDetails, booking.total_price);
 
       // Create initial payment record
@@ -67,6 +77,7 @@ export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }
       onPayNow();
     } catch (error: any) {
       console.error('Payment error:', error);
+      setPaymentError(error.message || "There was an error processing your payment");
       toast({
         title: "Payment Failed",
         description: error.message || "There was an error processing your payment",
@@ -80,6 +91,7 @@ export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }
   const handleHold = async () => {
     try {
       setIsProcessing(true);
+      setPaymentError(null);
       const amounts = calculatePaymentAmounts(flightDetails, booking.total_price);
 
       // Create hold order with Duffel
@@ -111,6 +123,7 @@ export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }
       onHoldOrder();
     } catch (error: any) {
       console.error('Hold error:', error);
+      setPaymentError(error.message || "There was an error holding your booking");
       toast({
         title: "Hold Failed",
         description: error.message || "There was an error holding your booking",
@@ -125,44 +138,74 @@ export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }
   const isHeld = booking.booking_payments?.[0]?.status === 'held';
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-6">
+      {paymentError && (
+        <Alert variant="destructive">
+          <AlertDescription>{paymentError}</AlertDescription>
+        </Alert>
+      )}
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {isHoldAvailable && (
-          <div className="p-4 rounded-lg border border-gray-700 bg-gray-800/50 backdrop-blur-sm">
-            <div className="flex items-center gap-3 mb-3">
-              <Clock className="w-5 h-5 text-blue-400" />
-              <h3 className="text-lg font-medium">Hold Booking</h3>
-            </div>
-            <p className="text-sm text-gray-400 mb-4">
-              Reserve your booking for 24 hours without payment
-            </p>
-            <Button
-              variant="outline"
-              className="w-full border-gray-700 hover:bg-gray-700/50"
-              onClick={handleHold}
-              disabled={isProcessing || isHeld}
-            >
-              {isProcessing ? "Processing..." : isHeld ? "Currently Held" : "Hold for 24h"}
-            </Button>
-          </div>
+          <Card className="border-gray-700 bg-gray-800/50 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <Clock className="w-5 h-5 text-blue-400" />
+                Hold Booking
+              </CardTitle>
+              <CardDescription>
+                Reserve your booking for 24 hours without payment
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                variant="outline"
+                className="w-full border-gray-700 hover:bg-gray-700/50"
+                onClick={handleHold}
+                disabled={isProcessing || isHeld}
+              >
+                {isProcessing ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Processing...
+                  </div>
+                ) : isHeld ? (
+                  "Currently Held"
+                ) : (
+                  "Hold for 24h"
+                )}
+              </Button>
+            </CardContent>
+          </Card>
         )}
         
-        <div className="p-4 rounded-lg border border-gray-700 bg-gray-800/50 backdrop-blur-sm">
-          <div className="flex items-center gap-3 mb-3">
-            <CreditCard className="w-5 h-5 text-purple-400" />
-            <h3 className="text-lg font-medium">Pay Now</h3>
-          </div>
-          <p className="text-sm text-gray-400 mb-4">
-            Secure your booking immediately with instant payment
-          </p>
-          <Button
-            className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
-            onClick={handlePayNow}
-            disabled={isProcessing}
-          >
-            {isProcessing ? "Processing..." : "Pay Now"}
-          </Button>
-        </div>
+        <Card className="border-gray-700 bg-gray-800/50 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3">
+              <CreditCard className="w-5 h-5 text-purple-400" />
+              Pay Now
+            </CardTitle>
+            <CardDescription>
+              Secure your booking immediately with instant payment
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+              onClick={handlePayNow}
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Processing Payment...
+                </div>
+              ) : (
+                "Pay Now"
+              )}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

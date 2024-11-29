@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { AirportSelector } from "./AirportSelector";
 import { PassengerSelector, PassengerCount } from "./PassengerSelector";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface SearchFormData {
   origin: string;
@@ -28,8 +30,11 @@ interface SearchFormProps {
   onSearch: (data: SearchFormData) => void;
 }
 
+const SEARCH_STATE_KEY = 'pendingFlightSearch';
+
 export const SearchForm = ({ onSearch }: SearchFormProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [departureDate, setDepartureDate] = useState<Date>();
   const [returnDate, setReturnDate] = useState<Date>();
   const [origin, setOrigin] = useState("");
@@ -44,6 +49,27 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
   const [departureDateOpen, setDepartureDateOpen] = useState(false);
   const [returnDateOpen, setReturnDateOpen] = useState(false);
 
+  useEffect(() => {
+    checkPendingSearch();
+  }, []);
+
+  const checkPendingSearch = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const pendingSearch = localStorage.getItem(SEARCH_STATE_KEY);
+      if (pendingSearch) {
+        const searchData = JSON.parse(pendingSearch);
+        // Convert date strings back to Date objects
+        searchData.departureDate = new Date(searchData.departureDate);
+        if (searchData.returnDate) {
+          searchData.returnDate = new Date(searchData.returnDate);
+        }
+        localStorage.removeItem(SEARCH_STATE_KEY);
+        onSearch(searchData);
+      }
+    }
+  };
+
   const handleDepartureDateSelect = (date: Date | undefined) => {
     setDepartureDate(date);
     setDepartureDateOpen(false);
@@ -54,8 +80,27 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
     setReturnDateOpen(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      // Save search state before redirecting
+      const searchData = {
+        origin,
+        destination,
+        departureDate,
+        returnDate: tripType === "roundTrip" ? returnDate : undefined,
+        passengers,
+        class: flightClass,
+        tripType,
+      };
+      localStorage.setItem(SEARCH_STATE_KEY, JSON.stringify(searchData));
+      navigate('/auth');
+      return;
+    }
+
     if (!departureDate || !origin || !destination) {
       toast({
         title: "Missing Information",

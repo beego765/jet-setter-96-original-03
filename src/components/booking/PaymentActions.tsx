@@ -98,10 +98,7 @@ export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }
       if (duffelError) throw duffelError;
 
       // Create hold payment record
-      await createPaymentRecord(booking.id, {
-        ...amounts,
-        status: 'held'
-      });
+      await createPaymentRecord(booking.id, amounts);
 
       // Update booking status
       await updateBookingStatus(booking.id, 'draft');

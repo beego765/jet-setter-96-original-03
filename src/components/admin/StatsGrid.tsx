@@ -3,6 +3,7 @@ import { ArrowUpRight, Search, Users, Map, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfMonth, subMonths, format } from "date-fns";
+import { useEffect, useState } from "react";
 
 interface StatsGridProps {
   stats: {
@@ -17,13 +18,17 @@ interface StatsGridProps {
 }
 
 const useStats = () => {
-  return useQuery({
+  const [realtimeStats, setRealtimeStats] = useState<{
+    conversionRate: string;
+    conversionChange: string;
+  } | null>(null);
+
+  const { data: queryStats } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
       const startDate = subMonths(startOfMonth(new Date()), 1);
       const prevStartDate = subMonths(startDate, 1);
 
-      // Get confirmed bookings for current and previous month
       const { data: currentBookings } = await supabase
         .from('bookings')
         .select('id')
@@ -37,7 +42,6 @@ const useStats = () => {
         .gte('created_at', prevStartDate.toISOString())
         .lt('created_at', startDate.toISOString());
 
-      // Get total searches for current and previous month
       const { data: currentSearches } = await supabase
         .from('system_metrics')
         .select('value')
@@ -51,13 +55,11 @@ const useStats = () => {
         .gte('created_at', prevStartDate.toISOString())
         .lt('created_at', startDate.toISOString());
 
-      // Calculate totals
       const currentBookingsCount = currentBookings?.length || 0;
       const prevBookingsCount = prevBookings?.length || 0;
       const currentSearchesCount = currentSearches?.reduce((sum, metric) => sum + metric.value, 0) || 0;
       const prevSearchesCount = prevSearches?.reduce((sum, metric) => sum + metric.value, 0) || 0;
 
-      // Calculate conversion rates
       const currentConversionRate = currentSearchesCount > 0 
         ? (currentBookingsCount / currentSearchesCount) * 100 
         : 0;
@@ -65,7 +67,6 @@ const useStats = () => {
         ? (prevBookingsCount / prevSearchesCount) * 100 
         : 0;
 
-      // Calculate changes
       const conversionChange = prevConversionRate > 0 
         ? ((currentConversionRate - prevConversionRate) / prevConversionRate) * 100 
         : 0;
@@ -75,12 +76,41 @@ const useStats = () => {
         conversionChange: `${conversionChange >= 0 ? '+' : ''}${conversionChange.toFixed(1)}%`,
       };
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
+    staleTime: 30000,
+    gcTime: 60000,
   });
+
+  useEffect(() => {
+    // Set up real-time subscription
+    const bookingsChannel = supabase
+      .channel('bookings-stats')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'bookings' 
+        },
+        async () => {
+          // Fetch updated stats when bookings change
+          const { data: stats } = await queryStats?.refetch();
+          if (stats) {
+            setRealtimeStats(stats);
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription
+    return () => {
+      bookingsChannel.unsubscribe();
+    };
+  }, [queryStats]);
+
+  return realtimeStats || queryStats;
 };
 
 export const StatsGrid = ({ stats }: StatsGridProps) => {
-  const { data: conversionStats } = useStats();
+  const conversionStats = useStats();
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

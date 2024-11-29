@@ -45,8 +45,7 @@ export const useBookingStats = () => {
     return { trends, destinations };
   };
 
-  // Initial data fetch
-  const { data: initialData } = useQuery({
+  const { data: initialData, refetch } = useQuery({
     queryKey: ['booking-stats'],
     queryFn: async () => {
       const { data: bookings, error } = await supabase
@@ -59,8 +58,8 @@ export const useBookingStats = () => {
 
       return processBookingData(bookings);
     },
-    staleTime: 30000, // Consider data fresh for 30 seconds
-    gcTime: 60000, // Keep data in cache for 1 minute (formerly cacheTime)
+    staleTime: 30000,
+    gcTime: 60000,
   });
 
   useEffect(() => {
@@ -69,33 +68,20 @@ export const useBookingStats = () => {
       setDestinationStats(initialData.destinations);
     }
 
-    // Set up real-time subscription
     const channel = supabase
       .channel('booking-stats')
       .on('postgres_changes', 
         { 
           event: '*', 
           schema: 'public', 
-          table: 'bookings',
-          filter: `created_at.gte.${subMonths(startOfMonth(new Date()), 4).toISOString()}`
+          table: 'bookings'
         },
-        async (payload) => {
-          console.log('Received real-time update:', payload);
-          
-          const { data: refreshedData, error } = await supabase
-            .from('bookings')
-            .select('departure_date, destination')
-            .gte('created_at', subMonths(startOfMonth(new Date()), 4).toISOString());
-
-          if (error) {
-            console.error('Error fetching updated data:', error);
-            return;
-          }
-
-          if (refreshedData) {
-            const { trends, destinations } = processBookingData(refreshedData);
-            setBookingTrends(trends);
-            setDestinationStats(destinations);
+        async () => {
+          console.log('Received booking update');
+          const { data } = await refetch();
+          if (data) {
+            setBookingTrends(data.trends);
+            setDestinationStats(data.destinations);
           }
         }
       )
@@ -103,12 +89,11 @@ export const useBookingStats = () => {
         console.log('Subscription status:', status);
       });
 
-    // Cleanup subscription on unmount
     return () => {
       console.log('Cleaning up subscription');
       channel.unsubscribe();
     };
-  }, [initialData]);
+  }, [initialData, refetch]);
 
   return {
     bookingTrends,

@@ -36,7 +36,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
           'Duffel-Version': 'v1'
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify({ data: body.data }) // Ensure data is nested under 'data' key
       });
 
       const offerRequestData = await offerRequestResponse.json();
@@ -84,7 +84,9 @@ serve(async (req) => {
       )
     }
 
-    // For all other endpoints, proceed as normal
+    // For all other endpoints, proceed as normal but ensure data is nested under 'data' key
+    const requestBody = body ? JSON.stringify({ data: body.data }) : undefined;
+    
     const response = await fetch(`https://api.duffel.com${path}`, {
       method: method || 'GET',
       headers: {
@@ -93,7 +95,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
         'Duffel-Version': 'v1'
       },
-      ...(body && { body: JSON.stringify(body) })
+      ...(requestBody && { body: requestBody })
     })
 
     const data = await response.json()

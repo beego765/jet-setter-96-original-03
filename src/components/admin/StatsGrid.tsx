@@ -2,8 +2,9 @@ import { Card } from "@/components/ui/card";
 import { ArrowUpRight, Search, Users, Map, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfMonth, subMonths, format } from "date-fns";
+import { startOfMonth, subMonths } from "date-fns";
 import { useEffect, useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface StatsGridProps {
   stats: {
@@ -18,6 +19,7 @@ interface StatsGridProps {
 }
 
 const useStats = () => {
+  const { toast } = useToast();
   const [realtimeStats, setRealtimeStats] = useState<{
     conversionRate: string;
     conversionChange: string;
@@ -26,55 +28,70 @@ const useStats = () => {
   const { data: queryStats, refetch } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      const startDate = subMonths(startOfMonth(new Date()), 1);
-      const prevStartDate = subMonths(startDate, 1);
+      try {
+        const startDate = subMonths(startOfMonth(new Date()), 1);
+        const prevStartDate = subMonths(startDate, 1);
 
-      const { data: currentBookings } = await supabase
-        .from('bookings')
-        .select('id')
-        .eq('status', 'confirmed')
-        .gte('created_at', startDate.toISOString());
+        const [currentBookings, prevBookings, currentSearches, prevSearches] = await Promise.all([
+          supabase
+            .from('bookings')
+            .select('id')
+            .eq('status', 'confirmed')
+            .gte('created_at', startDate.toISOString()),
+          supabase
+            .from('bookings')
+            .select('id')
+            .eq('status', 'confirmed')
+            .gte('created_at', prevStartDate.toISOString())
+            .lt('created_at', startDate.toISOString()),
+          supabase
+            .from('system_metrics')
+            .select('value')
+            .eq('metric_type', 'server')
+            .gte('created_at', startDate.toISOString()),
+          supabase
+            .from('system_metrics')
+            .select('value')
+            .eq('metric_type', 'server')
+            .gte('created_at', prevStartDate.toISOString())
+            .lt('created_at', startDate.toISOString())
+        ]);
 
-      const { data: prevBookings } = await supabase
-        .from('bookings')
-        .select('id')
-        .eq('status', 'confirmed')
-        .gte('created_at', prevStartDate.toISOString())
-        .lt('created_at', startDate.toISOString());
+        if (currentBookings.error || prevBookings.error || currentSearches.error || prevSearches.error) {
+          throw new Error('Error fetching stats data');
+        }
 
-      const { data: currentSearches } = await supabase
-        .from('system_metrics')
-        .select('value')
-        .eq('metric_type', 'server')
-        .gte('created_at', startDate.toISOString());
+        const currentBookingsCount = currentBookings.data?.length || 0;
+        const prevBookingsCount = prevBookings.data?.length || 0;
+        const currentSearchesCount = currentSearches.data?.reduce((sum, metric) => sum + metric.value, 0) || 0;
+        const prevSearchesCount = prevSearches.data?.reduce((sum, metric) => sum + metric.value, 0) || 0;
 
-      const { data: prevSearches } = await supabase
-        .from('system_metrics')
-        .select('value')
-        .eq('metric_type', 'server')
-        .gte('created_at', prevStartDate.toISOString())
-        .lt('created_at', startDate.toISOString());
+        const currentConversionRate = currentSearchesCount > 0 
+          ? (currentBookingsCount / currentSearchesCount) * 100 
+          : 0;
+        const prevConversionRate = prevSearchesCount > 0 
+          ? (prevBookingsCount / prevSearchesCount) * 100 
+          : 0;
 
-      const currentBookingsCount = currentBookings?.length || 0;
-      const prevBookingsCount = prevBookings?.length || 0;
-      const currentSearchesCount = currentSearches?.reduce((sum, metric) => sum + metric.value, 0) || 0;
-      const prevSearchesCount = prevSearches?.reduce((sum, metric) => sum + metric.value, 0) || 0;
+        const conversionChange = prevConversionRate > 0 
+          ? ((currentConversionRate - prevConversionRate) / prevConversionRate) * 100 
+          : 0;
 
-      const currentConversionRate = currentSearchesCount > 0 
-        ? (currentBookingsCount / currentSearchesCount) * 100 
-        : 0;
-      const prevConversionRate = prevSearchesCount > 0 
-        ? (prevBookingsCount / prevSearchesCount) * 100 
-        : 0;
-
-      const conversionChange = prevConversionRate > 0 
-        ? ((currentConversionRate - prevConversionRate) / prevConversionRate) * 100 
-        : 0;
-
-      return {
-        conversionRate: `${currentConversionRate.toFixed(1)}%`,
-        conversionChange: `${conversionChange >= 0 ? '+' : ''}${conversionChange.toFixed(1)}%`,
-      };
+        return {
+          conversionRate: `${currentConversionRate.toFixed(1)}%`,
+          conversionChange: `${conversionChange >= 0 ? '+' : ''}${conversionChange.toFixed(1)}%`,
+        };
+      } catch (error) {
+        toast({
+          title: "Error fetching stats",
+          description: "Failed to fetch conversion stats",
+          variant: "destructive",
+        });
+        return {
+          conversionRate: "0%",
+          conversionChange: "+0%",
+        };
+      }
     },
     staleTime: 30000,
     gcTime: 60000,
@@ -90,9 +107,17 @@ const useStats = () => {
           table: 'bookings' 
         },
         async () => {
-          const { data: stats } = await refetch();
-          if (stats) {
-            setRealtimeStats(stats);
+          try {
+            const { data: stats } = await refetch();
+            if (stats) {
+              setRealtimeStats(stats);
+            }
+          } catch (error) {
+            toast({
+              title: "Error updating stats",
+              description: "Failed to update real-time stats",
+              variant: "destructive",
+            });
           }
         }
       )
@@ -101,7 +126,7 @@ const useStats = () => {
     return () => {
       bookingsChannel.unsubscribe();
     };
-  }, [refetch]);
+  }, [refetch, toast]);
 
   return realtimeStats || queryStats;
 };

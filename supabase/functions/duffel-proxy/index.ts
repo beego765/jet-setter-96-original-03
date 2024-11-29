@@ -27,7 +27,11 @@ serve(async (req) => {
 
     // Special handling for /air/offers endpoint
     if (path === '/air/offers' && method === 'GET') {
-      // If it's a GET request to /air/offers, we need to create an offer request first
+      if (!body || !body.data) {
+        throw new Error('Request body must include data object for offer requests')
+      }
+
+      // Create an offer request first
       const offerRequestResponse = await fetch('https://api.duffel.com/air/offer_requests', {
         method: 'POST',
         headers: {
@@ -36,7 +40,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
           'Duffel-Version': 'v1'
         },
-        body: JSON.stringify({ data: body.data }) // Ensure data is nested under 'data' key
+        body: JSON.stringify({ data: body.data })
       });
 
       const offerRequestData = await offerRequestResponse.json();
@@ -84,8 +88,13 @@ serve(async (req) => {
       )
     }
 
-    // For all other endpoints, proceed as normal but ensure data is nested under 'data' key
-    const requestBody = body ? JSON.stringify({ data: body.data }) : undefined;
+    // For all other endpoints, ensure data is properly nested
+    let requestBody;
+    if (body) {
+      requestBody = JSON.stringify({ 
+        data: body.data || body // Handle cases where data might not be nested
+      });
+    }
     
     const response = await fetch(`https://api.duffel.com${path}`, {
       method: method || 'GET',

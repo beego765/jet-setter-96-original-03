@@ -89,7 +89,7 @@ export const ChatInterface = ({ supportMessage, onClose }: ChatInterfaceProps) =
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[9999]">
       <div className="bg-gray-800/95 backdrop-blur-lg border border-gray-700 rounded-lg p-6 max-w-2xl w-full space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold text-gray-100">Support Chat</h3>

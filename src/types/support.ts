@@ -9,10 +9,12 @@ export type SupportMessage = {
   created_at: string;
 };
 
+export type SenderType = 'user' | 'admin';
+
 export type SupportChatMessage = {
   id: string;
   support_message_id: string;
-  sender_type: 'user' | 'admin';
+  sender_type: SenderType;
   message: string;
   created_at: string;
   updated_at: string;

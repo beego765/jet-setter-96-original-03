@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { SupportMessage, SupportChatMessage } from "../../../types/support";
+import { SupportMessage, SupportChatMessage, SenderType } from "../../../types/support";
 
 interface MessageDetailsProps {
   message: SupportMessage;
@@ -28,7 +28,6 @@ export const MessageDetails = ({
   const { toast } = useToast();
 
   useEffect(() => {
-    // Fetch existing chat messages
     const fetchMessages = async () => {
       const { data, error } = await supabase
         .from('support_chat_messages')
@@ -45,12 +44,11 @@ export const MessageDetails = ({
         return;
       }
 
-      setChatMessages(data);
+      setChatMessages(data as SupportChatMessage[]);
     };
 
     fetchMessages();
 
-    // Subscribe to new messages
     const channel = supabase
       .channel(`support_message_${message.id}`)
       .on(
@@ -85,7 +83,7 @@ export const MessageDetails = ({
           {
             support_message_id: message.id,
             message: newMessage.trim(),
-            sender_type: 'admin'
+            sender_type: 'admin' as SenderType
           }
         ]);
 

@@ -4,27 +4,19 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { SupportMessage } from "@/types/support";
+import { SupportMessage, SupportChatMessage, SenderType } from "@/types/support";
 
 interface ChatInterfaceProps {
   supportMessage: SupportMessage;
   onClose: () => void;
 }
 
-interface ChatMessage {
-  id: string;
-  message: string;
-  sender_type: 'user' | 'admin';
-  created_at: string;
-}
-
 export const ChatInterface = ({ supportMessage, onClose }: ChatInterfaceProps) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<SupportChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
-    // Fetch existing chat messages
     const fetchMessages = async () => {
       const { data, error } = await supabase
         .from('support_chat_messages')
@@ -41,12 +33,11 @@ export const ChatInterface = ({ supportMessage, onClose }: ChatInterfaceProps) =
         return;
       }
 
-      setMessages(data);
+      setMessages(data as SupportChatMessage[]);
     };
 
     fetchMessages();
 
-    // Subscribe to new messages
     const channel = supabase
       .channel(`support_message_${supportMessage.id}`)
       .on(
@@ -59,7 +50,7 @@ export const ChatInterface = ({ supportMessage, onClose }: ChatInterfaceProps) =
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            setMessages(prev => [...prev, payload.new as ChatMessage]);
+            setMessages(prev => [...prev, payload.new as SupportChatMessage]);
           }
         }
       )
@@ -81,7 +72,7 @@ export const ChatInterface = ({ supportMessage, onClose }: ChatInterfaceProps) =
           {
             support_message_id: supportMessage.id,
             message: newMessage.trim(),
-            sender_type: 'user'
+            sender_type: 'user' as SenderType
           }
         ]);
 

@@ -25,6 +25,66 @@ serve(async (req) => {
       body
     })
 
+    // Special handling for /air/offers endpoint
+    if (path === '/air/offers' && method === 'GET') {
+      // If it's a GET request to /air/offers, we need to create an offer request first
+      const offerRequestResponse = await fetch('https://api.duffel.com/air/offer_requests', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${duffelApiKey}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Duffel-Version': 'v1'
+        },
+        body: JSON.stringify(body)
+      });
+
+      const offerRequestData = await offerRequestResponse.json();
+      
+      if (!offerRequestResponse.ok) {
+        console.error('Offer request failed:', offerRequestData);
+        return new Response(
+          JSON.stringify(offerRequestData),
+          { 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json',
+            },
+            status: offerRequestResponse.status
+          },
+        )
+      }
+
+      // Now get the offers using the offer request ID
+      const offersResponse = await fetch(`https://api.duffel.com/air/offers?offer_request_id=${offerRequestData.data.id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${duffelApiKey}`,
+          'Accept': 'application/json',
+          'Duffel-Version': 'v1'
+        }
+      });
+
+      const data = await offersResponse.json();
+      
+      console.log('Duffel API response:', {
+        status: offersResponse.status,
+        data
+      });
+
+      return new Response(
+        JSON.stringify(data),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+          status: offersResponse.status
+        },
+      )
+    }
+
+    // For all other endpoints, proceed as normal
     const response = await fetch(`https://api.duffel.com${path}`, {
       method: method || 'GET',
       headers: {

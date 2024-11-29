@@ -14,12 +14,16 @@ export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
+  if (!booking || !flightDetails) {
+    return null;
+  }
+
   const handlePayNow = async () => {
     try {
       setIsProcessing(true);
-      const baseAmount = parseFloat(flightDetails.data?.total_amount || booking.total_price);
-      const taxAmount = parseFloat(flightDetails.data?.tax_amount || 0);
-      const feesAmount = parseFloat(flightDetails.data?.service_fees_amount || 0);
+      const baseAmount = parseFloat(flightDetails?.data?.total_amount || booking.total_price);
+      const taxAmount = parseFloat(flightDetails?.data?.tax_amount || 0);
+      const feesAmount = parseFloat(flightDetails?.data?.service_fees_amount || 0);
       const totalAmount = baseAmount + taxAmount + feesAmount;
 
       // Create payment record in Supabase
@@ -46,7 +50,7 @@ export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }
           body: {
             data: {
               amount: totalAmount.toString(),
-              currency: flightDetails.data?.total_currency || 'GBP',
+              currency: flightDetails?.data?.total_currency || 'GBP',
               order_id: booking.duffel_booking_id
             }
           }
@@ -91,9 +95,9 @@ export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }
   const handleHold = async () => {
     try {
       setIsProcessing(true);
-      const baseAmount = parseFloat(flightDetails.data?.total_amount || booking.total_price);
-      const taxAmount = parseFloat(flightDetails.data?.tax_amount || 0);
-      const feesAmount = parseFloat(flightDetails.data?.service_fees_amount || 0);
+      const baseAmount = parseFloat(flightDetails?.data?.total_amount || booking.total_price);
+      const taxAmount = parseFloat(flightDetails?.data?.tax_amount || 0);
+      const feesAmount = parseFloat(flightDetails?.data?.service_fees_amount || 0);
       const totalAmount = baseAmount + taxAmount + feesAmount;
 
       // Create hold record in Supabase
@@ -136,7 +140,7 @@ export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }
 
   return (
     <div className="flex justify-between items-center mt-6">
-      {flightDetails.data?.payment_requirements?.requires_instant_payment === false && (
+      {flightDetails?.data?.payment_requirements?.requires_instant_payment === false && (
         <Button
           variant="outline"
           className="border-gray-700"

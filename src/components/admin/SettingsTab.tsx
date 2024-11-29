@@ -4,11 +4,42 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Mail, Globe, Shield, Moon, Sun, Users } from "lucide-react";
+import { Bell, Mail, Globe, Shield, Moon, Sun, Users, Database, Plane } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 export const SettingsTab = () => {
   const { toast } = useToast();
+
+  // Query to check Supabase connection
+  const { data: supabaseStatus, isLoading: supabaseLoading } = useQuery({
+    queryKey: ['supabase-status'],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase.from('airports').select('id').limit(1);
+        return error ? 'error' : 'connected';
+      } catch {
+        return 'error';
+      }
+    }
+  });
+
+  // Query to check Duffel API connection
+  const { data: duffelStatus, isLoading: duffelLoading } = useQuery({
+    queryKey: ['duffel-status'],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase.from('api_credentials')
+          .select('*')
+          .eq('provider', 'duffel')
+          .single();
+        return data ? 'connected' : 'not configured';
+      } catch {
+        return 'error';
+      }
+    }
+  });
 
   const handleSave = () => {
     toast({
@@ -102,6 +133,56 @@ export const SettingsTab = () => {
       <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6">
         <h2 className="text-xl font-semibold text-gray-100 mb-6">API Settings</h2>
         <div className="space-y-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Database className="w-5 h-5 text-blue-400" />
+                <div>
+                  <p className="text-gray-200">Supabase Connection</p>
+                  <p className="text-sm text-gray-400">Database and authentication service</p>
+                </div>
+              </div>
+              {supabaseLoading ? (
+                <Badge className="bg-gray-500/20 text-gray-400">Checking...</Badge>
+              ) : (
+                <Badge className={
+                  supabaseStatus === 'connected' 
+                    ? 'bg-green-500/20 text-green-400'
+                    : 'bg-red-500/20 text-red-400'
+                }>
+                  {supabaseStatus === 'connected' ? 'Connected' : 'Error'}
+                </Badge>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Plane className="w-5 h-5 text-purple-400" />
+                <div>
+                  <p className="text-gray-200">Duffel API</p>
+                  <p className="text-sm text-gray-400">Flight booking service</p>
+                </div>
+              </div>
+              {duffelLoading ? (
+                <Badge className="bg-gray-500/20 text-gray-400">Checking...</Badge>
+              ) : (
+                <Badge className={
+                  duffelStatus === 'connected'
+                    ? 'bg-green-500/20 text-green-400'
+                    : duffelStatus === 'not configured'
+                    ? 'bg-yellow-500/20 text-yellow-400'
+                    : 'bg-red-500/20 text-red-400'
+                }>
+                  {duffelStatus === 'connected' 
+                    ? 'Connected' 
+                    : duffelStatus === 'not configured'
+                    ? 'Not Configured'
+                    : 'Error'}
+                </Badge>
+              )}
+            </div>
+          </div>
+
           <div className="space-y-2">
             <label className="text-sm text-gray-300">API Key</label>
             <div className="flex gap-2">

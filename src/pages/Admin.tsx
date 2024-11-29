@@ -9,12 +9,67 @@ import { SystemTab } from "@/components/admin/SystemTab";
 import { SettingsTab } from "@/components/admin/SettingsTab";
 import { BookingsTab } from "@/components/admin/BookingsTab";
 import { SupportMessagesTab } from "@/components/admin/SupportMessagesTab";
+import { NotificationBubble } from "@/components/admin/NotificationBubble";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
 
 const Admin = () => {
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Fetch unread messages count
+  const { data: messageCount = 0 } = useQuery({
+    queryKey: ['unread-support-messages'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('support_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'new');
+
+      if (error) throw error;
+      return count || 0;
+    }
+  });
+
+  // Update unread count and subscribe to changes
+  useEffect(() => {
+    setUnreadCount(messageCount);
+
+    const channel = supabase
+      .channel('support_messages_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'support_messages' },
+        () => {
+          // Refresh the count when messages change
+          supabase
+            .from('support_messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'new')
+            .then(({ count, error }) => {
+              if (!error && count !== null) {
+                setUnreadCount(count);
+              }
+            });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [messageCount]);
+
+  // Reset unread count when switching to support tab
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === 'support') {
+      setUnreadCount(0);
+    }
+  };
+
   const [realtimeStats, setRealtimeStats] = useState({
     totalSearches: 0,
     searchesChange: "+0%",
@@ -140,42 +195,25 @@ const Admin = () => {
         <AdminHeader />
         <StatsGrid stats={realtimeStats} />
 
-        <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
           <TabsList className="bg-gray-800/50 border-gray-700 w-full justify-start overflow-x-auto">
-            <TabsTrigger 
-              value="overview" 
-              className="flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700"
-            >
+            <TabsTrigger value="overview" className="flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700">
               Overview
             </TabsTrigger>
-            <TabsTrigger 
-              value="bookings" 
-              className="flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700"
-            >
+            <TabsTrigger value="bookings" className="flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700">
               Bookings
             </TabsTrigger>
-            <TabsTrigger 
-              value="users" 
-              className="flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700"
-            >
+            <TabsTrigger value="users" className="flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700">
               Users
             </TabsTrigger>
-            <TabsTrigger 
-              value="support" 
-              className="flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700"
-            >
+            <TabsTrigger value="support" className="relative flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700">
               Support
+              <NotificationBubble count={unreadCount} />
             </TabsTrigger>
-            <TabsTrigger 
-              value="system" 
-              className="flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700"
-            >
+            <TabsTrigger value="system" className="flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700">
               System
             </TabsTrigger>
-            <TabsTrigger 
-              value="settings" 
-              className="flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700"
-            >
+            <TabsTrigger value="settings" className="flex-1 text-gray-100 data-[state=active]:text-white data-[state=active]:bg-gray-700">
               Settings
             </TabsTrigger>
           </TabsList>

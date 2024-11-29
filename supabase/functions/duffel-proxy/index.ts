@@ -67,13 +67,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
           'Duffel-Version': 'v1'
         },
-        body: JSON.stringify({ 
-          data: {
-            slices: body.slices,
-            passengers: body.passengers,
-            cabin_class: body.cabin_class || 'economy'
-          }
-        })
+        body: JSON.stringify({ data: body })
       });
 
       const offerRequestData = await offerRequestResponse.json();

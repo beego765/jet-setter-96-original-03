@@ -165,51 +165,56 @@ const MyBookings = () => {
           </div>
         </div>
 
-        {/* Search History Section */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Recent Searches</h2>
-          <div className="space-y-4">
-            {searchHistory.map((search) => (
-              <Card key={search.id} className="p-4 bg-gray-800/50 backdrop-blur-sm border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 rounded-full bg-blue-500/20">
-                      <Search className="w-4 h-4 text-blue-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400">From {search.from} to {search.to}</p>
-                      <p className="text-xs text-gray-500">Date: {search.date}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <Clock className="w-4 h-4" />
-                    <span className="text-xs">Searched on {search.searchedAt}</span>
-                  </div>
-                </div>
-              </Card>
-            ))}
+        {/* Pending or Draft Bookings */}
+        {bookings.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">Pending Bookings</h2>
+            <div className="space-y-4">
+              {bookings.map((booking) => (
+                <BookingCard
+                  key={booking.id}
+                  booking={{
+                    id: booking.id,
+                    flightNumber: booking.booking_reference || 'N/A',
+                    from: booking.origin,
+                    to: booking.destination,
+                    date: booking.departure_date,
+                    status: booking.status
+                  }}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
+        {/* Recent Searches Section */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-semibold mb-4">Other Bookings</h2>
-          {bookings.length > 0 ? (
-            bookings.map((booking) => (
-              <BookingCard
-                key={booking.id}
-                booking={{
-                  id: booking.id,
-                  flightNumber: booking.booking_reference || 'N/A',
-                  from: booking.origin,
-                  to: booking.destination,
-                  date: booking.departure_date,
-                  status: booking.status
-                }}
-              />
-            ))
+          <h2 className="text-2xl font-semibold mb-4">Recent Searches</h2>
+          {searchHistory.length > 0 ? (
+            <div className="space-y-4">
+              {searchHistory.map((search) => (
+                <Card key={search.id} className="p-4 bg-gray-800/50 backdrop-blur-sm border-gray-700">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 rounded-full bg-blue-500/20">
+                        <Search className="w-4 h-4 text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-400">From {search.from} to {search.to}</p>
+                        <p className="text-xs text-gray-500">Date: {search.date}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <Clock className="w-4 h-4" />
+                      <span className="text-xs">Searched on {search.searchedAt}</span>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
           ) : (
             <div className="text-center py-8 text-gray-400">
-              No other bookings found
+              No recent searches found
             </div>
           )}
         </div>

@@ -10,6 +10,34 @@ interface PaymentActionsProps {
   onHoldOrder: () => void;
 }
 
+// Helper functions to keep the component smaller
+const createPaymentRecord = async (bookingId: string, amounts: any) => {
+  const { data, error } = await supabase
+    .from('booking_payments')
+    .insert({
+      booking_id: bookingId,
+      amount: amounts.total,
+      base_amount: amounts.base,
+      taxes_amount: amounts.taxes,
+      fees_amount: amounts.fees,
+      status: 'processing'
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+const updateBookingStatus = async (bookingId: string, status: string) => {
+  const { error } = await supabase
+    .from('bookings')
+    .update({ status })
+    .eq('id', bookingId);
+
+  if (error) throw error;
+};
+
 export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }: PaymentActionsProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
@@ -21,26 +49,15 @@ export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }
   const handlePayNow = async () => {
     try {
       setIsProcessing(true);
-      const baseAmount = parseFloat(flightDetails.data.total_amount || booking.total_price);
-      const taxAmount = parseFloat(flightDetails.data.tax_amount || 0);
-      const feesAmount = parseFloat(flightDetails.data.service_fees_amount || 0);
-      const totalAmount = baseAmount + taxAmount + feesAmount;
+      const amounts = {
+        base: parseFloat(flightDetails.data.total_amount || booking.total_price),
+        taxes: parseFloat(flightDetails.data.tax_amount || 0),
+        fees: parseFloat(flightDetails.data.service_fees_amount || 0),
+      };
+      amounts.total = amounts.base + amounts.taxes + amounts.fees;
 
-      // Create payment record in Supabase
-      const { data: paymentData, error: paymentError } = await supabase
-        .from('booking_payments')
-        .insert({
-          booking_id: booking.id,
-          amount: totalAmount,
-          base_amount: baseAmount,
-          taxes_amount: taxAmount,
-          fees_amount: feesAmount,
-          status: 'processing'
-        })
-        .select()
-        .single();
-
-      if (paymentError) throw paymentError;
+      // Create initial payment record
+      const paymentData = await createPaymentRecord(booking.id, amounts);
 
       // Process payment with Duffel
       const { data: duffelPayment, error: duffelError } = await supabase.functions.invoke('duffel-proxy', {
@@ -49,9 +66,10 @@ export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }
           method: 'POST',
           body: {
             data: {
-              amount: totalAmount.toString(),
+              amount: amounts.total.toString(),
               currency: flightDetails.data.total_currency || 'GBP',
-              order_id: booking.duffel_booking_id
+              order_id: booking.duffel_booking_id,
+              type: 'balance'
             }
           }
         }
@@ -59,20 +77,17 @@ export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }
 
       if (duffelError) throw duffelError;
 
-      // Update payment record with Duffel payment ID
+      // Update payment record with success
       await supabase
         .from('booking_payments')
         .update({
           status: 'completed',
-          duffel_payment_id: duffelPayment.id
+          duffel_payment_id: duffelPayment.data.id
         })
         .eq('id', paymentData.id);
 
       // Update booking status
-      await supabase
-        .from('bookings')
-        .update({ status: 'confirmed' })
-        .eq('id', booking.id);
+      await updateBookingStatus(booking.id, 'confirmed');
 
       toast({
         title: "Payment Successful",
@@ -95,30 +110,36 @@ export const PaymentActions = ({ booking, flightDetails, onPayNow, onHoldOrder }
   const handleHold = async () => {
     try {
       setIsProcessing(true);
-      const baseAmount = parseFloat(flightDetails.data.total_amount || booking.total_price);
-      const taxAmount = parseFloat(flightDetails.data.tax_amount || 0);
-      const feesAmount = parseFloat(flightDetails.data.service_fees_amount || 0);
-      const totalAmount = baseAmount + taxAmount + feesAmount;
+      const amounts = {
+        base: parseFloat(flightDetails.data.total_amount || booking.total_price),
+        taxes: parseFloat(flightDetails.data.tax_amount || 0),
+        fees: parseFloat(flightDetails.data.service_fees_amount || 0),
+      };
+      amounts.total = amounts.base + amounts.taxes + amounts.fees;
 
-      // Create hold record in Supabase
-      const { error: paymentError } = await supabase
-        .from('booking_payments')
-        .insert({
-          booking_id: booking.id,
-          amount: totalAmount,
-          base_amount: baseAmount,
-          taxes_amount: taxAmount,
-          fees_amount: feesAmount,
-          status: 'held'
-        });
+      // Create hold order with Duffel
+      const { data: duffelHold, error: duffelError } = await supabase.functions.invoke('duffel-proxy', {
+        body: {
+          path: `/air/orders/${booking.duffel_booking_id}/hold`,
+          method: 'POST',
+          body: {
+            data: {
+              expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
+            }
+          }
+        }
+      });
 
-      if (paymentError) throw paymentError;
+      if (duffelError) throw duffelError;
+
+      // Create hold payment record
+      await createPaymentRecord(booking.id, {
+        ...amounts,
+        status: 'held'
+      });
 
       // Update booking status
-      await supabase
-        .from('bookings')
-        .update({ status: 'draft' })
-        .eq('id', booking.id);
+      await updateBookingStatus(booking.id, 'draft');
 
       toast({
         title: "Booking Held",

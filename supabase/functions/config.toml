@@ -7,7 +7,3 @@ DUFFEL_API_KEY = "env"
 [[functions]]
 name = "duffel-proxy"
 verify_jwt = false
-
-[[functions]]
-name = "import-airports"
-verify_jwt = false

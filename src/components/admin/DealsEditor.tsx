@@ -1,17 +1,17 @@
 import { useState } from "react";
-import { Card } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Textarea } from "../../components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { Card } from "../ui/card";
+import { Button } from "../ui/button";
 import { supabase } from "../../integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
+import { DealForm } from "./deals/DealForm";
+import { DealsList } from "./deals/DealsList";
+import { NewDeal } from "./types/deals";
 
 export const DealsEditor = () => {
   const [isAdding, setIsAdding] = useState(false);
-  const [newDeal, setNewDeal] = useState({
+  const [newDeal, setNewDeal] = useState<NewDeal>({
     title: "",
     description: "",
     discount: "",
@@ -40,11 +40,11 @@ export const DealsEditor = () => {
     try {
       const { error } = await supabase
         .from('deals')
-        .insert([{
+        .insert({
           ...newDeal,
           price: parseFloat(newDeal.price),
           original_price: parseFloat(newDeal.original_price)
-        }]);
+        });
 
       if (error) throw error;
       
@@ -98,79 +98,11 @@ export const DealsEditor = () => {
       </div>
 
       {isAdding && (
-        <div className="space-y-4 mb-6 p-4 bg-gray-700/30 rounded-lg">
-          <Input
-            placeholder="Title"
-            value={newDeal.title}
-            onChange={(e) => setNewDeal({ ...newDeal, title: e.target.value })}
-            className="bg-gray-800 border-gray-600"
-          />
-          <Textarea
-            placeholder="Description"
-            value={newDeal.description}
-            onChange={(e) => setNewDeal({ ...newDeal, description: e.target.value })}
-            className="bg-gray-800 border-gray-600"
-          />
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              placeholder="Discount (e.g., 20% OFF)"
-              value={newDeal.discount}
-              onChange={(e) => setNewDeal({ ...newDeal, discount: e.target.value })}
-              className="bg-gray-800 border-gray-600"
-            />
-            <Input
-              type="datetime-local"
-              value={newDeal.valid_until}
-              onChange={(e) => setNewDeal({ ...newDeal, valid_until: e.target.value })}
-              className="bg-gray-800 border-gray-600"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              type="number"
-              placeholder="Price"
-              value={newDeal.price}
-              onChange={(e) => setNewDeal({ ...newDeal, price: e.target.value })}
-              className="bg-gray-800 border-gray-600"
-            />
-            <Input
-              type="number"
-              placeholder="Original Price"
-              value={newDeal.original_price}
-              onChange={(e) => setNewDeal({ ...newDeal, original_price: e.target.value })}
-              className="bg-gray-800 border-gray-600"
-            />
-          </div>
-          <Select
-            value={newDeal.category}
-            onValueChange={(value) => setNewDeal({ ...newDeal, category: value })}
-          >
-            <SelectTrigger className="bg-gray-800 border-gray-600">
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="weekend">Weekend</SelectItem>
-              <SelectItem value="seasonal">Seasonal</SelectItem>
-              <SelectItem value="business">Business</SelectItem>
-              <SelectItem value="all">All</SelectItem>
-            </SelectContent>
-          </Select>
-          <Input
-            placeholder="Destination"
-            value={newDeal.destination}
-            onChange={(e) => setNewDeal({ ...newDeal, destination: e.target.value })}
-            className="bg-gray-800 border-gray-600"
-          />
-          <Input
-            placeholder="Image URL"
-            value={newDeal.image_url}
-            onChange={(e) => setNewDeal({ ...newDeal, image_url: e.target.value })}
-            className="bg-gray-800 border-gray-600"
-          />
-          <Button onClick={handleAddDeal} className="w-full bg-green-500 hover:bg-green-600">
-            Add Deal
-          </Button>
-        </div>
+        <DealForm 
+          newDeal={newDeal}
+          onDealChange={setNewDeal}
+          onSubmit={handleAddDeal}
+        />
       )}
 
       {isLoading ? (
@@ -178,28 +110,7 @@ export const DealsEditor = () => {
           <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
         </div>
       ) : (
-        <div className="space-y-4">
-          {deals?.map((deal) => (
-            <div
-              key={deal.id}
-              className="flex items-center justify-between p-4 bg-gray-700/30 rounded-lg"
-            >
-              <div>
-                <h3 className="font-medium text-gray-200">{deal.title}</h3>
-                <p className="text-sm text-gray-400">
-                  {deal.destination} - {deal.discount}
-                </p>
-              </div>
-              <Button
-                variant="destructive"
-                size="icon"
-                onClick={() => handleDeleteDeal(deal.id)}
-              >
-                <Trash className="w-4 h-4" />
-              </Button>
-            </div>
-          ))}
-        </div>
+        <DealsList deals={deals || []} onDelete={handleDeleteDeal} />
       )}
     </Card>
   );

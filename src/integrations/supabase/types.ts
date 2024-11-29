@@ -268,6 +268,51 @@ export type Database = {
         }
         Relationships: []
       }
+      deals: {
+        Row: {
+          category: Database["public"]["Enums"]["deal_category"]
+          created_at: string
+          description: string
+          destination: string
+          discount: string
+          id: string
+          image_url: string
+          original_price: number
+          price: number
+          title: string
+          updated_at: string
+          valid_until: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["deal_category"]
+          created_at?: string
+          description: string
+          destination: string
+          discount: string
+          id?: string
+          image_url: string
+          original_price: number
+          price: number
+          title: string
+          updated_at?: string
+          valid_until: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["deal_category"]
+          created_at?: string
+          description?: string
+          destination?: string
+          discount?: string
+          id?: string
+          image_url?: string
+          original_price?: number
+          price?: number
+          title?: string
+          updated_at?: string
+          valid_until?: string
+        }
+        Relationships: []
+      }
       passenger_details: {
         Row: {
           booking_id: string
@@ -414,6 +459,7 @@ export type Database = {
         | "cancellation"
         | "change"
       booking_status: "pending" | "confirmed" | "cancelled" | "draft"
+      deal_category: "weekend" | "seasonal" | "business" | "all"
       payment_status: "pending" | "processing" | "completed" | "failed" | "held"
       user_role: "user" | "admin"
     }

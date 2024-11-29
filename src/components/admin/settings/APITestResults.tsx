@@ -6,15 +6,27 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PlayCircle } from "lucide-react";
 
+type TestStatus = 'pending' | 'success' | 'error' | 'warning';
+
+interface TestResult {
+  status: TestStatus;
+  message: string;
+}
+
+interface TestResults {
+  supabase: TestResult;
+  duffel: TestResult;
+}
+
 export const APITestResults = () => {
   const { toast } = useToast();
 
   const { data: testResults, refetch: runTests, isLoading } = useQuery({
     queryKey: ['api-tests'],
     queryFn: async () => {
-      const results = {
-        supabase: { status: 'pending' as const, message: '' },
-        duffel: { status: 'pending' as const, message: '' }
+      const results: TestResults = {
+        supabase: { status: 'pending', message: '' },
+        duffel: { status: 'pending', message: '' }
       };
 
       // Test Supabase
@@ -25,18 +37,18 @@ export const APITestResults = () => {
         
         if (error) {
           results.supabase = { 
-            status: 'error' as const, 
+            status: 'error', 
             message: `Error: ${error.message} (${duration}ms)`
           };
         } else {
           results.supabase = { 
-            status: 'success' as const, 
+            status: 'success', 
             message: `Connected successfully (${duration}ms)`
           };
         }
       } catch (error: any) {
         results.supabase = { 
-          status: 'error' as const, 
+          status: 'error', 
           message: `Error: ${error.message}`
         };
       }
@@ -52,12 +64,12 @@ export const APITestResults = () => {
 
         if (error) {
           results.duffel = { 
-            status: 'error' as const, 
+            status: 'error', 
             message: `Error: ${error.message} (${duration}ms)`
           };
         } else if (!data) {
           results.duffel = { 
-            status: 'warning' as const, 
+            status: 'warning', 
             message: 'API not configured'
           };
         } else {
@@ -71,19 +83,19 @@ export const APITestResults = () => {
 
           if (duffelError) {
             results.duffel = { 
-              status: 'error' as const, 
+              status: 'error', 
               message: `API Error: ${duffelError.message} (${duration}ms)`
             };
           } else {
             results.duffel = { 
-              status: 'success' as const, 
+              status: 'success', 
               message: `Connected successfully (${duration}ms)`
             };
           }
         }
       } catch (error: any) {
         results.duffel = { 
-          status: 'error' as const, 
+          status: 'error', 
           message: `Error: ${error.message}`
         };
       }
@@ -101,7 +113,7 @@ export const APITestResults = () => {
     runTests();
   };
 
-  const getStatusBadge = (status: 'pending' | 'success' | 'error' | 'warning') => {
+  const getStatusBadge = (status: TestStatus) => {
     const styles = {
       pending: 'bg-gray-500/20 text-gray-400',
       success: 'bg-green-500/20 text-green-400',

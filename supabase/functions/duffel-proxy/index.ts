@@ -67,7 +67,13 @@ serve(async (req) => {
           'Content-Type': 'application/json',
           'Duffel-Version': 'v1'
         },
-        body: JSON.stringify({ data: body })
+        body: JSON.stringify({ 
+          data: {
+            slices: body.slices,
+            passengers: body.passengers,
+            cabin_class: body.cabin_class || 'economy'
+          }
+        })
       });
 
       const offerRequestData = await offerRequestResponse.json();
@@ -116,7 +122,7 @@ serve(async (req) => {
     }
 
     // For all other endpoints
-    const requestBody = body ? JSON.stringify({ data: body }) : undefined;
+    const requestBody = body ? JSON.stringify({ data: body.data || body }) : undefined;
     
     const response = await fetch(`https://api.duffel.com${path}`, {
       method: method || 'GET',

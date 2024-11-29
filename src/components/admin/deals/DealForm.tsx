@@ -5,7 +5,7 @@ import { Button } from "../../ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
 import { useState } from "react";
 import { supabase } from "../../../integrations/supabase/client";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface DealFormProps {
@@ -17,7 +17,7 @@ interface DealFormProps {
 export const DealForm = ({ newDeal, onDealChange, onSubmit }: DealFormProps) => {
   const [isUploading, setIsUploading] = useState(false);
 
-  const handleChange = (field: keyof NewDeal, value: string) => {
+  const handleChange = (field: keyof NewDeal, value: string | number) => {
     onDealChange({ ...newDeal, [field]: value });
   };
 
@@ -83,14 +83,14 @@ export const DealForm = ({ newDeal, onDealChange, onSubmit }: DealFormProps) => 
           type="number"
           placeholder="Price"
           value={newDeal.price}
-          onChange={(e) => handleChange('price', e.target.value)}
+          onChange={(e) => handleChange('price', Number(e.target.value))}
           className="bg-gray-800 border-gray-600"
         />
         <Input
           type="number"
           placeholder="Original Price"
           value={newDeal.original_price}
-          onChange={(e) => handleChange('original_price', e.target.value)}
+          onChange={(e) => handleChange('original_price', Number(e.target.value))}
           className="bg-gray-800 border-gray-600"
         />
       </div>

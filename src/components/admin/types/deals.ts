@@ -6,9 +6,9 @@ export interface Deal {
   description: string;
   discount: string;
   valid_until: string;
-  price: string;
+  price: number;
   category: DealCategory;
-  original_price: string;
+  original_price: number;
   destination: string;
   image_url: string;
 }

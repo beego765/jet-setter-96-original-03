@@ -16,9 +16,9 @@ export const DealsEditor = () => {
     description: "",
     discount: "",
     valid_until: "",
-    price: "",
+    price: 0,
     category: "weekend",
-    original_price: "",
+    original_price: 0,
     destination: "",
     image_url: ""
   });
@@ -42,8 +42,8 @@ export const DealsEditor = () => {
         .from('deals')
         .insert({
           ...newDeal,
-          price: parseFloat(newDeal.price),
-          original_price: parseFloat(newDeal.original_price)
+          price: Number(newDeal.price),
+          original_price: Number(newDeal.original_price)
         });
 
       if (error) throw error;
@@ -55,9 +55,9 @@ export const DealsEditor = () => {
         description: "",
         discount: "",
         valid_until: "",
-        price: "",
+        price: 0,
         category: "weekend",
-        original_price: "",
+        original_price: 0,
         destination: "",
         image_url: ""
       });

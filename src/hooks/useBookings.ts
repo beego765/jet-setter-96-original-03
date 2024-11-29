@@ -2,12 +2,21 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
+import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 export type Booking = {
   id: string;
   customer: string;
   destination: string;
   date: string;
+  status: string;
+};
+
+type BookingPayload = {
+  id: string;
+  passenger_details: Array<{ first_name: string; last_name: string }>;
+  destination: string;
+  departure_date: string;
   status: string;
 };
 
@@ -31,7 +40,7 @@ export const useBookings = () => {
 
       if (error) throw error;
 
-      return data.map((booking: any) => ({
+      return data.map((booking: BookingPayload) => ({
         id: booking.id,
         customer: booking.passenger_details?.[0] 
           ? `${booking.passenger_details[0].first_name} ${booking.passenger_details[0].last_name}`
@@ -54,7 +63,9 @@ export const useBookings = () => {
       .channel('bookings-channel')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'bookings' },
-        async (payload) => {
+        async (payload: RealtimePostgresChangesPayload<BookingPayload>) => {
+          if (!payload.new && !payload.old) return;
+
           // Fetch the complete booking data including passenger details
           const { data: newBooking, error } = await supabase
             .from('bookings')
@@ -65,7 +76,7 @@ export const useBookings = () => {
               departure_date,
               status
             `)
-            .eq('id', payload.new.id)
+            .eq('id', payload.new?.id || payload.old?.id)
             .single();
 
           if (error) {
@@ -104,7 +115,7 @@ export const useBookings = () => {
               description: `Booking for ${formattedBooking.customer} has been updated.`
             });
           } else if (payload.eventType === 'DELETE') {
-            setBookings(prev => prev.filter(booking => booking.id !== payload.old.id));
+            setBookings(prev => prev.filter(booking => booking.id !== payload.old?.id));
             toast({
               title: "Booking removed",
               description: "A booking has been removed from the system."

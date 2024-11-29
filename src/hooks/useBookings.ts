@@ -72,12 +72,15 @@ export const useBookings = () => {
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'bookings' },
         async (payload: RealtimeBookingPayload) => {
-          if (!payload.new && !payload.old) return;
+          const newData = payload.new;
+          const oldData = payload.old;
+
+          if (!newData && !oldData) return;
 
           // Only proceed if the booking is confirmed or was confirmed
           if (
-            (payload.new && payload.new.status !== 'confirmed') && 
-            (payload.old && payload.old.status !== 'confirmed')
+            (newData && newData.status !== 'confirmed') && 
+            (oldData && oldData.status !== 'confirmed')
           ) {
             return;
           }
@@ -92,7 +95,7 @@ export const useBookings = () => {
               departure_date,
               status
             `)
-            .eq('id', payload.new?.id || payload.old?.id)
+            .eq('id', newData?.id || oldData?.id)
             .single();
 
           if (error) {
@@ -135,7 +138,7 @@ export const useBookings = () => {
             }
           } else if (payload.eventType === 'DELETE' || (payload.eventType === 'UPDATE' && newBooking?.status !== 'confirmed')) {
             // Remove booking if deleted or status changed from confirmed
-            setBookings(prev => prev.filter(booking => booking.id !== (payload.old?.id || payload.new?.id)));
+            setBookings(prev => prev.filter(booking => booking.id !== (oldData?.id || newData?.id)));
             toast({
               title: "Booking removed",
               description: "A booking has been removed from the list."

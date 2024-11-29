@@ -71,15 +71,19 @@
 }
 
 * {
-  @apply transition-colors duration-200;
+  @apply transition-none;
 }
 
 *:focus-visible {
-  @apply outline-none ring-2 ring-flight-accent ring-offset-2;
+  @apply outline-none ring-0;
 }
 
 input:-webkit-autofill {
   -webkit-text-fill-color: theme('colors.flight.primary');
-  -webkit-box-shadow: 0 0 0px 1000px white inset;
-  transition: background-color 5000s ease-in-out 0s;
+  -webkit-box-shadow: none;
+  transition: none;
+}
+
+input {
+  @apply shadow-none outline-none ring-0 focus:ring-0 focus:outline-none;
 }

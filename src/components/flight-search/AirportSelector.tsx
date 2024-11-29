@@ -63,7 +63,7 @@ export const AirportSelector = ({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="w-full justify-start h-12 bg-gray-700/50 border-gray-600 text-white hover:bg-gray-700"
+            className="w-full justify-start h-12 bg-gray-700/50 border-gray-600 text-white hover:bg-gray-700 focus:ring-0 focus:outline-none"
           >
             {displayValue || value || placeholder}
           </Button>
@@ -80,7 +80,7 @@ export const AirportSelector = ({
               placeholder="Search airports..." 
               value={query}
               onValueChange={setQuery}
-              className="h-12 bg-transparent border-b border-gray-600 placeholder-gray-400"
+              className="h-12 bg-transparent border-b border-gray-600 placeholder-gray-400 focus:ring-0 focus:outline-none"
             />
             
             <CommandList className="max-h-[300px] overflow-auto">

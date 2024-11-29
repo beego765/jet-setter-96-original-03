@@ -6,10 +6,12 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { SupportMessage } from "@/types/support";
+import { ChatInterface } from "@/components/support/ChatInterface";
 
 const Support = () => {
   const [session, setSession] = useState(null);
   const [messages, setMessages] = useState<SupportMessage[]>([]);
+  const [selectedMessage, setSelectedMessage] = useState<SupportMessage | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -99,14 +101,16 @@ const Support = () => {
     }
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('support_messages')
         .insert([
           {
             ...formData,
             user_id: session.user.id,
           }
-        ]);
+        ])
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -114,6 +118,9 @@ const Support = () => {
         title: "Message Sent",
         description: "We'll get back to you as soon as possible.",
       });
+
+      // Open chat interface for the new message
+      setSelectedMessage(data);
 
       // Clear form
       setFormData({
@@ -151,14 +158,24 @@ const Support = () => {
                     <span className="text-sm text-gray-400">
                       {new Date(msg.created_at).toLocaleDateString()}
                     </span>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      msg.status === 'new' ? 'bg-blue-500/20 text-blue-400' :
-                      msg.status === 'in_progress' ? 'bg-yellow-500/20 text-yellow-400' :
-                      msg.status === 'resolved' ? 'bg-green-500/20 text-green-400' :
-                      'bg-gray-500/20 text-gray-400'
-                    }`}>
-                      {msg.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        msg.status === 'new' ? 'bg-blue-500/20 text-blue-400' :
+                        msg.status === 'in_progress' ? 'bg-yellow-500/20 text-yellow-400' :
+                        msg.status === 'resolved' ? 'bg-green-500/20 text-green-400' :
+                        'bg-gray-500/20 text-gray-400'
+                      }`}>
+                        {msg.status}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedMessage(msg)}
+                        className="border-gray-700 hover:bg-gray-700"
+                      >
+                        Open Chat
+                      </Button>
+                    </div>
                   </div>
                   <p className="text-gray-200">{msg.message}</p>
                   {msg.admin_notes && (
@@ -171,6 +188,13 @@ const Support = () => {
               ))}
             </div>
           </Card>
+        )}
+
+        {selectedMessage && (
+          <ChatInterface
+            supportMessage={selectedMessage}
+            onClose={() => setSelectedMessage(null)}
+          />
         )}
 
         {session ? (

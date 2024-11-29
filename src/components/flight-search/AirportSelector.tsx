@@ -80,7 +80,7 @@ export const AirportSelector = ({
               placeholder="Search airports..." 
               value={query}
               onValueChange={setQuery}
-              className="h-12 bg-transparent border-b border-gray-600 focus:outline-none focus:ring-0 placeholder-gray-400"
+              className="h-12 bg-transparent border-b border-gray-600 placeholder-gray-400"
             />
             
             <CommandList className="max-h-[300px] overflow-auto">

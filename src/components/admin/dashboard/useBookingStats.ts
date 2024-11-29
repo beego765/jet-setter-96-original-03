@@ -60,7 +60,7 @@ export const useBookingStats = () => {
       return processBookingData(bookings);
     },
     staleTime: 30000, // Consider data fresh for 30 seconds
-    cacheTime: 60000, // Keep data in cache for 1 minute
+    gcTime: 60000, // Keep data in cache for 1 minute (formerly cacheTime)
   });
 
   useEffect(() => {

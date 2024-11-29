@@ -6,11 +6,15 @@ import { BoardingPass } from "@/components/bookings/BoardingPass";
 import { BookingsCalendar } from "@/components/bookings/BookingsCalendar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search, Clock } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 const MyBookings = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [bookings, setBookings] = useState<any[]>([]);
+  const [confirmedBookings, setConfirmedBookings] = useState<any[]>([]);
+  const [searchHistory, setSearchHistory] = useState<any[]>([]);
   const [travelStats, setTravelStats] = useState({
     totalMiles: 0,
     visitedDestinations: 0,
@@ -32,7 +36,6 @@ const MyBookings = () => {
 
         if (statsError) throw statsError;
         
-        // If stats exist, use them. Otherwise, use defaults
         if (statsData && statsData.length > 0) {
           setTravelStats({
             totalMiles: statsData[0].total_miles || 0,
@@ -41,7 +44,7 @@ const MyBookings = () => {
           });
         }
 
-        // Fetch bookings
+        // Fetch all bookings
         const { data: bookingsData, error: bookingsError } = await supabase
           .from('bookings')
           .select('*')
@@ -49,7 +52,21 @@ const MyBookings = () => {
           .order('departure_date', { ascending: true });
 
         if (bookingsError) throw bookingsError;
-        setBookings(bookingsData || []);
+        
+        // Separate confirmed bookings
+        const confirmed = bookingsData?.filter(b => b.status === 'confirmed') || [];
+        const other = bookingsData?.filter(b => b.status !== 'confirmed') || [];
+        
+        setConfirmedBookings(confirmed);
+        setBookings(other);
+
+        // Fetch recent searches (mock data for now)
+        setSearchHistory([
+          { id: 1, from: 'London', to: 'Paris', date: '2024-03-15', searchedAt: '2024-03-01' },
+          { id: 2, from: 'New York', to: 'Tokyo', date: '2024-04-20', searchedAt: '2024-03-02' },
+          { id: 3, from: 'Dubai', to: 'Singapore', date: '2024-05-10', searchedAt: '2024-03-03' },
+        ]);
+
       } catch (error: any) {
         toast({
           title: "Error fetching data",
@@ -70,7 +87,7 @@ const MyBookings = () => {
     nextTierPoints: 1000
   };
 
-  const upcomingBooking = bookings.find(b => b.status === 'confirmed' && new Date(b.departure_date) > new Date());
+  const upcomingBooking = confirmedBookings.find(b => new Date(b.departure_date) > new Date());
   const upcomingBoardingPass = upcomingBooking ? {
     flightNumber: upcomingBooking.booking_reference || 'N/A',
     seat: "12A",
@@ -122,8 +139,60 @@ const MyBookings = () => {
           </div>
         )}
 
+        {/* Confirmed Bookings Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">Confirmed Bookings</h2>
+          <div className="space-y-4">
+            {confirmedBookings.length > 0 ? (
+              confirmedBookings.map((booking) => (
+                <BookingCard
+                  key={booking.id}
+                  booking={{
+                    id: booking.id,
+                    flightNumber: booking.booking_reference || 'N/A',
+                    from: booking.origin,
+                    to: booking.destination,
+                    date: booking.departure_date,
+                    status: booking.status
+                  }}
+                />
+              ))
+            ) : (
+              <Card className="p-6 bg-gray-800/50 backdrop-blur-sm border-gray-700">
+                <p className="text-gray-400 text-center">No confirmed bookings yet</p>
+              </Card>
+            )}
+          </div>
+        </div>
+
+        {/* Search History Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">Recent Searches</h2>
+          <div className="space-y-4">
+            {searchHistory.map((search) => (
+              <Card key={search.id} className="p-4 bg-gray-800/50 backdrop-blur-sm border-gray-700">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 rounded-full bg-blue-500/20">
+                      <Search className="w-4 h-4 text-blue-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">From {search.from} to {search.to}</p>
+                      <p className="text-xs text-gray-500">Date: {search.date}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-xs">Searched on {search.searchedAt}</span>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+
         <div className="space-y-6">
-          <h2 className="text-2xl font-semibold mb-4">Your Bookings</h2>
+          <h2 className="text-2xl font-semibold mb-4">Other Bookings</h2>
           {bookings.length > 0 ? (
             bookings.map((booking) => (
               <BookingCard
@@ -140,7 +209,7 @@ const MyBookings = () => {
             ))
           ) : (
             <div className="text-center py-8 text-gray-400">
-              No bookings found. Start planning your next adventure!
+              No other bookings found
             </div>
           )}
         </div>

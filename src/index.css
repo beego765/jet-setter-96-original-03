@@ -54,7 +54,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased transition-colors duration-200;
   }
 }
 
@@ -67,11 +67,11 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-200 rounded-full hover:bg-gray-300 transition-colors;
+  @apply bg-gray-200 rounded-full hover:bg-gray-300 transition-colors dark:bg-gray-700 dark:hover:bg-gray-600;
 }
 
 * {
-  @apply transition-none;
+  @apply transition-colors duration-200;
 }
 
 *:focus-visible {

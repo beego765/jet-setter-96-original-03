@@ -10,7 +10,8 @@ export const ThemeToggle = () => {
       variant="ghost"
       size="icon"
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-      className="hover:bg-gray-700 text-gray-200 hover:text-white"
+      className="dark:hover:bg-gray-700 dark:text-gray-200 dark:hover:text-white
+                light:hover:bg-gray-200 light:text-gray-700 light:hover:text-black"
     >
       {theme === "dark" ? (
         <Sun className="h-5 w-5" />

@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import Deals from "./pages/Deals";
 import MyBookings from "./pages/MyBookings";
@@ -64,41 +65,43 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 };
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/deals" element={<Deals />} />
-          <Route path="/my-bookings" element={
-            <ProtectedRoute>
-              <MyBookings />
-            </ProtectedRoute>
-          } />
-          <Route path="/booking/:flightId" element={
-            <ProtectedRoute>
-              <BookingDetails />
-            </ProtectedRoute>
-          } />
-          <Route path="/booking/:flightId/seat-selection" element={
-            <ProtectedRoute>
-              <SeatSelection />
-            </ProtectedRoute>
-          } />
-          <Route path="/support" element={<Support />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/admin" element={
-            <ProtectedRoute adminOnly={true}>
-              <Admin />
-            </ProtectedRoute>
-          } />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ThemeProvider defaultTheme="system" enableSystem>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/deals" element={<Deals />} />
+            <Route path="/my-bookings" element={
+              <ProtectedRoute>
+                <MyBookings />
+              </ProtectedRoute>
+            } />
+            <Route path="/booking/:flightId" element={
+              <ProtectedRoute>
+                <BookingDetails />
+              </ProtectedRoute>
+            } />
+            <Route path="/booking/:flightId/seat-selection" element={
+              <ProtectedRoute>
+                <SeatSelection />
+              </ProtectedRoute>
+            } />
+            <Route path="/support" element={<Support />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/admin" element={
+              <ProtectedRoute adminOnly={true}>
+                <Admin />
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;

@@ -5,7 +5,8 @@ import type { Database } from './types';
 const supabaseUrl = "https://yqzsdhoxnkjgmdjxbyos.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlxenNkaG94bmtqZ21kanhieW9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI1NTU1NjAsImV4cCI6MjA0ODEzMTU2MH0.jEVHYnAnHrinyv9t1iC1HcfI0uH-U1qvyAw5ObiQZSY";
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
-
-export const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+// Make sure the URL doesn't have any trailing colons or slashes
+export const supabase = createClient<Database>(
+  supabaseUrl.replace(/:\/*$/, ''),
+  supabaseKey
+);

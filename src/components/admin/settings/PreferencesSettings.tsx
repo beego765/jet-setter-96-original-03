@@ -1,5 +1,5 @@
 import { Switch } from "@/components/ui/switch";
-import { Bell, Moon, Shield } from "lucide-react";
+import { Bell, Shield } from "lucide-react";
 
 export const PreferencesSettings = () => {
   return (
@@ -13,17 +13,6 @@ export const PreferencesSettings = () => {
           </div>
         </div>
         <Switch />
-      </div>
-      
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Moon className="w-5 h-5 text-purple-400" />
-          <div>
-            <p className="text-gray-200">Dark Mode</p>
-            <p className="text-sm text-gray-400">Toggle between light and dark themes</p>
-          </div>
-        </div>
-        <Switch defaultChecked />
       </div>
       
       <div className="flex items-center justify-between">

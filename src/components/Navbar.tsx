@@ -8,6 +8,7 @@ import { NavLinks } from "./navbar/NavLinks";
 import { AuthButtons } from "./navbar/AuthButtons";
 import { MobileMenu } from "./navbar/MobileMenu";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { ThemeToggle } from "./ThemeToggle";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -77,6 +78,7 @@ export const Navbar = () => {
           />
 
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <AuthButtons
               session={session}
               onSignIn={handleSignIn}

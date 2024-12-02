@@ -4,15 +4,26 @@ import { FlightCard, type Flight } from "@/components/flight-search/FlightCard";
 import { useToast } from "@/components/ui/use-toast";
 import { Plane, MapPin, Clock, CreditCard, Shield, Award } from "lucide-react";
 import { searchFlights } from "@/server/duffelService";
+import { SearchFilters, type FilterValues } from "@/components/flight-search/SearchFilters";
 
 const Index = () => {
   const [flights, setFlights] = useState<Flight[]>([]);
+  const [filteredFlights, setFilteredFlights] = useState<Flight[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [currentPassengers, setCurrentPassengers] = useState({
     adults: 1,
     children: 0,
     infants: 0,
   });
+  
+  const [filters, setFilters] = useState<FilterValues>({
+    priceRange: [0, 10000],
+    stops: [],
+    airlines: [],
+    departureTime: [],
+    arrivalTime: [],
+  });
+
   const { toast } = useToast();
 
   const handleSearch = async (data: SearchFormData) => {
@@ -107,6 +118,7 @@ const Index = () => {
       }).filter(Boolean);
 
       setFlights(transformedFlights);
+      applyFilters(transformedFlights, filters);
       
       if (transformedFlights.length === 0) {
         toast({
@@ -130,6 +142,67 @@ const Index = () => {
     } finally {
       setIsSearching(false);
     }
+  };
+
+  const applyFilters = (flightsToFilter: Flight[], currentFilters: FilterValues) => {
+    const filtered = flightsToFilter.filter((flight) => {
+      // Price filter
+      if (flight.price < currentFilters.priceRange[0] || flight.price > currentFilters.priceRange[1]) {
+        return false;
+      }
+
+      // Airline filter
+      if (currentFilters.airlines.length > 0 && !currentFilters.airlines.includes(flight.airlineCode || '')) {
+        return false;
+      }
+
+      // Stops filter
+      const stopCount = (flight.segments?.length || 1) - 1;
+      const stopFilter = currentFilters.stops.map(stop => stop === '2+' ? '2' : stop);
+      if (currentFilters.stops.length > 0 && !stopFilter.includes(stopCount.toString())) {
+        return false;
+      }
+
+      // Time filters
+      const departureHour = parseInt(flight.departureTime.split(':')[0]);
+      const arrivalHour = parseInt(flight.arrivalTime.split(':')[0]);
+
+      const getTimeSlot = (hour: number) => {
+        if (hour >= 6 && hour < 12) return 'morning';
+        if (hour >= 12 && hour < 18) return 'afternoon';
+        if (hour >= 18 && hour < 24) return 'evening';
+        return 'night';
+      };
+
+      if (currentFilters.departureTime.length > 0 && 
+          !currentFilters.departureTime.includes(getTimeSlot(departureHour))) {
+        return false;
+      }
+
+      if (currentFilters.arrivalTime.length > 0 && 
+          !currentFilters.arrivalTime.includes(getTimeSlot(arrivalHour))) {
+        return false;
+      }
+
+      return true;
+    });
+
+    setFilteredFlights(filtered);
+  };
+
+  const handleFilterChange = (newFilters: FilterValues) => {
+    setFilters(newFilters);
+    applyFilters(flights, newFilters);
+  };
+
+  const getAvailableAirlines = () => {
+    const airlines = new Set<string>();
+    flights.forEach(flight => {
+      if (flight.airlineCode && flight.airline) {
+        airlines.add(JSON.stringify({ code: flight.airlineCode, name: flight.airline }));
+      }
+    });
+    return Array.from(airlines).map(airline => JSON.parse(airline));
   };
 
   const handleSelectFlight = (flight: Flight) => {
@@ -209,27 +282,43 @@ const Index = () => {
           </div>
         )}
 
-        {isSearching ? (
-          <div className="mt-8 space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div 
-                key={i} 
-                className="h-40 bg-gray-800/50 animate-pulse rounded-2xl"
+        {flights.length > 0 && (
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-1">
+              <SearchFilters
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                minPrice={Math.min(...flights.map(f => f.price))}
+                maxPrice={Math.max(...flights.map(f => f.price))}
+                availableAirlines={getAvailableAirlines()}
               />
-            ))}
+            </div>
+            <div className="lg:col-span-3 space-y-4">
+              {isSearching ? (
+                [1, 2, 3].map((i) => (
+                  <div 
+                    key={i} 
+                    className="h-40 bg-gray-800/50 animate-pulse rounded-2xl"
+                  />
+                ))
+              ) : (
+                filteredFlights.map((flight) => (
+                  <FlightCard
+                    key={flight.id}
+                    flight={flight}
+                    onSelect={handleSelectFlight}
+                    passengers={currentPassengers}
+                  />
+                ))
+              )}
+              {!isSearching && filteredFlights.length === 0 && (
+                <div className="text-center py-8 bg-gray-800/50 rounded-xl">
+                  <p className="text-gray-400">No flights match your filter criteria.</p>
+                </div>
+              )}
+            </div>
           </div>
-        ) : flights.length > 0 ? (
-          <div className="mt-8 space-y-4">
-            {flights.map((flight) => (
-              <FlightCard
-                key={flight.id}
-                flight={flight}
-                onSelect={handleSelectFlight}
-                passengers={currentPassengers}
-              />
-            ))}
-          </div>
-        ) : null}
+        )}
       </div>
     </div>
   );

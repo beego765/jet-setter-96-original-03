@@ -24,32 +24,43 @@ export const searchFlights = async (params: FlightSearchParams) => {
       mappedPassengers.push({ type: 'infant_without_seat' });
     }
 
+    // Format the departure date to YYYY-MM-DD
+    const formattedDepartureDate = params.departureDate instanceof Date 
+      ? params.departureDate.toISOString().split('T')[0]
+      : params.departureDate;
+
     // Ensure cabin class is properly formatted
     const cabinClass = params.cabinClass ? params.cabinClass.toLowerCase() : 'economy';
+
+    const requestBody = {
+      data: {
+        slices: [
+          {
+            origin: params.origin,
+            destination: params.destination,
+            departure_date: formattedDepartureDate,
+          },
+          ...(params.returnDate ? [{
+            origin: params.destination,
+            destination: params.origin,
+            departure_date: params.returnDate instanceof Date 
+              ? params.returnDate.toISOString().split('T')[0]
+              : params.returnDate,
+          }] : []),
+        ],
+        passengers: mappedPassengers,
+        cabin_class: cabinClass
+      }
+    };
+
+    console.debug('Duffel API Request:', requestBody);
 
     // Create an offer request first
     const { data: response, error } = await supabase.functions.invoke('duffel-proxy', {
       body: {
         path: '/air/offer_requests',
         method: 'POST',
-        body: {
-          data: {
-            slices: [
-              {
-                origin: params.origin,
-                destination: params.destination,
-                departure_date: params.departureDate,
-              },
-              ...(params.returnDate ? [{
-                origin: params.destination,
-                destination: params.origin,
-                departure_date: params.returnDate,
-              }] : []),
-            ],
-            passengers: mappedPassengers,
-            cabin_class: cabinClass
-          }
-        }
+        body: requestBody
       }
     });
 
@@ -57,6 +68,8 @@ export const searchFlights = async (params: FlightSearchParams) => {
       console.error('Supabase function error:', error);
       throw new Error('Failed to connect to flight search service');
     }
+
+    console.debug('Duffel API Offer Request Response:', response);
 
     if (!response?.data?.id) {
       throw new Error('Failed to create offer request');
@@ -71,16 +84,17 @@ export const searchFlights = async (params: FlightSearchParams) => {
     });
 
     if (offersError) {
+      console.error('Offers fetch error:', offersError);
       throw offersError;
     }
 
-    console.debug('Flight Search Response:', {
+    console.debug('Duffel API Offers Response:', {
       status: offersResponse?.status,
-      offerCount: offersResponse?.data?.offers?.length || 0
+      offerCount: offersResponse?.data?.length || 0
     });
 
-    if (!offersResponse?.data?.offers) {
-      throw new Error('No flights found');
+    if (!offersResponse?.data?.offers || offersResponse.data.offers.length === 0) {
+      throw new Error('No flights found for the specified route and dates');
     }
 
     return offersResponse.data.offers;

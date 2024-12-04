@@ -64,9 +64,17 @@ export const Navbar = () => {
     <nav className="bg-background/80 backdrop-blur-lg border-b border-border sticky top-0 z-50">
       <div className="container max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2">
-            <Plane className="w-6 h-6 text-primary" />
-            <span className="text-xl font-bold gradient-text">
+          <Link to="/" className="flex items-center gap-3 group">
+            <Plane className="w-8 h-8 text-primary animate-pulse 
+              [filter:drop-shadow(0_0_10px_theme(colors.primary.DEFAULT))]
+              group-hover:scale-110 transition-transform duration-300" />
+            <span className="text-2xl font-bold bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 
+              bg-clip-text text-transparent relative
+              after:absolute after:inset-0 after:bg-gradient-to-r 
+              after:from-violet-500/50 after:via-purple-500/50 after:to-fuchsia-500/50 
+              after:blur-lg after:-z-10 after:opacity-0
+              group-hover:after:opacity-100 after:transition-opacity
+              group-hover:scale-105 transition-transform duration-300">
               OpusTravels
             </span>
           </Link>

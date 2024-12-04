@@ -1,7 +1,7 @@
 import { SearchForm, SearchFormData } from "@/components/flight-search/SearchForm";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plane, MapPin, Clock, Shield } from "lucide-react";
+import { Plane, MapPin, Clock, Shield, ShieldCheck, BriefcaseIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -15,16 +15,15 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-background z-0" />
-        
-        <div className="container max-w-7xl mx-auto px-4 py-12 relative z-10">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4 gradient-text">
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-blue-500/20 backdrop-blur" />
+        <div className="relative container mx-auto px-4 py-16 space-y-12">
+          <div className="text-center space-y-4 mb-8">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
               Find Your Perfect Flight
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Search and compare flights from hundreds of airlines and travel providers
+              Book with confidence through our secure, reliable platform offering competitive prices and exceptional service
             </p>
           </div>
 
@@ -34,65 +33,62 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Features Section */}
-      <div className="bg-muted py-16">
-        <div className="container max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Card className="p-6 bg-card border-border">
-              <Plane className="w-12 h-12 text-primary mb-4" />
-              <h3 className="text-lg font-semibold text-card-foreground mb-2">
-                Wide Selection
-              </h3>
-              <p className="text-muted-foreground">
-                Access hundreds of airlines worldwide
-              </p>
-            </Card>
+      {/* Features Grid */}
+      <div className="container mx-auto px-4 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <Card className="p-6 bg-card/50 backdrop-blur border-border">
+            <div className="flex flex-col items-center text-center space-y-3">
+              <div className="p-3 bg-purple-500/20 rounded-full">
+                <Plane className="w-6 h-6 text-purple-400" />
+              </div>
+              <h3 className="font-semibold">Global Coverage</h3>
+              <p className="text-sm text-muted-foreground">Access flights to over 190 countries worldwide</p>
+            </div>
+          </Card>
 
-            <Card className="p-6 bg-card border-border">
-              <MapPin className="w-12 h-12 text-primary mb-4" />
-              <h3 className="text-lg font-semibold text-card-foreground mb-2">
-                Global Coverage
-              </h3>
-              <p className="text-muted-foreground">
-                Fly to destinations across the globe
-              </p>
-            </Card>
+          <Card className="p-6 bg-card/50 backdrop-blur border-border">
+            <div className="flex flex-col items-center text-center space-y-3">
+              <div className="p-3 bg-blue-500/20 rounded-full">
+                <BriefcaseIcon className="w-6 h-6 text-blue-400" />
+              </div>
+              <h3 className="font-semibold">IATA Accredited</h3>
+              <p className="text-sm text-muted-foreground">Official IATA member ensuring industry-standard service</p>
+            </div>
+          </Card>
 
-            <Card className="p-6 bg-card border-border">
-              <Clock className="w-12 h-12 text-primary mb-4" />
-              <h3 className="text-lg font-semibold text-card-foreground mb-2">
-                Real-time Updates
-              </h3>
-              <p className="text-muted-foreground">
-                Get instant flight status updates
-              </p>
-            </Card>
+          <Card className="p-6 bg-card/50 backdrop-blur border-border">
+            <div className="flex flex-col items-center text-center space-y-3">
+              <div className="p-3 bg-purple-500/20 rounded-full">
+                <ShieldCheck className="w-6 h-6 text-purple-400" />
+              </div>
+              <h3 className="font-semibold">ATOL Protected</h3>
+              <p className="text-sm text-muted-foreground">Your booking is protected under ATOL certification</p>
+            </div>
+          </Card>
 
-            <Card className="p-6 bg-card border-border">
-              <Shield className="w-12 h-12 text-primary mb-4" />
-              <h3 className="text-lg font-semibold text-card-foreground mb-2">
-                Secure Booking
-              </h3>
-              <p className="text-muted-foreground">
-                Book with confidence and security
-              </p>
-            </Card>
-          </div>
+          <Card className="p-6 bg-card/50 backdrop-blur border-border">
+            <div className="flex flex-col items-center text-center space-y-3">
+              <div className="p-3 bg-blue-500/20 rounded-full">
+                <Clock className="w-6 h-6 text-blue-400" />
+              </div>
+              <h3 className="font-semibold">24/7 Support</h3>
+              <p className="text-sm text-muted-foreground">Round-the-clock customer service and assistance</p>
+            </div>
+          </Card>
         </div>
-      </div>
 
-      {/* CTA Section */}
-      <div className="bg-card py-16">
-        <div className="container max-w-7xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-card-foreground mb-4">
-            Ready to Take Off?
-          </h2>
-          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join thousands of satisfied travelers who book their flights with us
-          </p>
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-            Start Booking Now
-          </Button>
+        {/* Trust Badges */}
+        <div className="mt-16 text-center">
+          <div className="inline-flex items-center gap-8 p-4 rounded-lg bg-card/50 backdrop-blur border-border">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-green-400" />
+              <span className="text-sm font-medium">ATOL: 1234</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <BriefcaseIcon className="w-5 h-5 text-blue-400" />
+              <span className="text-sm font-medium">IATA: 12-3-4567</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

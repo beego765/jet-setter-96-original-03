@@ -26,6 +26,18 @@ const Search = () => {
     );
   }
 
+  const handleFlightSelect = (flight: any) => {
+    // This function will be passed to FlightCard to handle selection
+    console.log('Selected flight:', flight);
+  };
+
+  // Get passengers from search params or use default values
+  const passengers = searchParams?.passengers || {
+    adults: 1,
+    children: 0,
+    infants: 0
+  };
+
   return (
     <div className="container mx-auto p-6">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -47,7 +59,12 @@ const Search = () => {
         
         <div className="lg:col-span-3 space-y-4">
           {flights?.map((flight: any) => (
-            <FlightCard key={flight.id} flight={flight} />
+            <FlightCard 
+              key={flight.id} 
+              flight={flight}
+              onSelect={handleFlightSelect}
+              passengers={passengers}
+            />
           ))}
           
           {flights?.length === 0 && (

@@ -16,19 +16,21 @@ serve(async (req) => {
     const duffelApiKey = Deno.env.get('DUFFEL_API_KEY')
     
     if (!duffelApiKey) {
+      console.error('DUFFEL_API_KEY is not set')
       throw new Error('DUFFEL_API_KEY is not set')
     }
 
     console.log('Making request to Duffel API:', {
       url: `https://api.duffel.com${path}`,
       method,
-      body
+      bodyPath: path,
+      hasBody: !!body
     })
 
     // Special handling for /air/offers endpoint
     if (path === '/air/offers' && method === 'GET') {
-      // Validate required fields for offer requests
       if (!body?.slices || !Array.isArray(body.slices) || body.slices.length === 0) {
+        console.error('Invalid request: Missing or invalid slices')
         return new Response(
           JSON.stringify({
             error: "At least one flight slice (origin/destination) is required"
@@ -44,6 +46,7 @@ serve(async (req) => {
       }
 
       if (!body?.passengers || !Array.isArray(body.passengers) || body.passengers.length === 0) {
+        console.error('Invalid request: Missing or invalid passengers')
         return new Response(
           JSON.stringify({
             error: "At least one passenger is required"
@@ -57,6 +60,12 @@ serve(async (req) => {
           }
         )
       }
+
+      console.log('Creating offer request with:', {
+        slices: body.slices,
+        passengerCount: body.passengers.length,
+        cabinClass: body.cabin_class
+      })
 
       // Create an offer request first
       const offerRequestResponse = await fetch('https://api.duffel.com/air/offer_requests', {
@@ -74,12 +83,15 @@ serve(async (req) => {
             cabin_class: body.cabin_class || 'economy'
           }
         })
-      });
+      })
 
-      const offerRequestData = await offerRequestResponse.json();
+      const offerRequestData = await offerRequestResponse.json()
       
       if (!offerRequestResponse.ok) {
-        console.error('Offer request failed:', offerRequestData);
+        console.error('Offer request failed:', {
+          status: offerRequestResponse.status,
+          error: offerRequestData
+        })
         return new Response(
           JSON.stringify(offerRequestData),
           { 
@@ -92,6 +104,10 @@ serve(async (req) => {
         )
       }
 
+      console.log('Offer request created:', {
+        requestId: offerRequestData.data.id
+      })
+
       // Now get the offers using the offer request ID
       const offersResponse = await fetch(`https://api.duffel.com/air/offers?offer_request_id=${offerRequestData.data.id}`, {
         method: 'GET',
@@ -100,14 +116,14 @@ serve(async (req) => {
           'Accept': 'application/json',
           'Duffel-Version': 'v1'
         }
-      });
+      })
 
-      const data = await offersResponse.json();
+      const data = await offersResponse.json()
       
-      console.log('Duffel API response:', {
+      console.log('Duffel API offers response:', {
         status: offersResponse.status,
-        data
-      });
+        offerCount: data?.data?.length || 0
+      })
 
       return new Response(
         JSON.stringify(data),
@@ -122,8 +138,14 @@ serve(async (req) => {
     }
 
     // For all other endpoints
-    const requestBody = body ? JSON.stringify({ data: body.data || body }) : undefined;
+    const requestBody = body ? JSON.stringify({ data: body.data || body }) : undefined
     
+    console.log('Making generic Duffel API request:', {
+      path,
+      method,
+      hasBody: !!requestBody
+    })
+
     const response = await fetch(`https://api.duffel.com${path}`, {
       method: method || 'GET',
       headers: {
@@ -138,8 +160,9 @@ serve(async (req) => {
     const data = await response.json()
     
     console.log('Duffel API response:', {
+      path,
       status: response.status,
-      data
+      hasData: !!data
     })
 
     return new Response(
@@ -161,7 +184,7 @@ serve(async (req) => {
           ...corsHeaders,
           'Content-Type': 'application/json',
         },
-        status: 400,
+        status: 500,
       },
     )
   }

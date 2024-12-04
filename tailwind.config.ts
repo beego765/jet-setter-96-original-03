@@ -83,13 +83,17 @@ export default {
           to: { transform: "translateY(0)" },
         },
         "glow-trace": {
-          "0%, 100%": {
+          "0%": {
             transform: "translateX(-100%)",
             opacity: "0",
           },
           "50%": {
             transform: "translateX(100%)",
             opacity: "1",
+          },
+          "100%": {
+            transform: "translateX(-100%)",
+            opacity: "0",
           }
         }
       },

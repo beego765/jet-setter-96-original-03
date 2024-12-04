@@ -22,6 +22,8 @@ serve(async (req) => {
 
     // Special handling for /air/offers endpoint
     if (path === '/air/offers' && method === 'GET') {
+      console.log('Creating offer request with body:', JSON.stringify(body))
+
       // Create an offer request first
       const offerRequestResponse = await fetch('https://api.duffel.com/air/offer_requests', {
         method: 'POST',
@@ -31,15 +33,24 @@ serve(async (req) => {
           'Content-Type': 'application/json',
           'Duffel-Version': 'v1'
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify({
+          data: {
+            slices: [{
+              origin: body.data.slices[0].origin,
+              destination: body.data.slices[0].destination,
+              departure_date: body.data.slices[0].departure_date
+            }],
+            passengers: body.data.passengers,
+            cabin_class: body.data.cabin_class
+          }
+        })
       })
 
       const offerRequestData = await offerRequestResponse.json()
       
-      console.log('Duffel API response:', {
-        path: '/air/offer_requests',
+      console.log('Offer request response:', {
         status: offerRequestResponse.status,
-        hasData: !!offerRequestData
+        data: offerRequestData
       })
 
       if (!offerRequestResponse.ok) {
@@ -64,8 +75,8 @@ serve(async (req) => {
         throw new Error('Failed to create offer request')
       }
 
-      // Wait a moment for the offers to be generated
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Wait for offers to be generated
+      await new Promise(resolve => setTimeout(resolve, 2000))
 
       // Now get the offers using the offer request ID
       const offersResponse = await fetch(`https://api.duffel.com/air/offers?offer_request_id=${offerRequestData.data.id}`, {
@@ -79,10 +90,24 @@ serve(async (req) => {
 
       const offersData = await offersResponse.json()
       
-      console.log('Duffel API offers response:', {
+      console.log('Offers response:', {
         status: offersResponse.status,
-        offerCount: offersData?.data?.length || 0
+        offersCount: offersData?.data?.length || 0,
+        data: offersData
       })
+
+      if (!offersResponse.ok) {
+        return new Response(
+          JSON.stringify(offersData),
+          { 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json',
+            },
+            status: offersResponse.status
+          }
+        )
+      }
 
       return new Response(
         JSON.stringify(offersData),
@@ -100,7 +125,7 @@ serve(async (req) => {
     console.log('Making request to Duffel API:', {
       url: `https://api.duffel.com${path}`,
       method,
-      hasBody: !!body
+      body
     })
 
     const response = await fetch(`https://api.duffel.com${path}`, {

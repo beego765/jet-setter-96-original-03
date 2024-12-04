@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { AirportSelector } from "./AirportSelector";
@@ -25,7 +25,7 @@ export interface SearchFormData {
 }
 
 interface SearchFormProps {
-  onSearch: (data: SearchFormData) => void;
+  onSearch?: (data: SearchFormData) => void;
 }
 
 export const SearchForm = ({ onSearch }: SearchFormProps) => {
@@ -80,7 +80,7 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
       return;
     }
 
-    onSearch({
+    const searchData = {
       origin,
       destination,
       departureDate,
@@ -89,55 +89,59 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
       class: flightClass,
       tripType,
       extras,
-    });
+    };
+
+    if (onSearch) {
+      onSearch(searchData);
+    }
+
+    navigate('/search', { state: searchData });
   };
 
   return (
     <Card className="p-8 bg-gray-800/50 backdrop-blur-xl rounded-3xl border border-gray-700">
       <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="space-y-6">
-          <TripTypeSelector tripType={tripType} setTripType={setTripType} />
+        <TripTypeSelector tripType={tripType} setTripType={setTripType} />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <AirportSelector
-              value={origin}
-              onChange={setOrigin}
-              placeholder="Select departure airport"
-              label="From"
-            />
-            <AirportSelector
-              value={destination}
-              onChange={setDestination}
-              placeholder="Select arrival airport"
-              label="To"
-            />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <AirportSelector
+            value={origin}
+            onChange={setOrigin}
+            placeholder="Select departure airport"
+            label="From"
+          />
+          <AirportSelector
+            value={destination}
+            onChange={setDestination}
+            placeholder="Select arrival airport"
+            label="To"
+          />
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <DateSelector
+            label="Departure"
+            date={departureDate}
+            onSelect={setDepartureDate}
+          />
+
+          {tripType === "roundTrip" && (
             <DateSelector
-              label="Departure"
-              date={departureDate}
-              onSelect={setDepartureDate}
+              label="Return"
+              date={returnDate}
+              onSelect={setReturnDate}
             />
+          )}
 
-            {tripType === "roundTrip" && (
-              <DateSelector
-                label="Return"
-                date={returnDate}
-                onSelect={setReturnDate}
-              />
-            )}
+          <PassengerSelector 
+            value={passengers} 
+            onChange={setPassengers} 
+          />
 
-            <PassengerSelector 
-              value={passengers} 
-              onChange={setPassengers} 
-            />
-
-            <ClassSelector
-              value={flightClass}
-              onChange={setFlightClass}
-            />
-          </div>
+          <ClassSelector
+            value={flightClass}
+            onChange={setFlightClass}
+          />
         </div>
 
         <Separator className="bg-gray-700" />

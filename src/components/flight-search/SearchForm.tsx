@@ -1,20 +1,14 @@
 import { useState, useEffect } from "react";
-import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { Toggle } from "@/components/ui/toggle";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { AirportSelector } from "./AirportSelector";
 import { PassengerSelector, PassengerCount } from "./PassengerSelector";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { TripTypeSelector } from "./TripTypeSelector";
+import { DateSelector } from "./DateSelector";
+import { ClassSelector } from "./ClassSelector";
+import { SearchFilters } from "./SearchFilters";
 
 export interface SearchFormData {
   origin: string;
@@ -46,8 +40,14 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
   });
   const [flightClass, setFlightClass] = useState<"economy" | "business" | "first">("economy");
   const [tripType, setTripType] = useState<"oneWay" | "roundTrip">("oneWay");
-  const [departureDateOpen, setDepartureDateOpen] = useState(false);
-  const [returnDateOpen, setReturnDateOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    priceRange: [0, 5000] as [number, number],
+    stops: [] as string[],
+    airlines: [] as string[],
+    departureTime: [] as string[],
+    arrivalTime: [] as string[],
+  });
 
   useEffect(() => {
     checkPendingSearch();
@@ -59,7 +59,6 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
       const pendingSearch = localStorage.getItem(SEARCH_STATE_KEY);
       if (pendingSearch) {
         const searchData = JSON.parse(pendingSearch);
-        // Convert date strings back to Date objects
         searchData.departureDate = new Date(searchData.departureDate);
         if (searchData.returnDate) {
           searchData.returnDate = new Date(searchData.returnDate);
@@ -70,23 +69,12 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
     }
   };
 
-  const handleDepartureDateSelect = (date: Date | undefined) => {
-    setDepartureDate(date);
-    setDepartureDateOpen(false);
-  };
-
-  const handleReturnDateSelect = (date: Date | undefined) => {
-    setReturnDate(date);
-    setReturnDateOpen(false);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
-      // Save search state before redirecting
       const searchData = {
         origin,
         destination,
@@ -122,124 +110,116 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="relative space-y-6 w-full max-w-4xl mx-auto p-8 bg-gray-800/50 backdrop-blur-xl rounded-3xl border border-gray-700">
-      <div className="flex items-center justify-center gap-4 mb-6">
-        <Toggle
-          pressed={tripType === "oneWay"}
-          onPressedChange={() => setTripType("oneWay")}
-          className="data-[state=on]:bg-purple-500"
-        >
-          One Way
-        </Toggle>
-        <Toggle
-          pressed={tripType === "roundTrip"}
-          onPressedChange={() => setTripType("roundTrip")}
-          className="data-[state=on]:bg-purple-500"
-        >
-          Round Trip
-        </Toggle>
-      </div>
+    <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="relative space-y-6 w-full max-w-4xl mx-auto p-8 bg-gray-800/50 backdrop-blur-xl rounded-3xl border border-gray-700">
+        <TripTypeSelector tripType={tripType} setTripType={setTripType} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-20">
-        <AirportSelector
-          value={origin}
-          onChange={setOrigin}
-          placeholder="Select departure airport"
-          label="From"
-        />
-        <AirportSelector
-          value={destination}
-          onChange={setDestination}
-          placeholder="Select arrival airport"
-          label="To"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
-            <CalendarIcon className="w-4 h-4" />
-            Departure Date
-          </label>
-          <Popover open={departureDateOpen} onOpenChange={setDepartureDateOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full h-12 justify-start text-left font-normal bg-gray-700/50 border-gray-600 text-white hover:bg-gray-700",
-                  !departureDate && "text-gray-400"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {departureDate ? format(departureDate, "PPP") : <span>Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={departureDate}
-                onSelect={handleDepartureDateSelect}
-                initialFocus
-                className="rounded-md border border-gray-700 bg-gray-800"
-              />
-            </PopoverContent>
-          </Popover>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-20">
+          <AirportSelector
+            value={origin}
+            onChange={(value) => {
+              setOrigin(value);
+              // Auto-focus destination after origin selection
+              if (value) {
+                const destInput = document.querySelector('[placeholder="Select arrival airport"]');
+                if (destInput instanceof HTMLElement) {
+                  destInput.focus();
+                }
+              }
+            }}
+            placeholder="Select departure airport"
+            label="From"
+          />
+          <AirportSelector
+            value={destination}
+            onChange={(value) => {
+              setDestination(value);
+              // Auto-focus date after destination selection
+              if (value) {
+                const dateButton = document.querySelector('[aria-label="Pick a date"]');
+                if (dateButton instanceof HTMLElement) {
+                  dateButton.click();
+                }
+              }
+            }}
+            placeholder="Select arrival airport"
+            label="To"
+          />
         </div>
 
-        {tripType === "roundTrip" && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
-              <CalendarIcon className="w-4 h-4" />
-              Return Date
-            </label>
-            <Popover open={returnDateOpen} onOpenChange={setReturnDateOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full h-12 justify-start text-left font-normal bg-gray-700/50 border-gray-600 text-white hover:bg-gray-700",
-                    !returnDate && "text-gray-400"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {returnDate ? format(returnDate, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={returnDate}
-                  onSelect={handleReturnDateSelect}
-                  initialFocus
-                  className="rounded-md border border-gray-700 bg-gray-800"
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+          <DateSelector
+            label="Departure Date"
+            date={departureDate}
+            onSelect={setDepartureDate}
+            onComplete={() => {
+              if (tripType === "roundTrip") {
+                const returnDateButton = document.querySelectorAll('[aria-label="Pick a date"]')[1];
+                if (returnDateButton instanceof HTMLElement) {
+                  returnDateButton.click();
+                }
+              }
+            }}
+          />
 
-        <PassengerSelector value={passengers} onChange={setPassengers} />
+          {tripType === "roundTrip" && (
+            <DateSelector
+              label="Return Date"
+              date={returnDate}
+              onSelect={setReturnDate}
+              onComplete={() => {
+                const passengerButton = document.querySelector('[aria-label="Select passengers"]');
+                if (passengerButton instanceof HTMLElement) {
+                  passengerButton.click();
+                }
+              }}
+            />
+          )}
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Class</label>
-          <select
+          <PassengerSelector 
+            value={passengers} 
+            onChange={setPassengers} 
+          />
+
+          <ClassSelector
             value={flightClass}
-            onChange={(e) => setFlightClass(e.target.value as "economy" | "business" | "first")}
-            className="w-full h-12 px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900"
-          >
-            <option value="economy">Economy</option>
-            <option value="business">Business</option>
-            <option value="first">First</option>
-          </select>
+            onChange={setFlightClass}
+          />
         </div>
-      </div>
 
-      <Button 
-        type="submit" 
-        className="w-full h-12 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-medium text-lg relative z-0"
-      >
-        Search Flights
-      </Button>
-    </form>
+        <Button 
+          type="submit" 
+          className="w-full h-12 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-medium text-lg relative z-0"
+        >
+          Search Flights
+        </Button>
+
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => setShowFilters(!showFilters)}
+          className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 text-gray-400 hover:text-white"
+        >
+          {showFilters ? "Hide Filters" : "Show Filters"}
+        </Button>
+      </form>
+
+      {showFilters && (
+        <div className="w-full max-w-4xl mx-auto">
+          <SearchFilters
+            filters={filters}
+            onFilterChange={setFilters}
+            minPrice={0}
+            maxPrice={5000}
+            availableAirlines={[
+              { code: "BA", name: "British Airways" },
+              { code: "LH", name: "Lufthansa" },
+              { code: "AF", name: "Air France" },
+              // Add more airlines as needed
+            ]}
+          />
+        </div>
+      )}
+    </div>
   );
 };

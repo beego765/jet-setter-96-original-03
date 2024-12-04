@@ -24,6 +24,9 @@ export const searchFlights = async (params: FlightSearchParams) => {
       mappedPassengers.push({ type: 'infant_without_seat' });
     }
 
+    // Ensure cabin class is properly formatted
+    const cabinClass = params.cabinClass ? params.cabinClass.toLowerCase() : 'economy';
+
     // Create an offer request first
     const { data: response, error } = await supabase.functions.invoke('duffel-proxy', {
       body: {
@@ -44,7 +47,7 @@ export const searchFlights = async (params: FlightSearchParams) => {
               }] : []),
             ],
             passengers: mappedPassengers,
-            cabin_class: params.cabinClass.toLowerCase()
+            cabin_class: cabinClass
           }
         }
       }

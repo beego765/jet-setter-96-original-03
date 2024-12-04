@@ -8,7 +8,7 @@ export interface FlightSearchParams {
     children: number;
     infants: number;
   };
-  cabinClass: 'economy' | 'business' | 'first';
+  cabinClass?: 'economy' | 'business' | 'first';
 }
 
 export interface CreateBookingParams {

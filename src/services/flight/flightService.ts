@@ -24,10 +24,10 @@ export const searchFlights = async (params: FlightSearchParams) => {
       mappedPassengers.push({ type: 'infant_without_seat' });
     }
 
-    // Format the departure date to YYYY-MM-DD
-    const formattedDepartureDate = params.departureDate instanceof Date 
-      ? params.departureDate.toISOString().split('T')[0]
-      : params.departureDate;
+    // Format the departure date, ensuring it's in YYYY-MM-DD format
+    const formattedDepartureDate = typeof params.departureDate === 'string' 
+      ? params.departureDate 
+      : new Date(params.departureDate).toISOString().split('T')[0];
 
     // Ensure cabin class is properly formatted
     const cabinClass = params.cabinClass ? params.cabinClass.toLowerCase() : 'economy';
@@ -43,9 +43,9 @@ export const searchFlights = async (params: FlightSearchParams) => {
           ...(params.returnDate ? [{
             origin: params.destination,
             destination: params.origin,
-            departure_date: params.returnDate instanceof Date 
-              ? params.returnDate.toISOString().split('T')[0]
-              : params.returnDate,
+            departure_date: typeof params.returnDate === 'string'
+              ? params.returnDate
+              : new Date(params.returnDate).toISOString().split('T')[0],
           }] : []),
         ],
         passengers: mappedPassengers,

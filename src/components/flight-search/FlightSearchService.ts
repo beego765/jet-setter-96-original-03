@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import airportsData from '../../../airports.json';
-import { searchFlights, createBooking } from '../../server/duffelService';
+import { supabase } from '@/integrations/supabase/client';
 
 // Enhanced type definitions
 interface FlightSearchParams {
@@ -96,13 +96,61 @@ export const useFlightSearch = (searchParams?: FlightSearchParams) => {
 
       try {
         console.debug('Flight Search Parameters:', searchParams);
-        const results = await searchFlights(searchParams);
 
-        if (!results || results.length === 0) {
-          throw new Error('No flights found matching your search criteria');
+        // Map passengers to Duffel's format
+        const mappedPassengers = [];
+        for (let i = 0; i < searchParams.passengers.adults; i++) {
+          mappedPassengers.push({ type: 'adult' });
+        }
+        for (let i = 0; i < searchParams.passengers.children; i++) {
+          mappedPassengers.push({ type: 'child' });
+        }
+        for (let i = 0; i < searchParams.passengers.infants; i++) {
+          mappedPassengers.push({ type: 'infant_without_seat' });
         }
 
-        return results;
+        const requestBody = {
+          slices: [
+            {
+              origin: searchParams.origin,
+              destination: searchParams.destination,
+              departure_date: searchParams.departureDate,
+            },
+            ...(searchParams.returnDate ? [{
+              origin: searchParams.destination,
+              destination: searchParams.origin,
+              departure_date: searchParams.returnDate,
+            }] : []),
+          ],
+          passengers: mappedPassengers,
+          cabin_class: searchParams.cabinClass.toLowerCase(),
+        };
+
+        console.debug('Duffel API Request:', requestBody);
+
+        const { data: response, error } = await supabase.functions.invoke('duffel-proxy', {
+          body: {
+            path: '/air/offers',
+            method: 'GET',
+            body: requestBody
+          }
+        });
+
+        if (error) {
+          console.error('Supabase function error:', error);
+          throw new Error('Failed to connect to flight search service');
+        }
+
+        console.debug('Flight Search Response:', {
+          status: response?.status,
+          offerCount: response?.data?.length || 0
+        });
+
+        if (!response?.data?.offers || !Array.isArray(response.data.offers)) {
+          throw new Error('Invalid response format from flight search service');
+        }
+
+        return response.data.offers;
       } catch (error) {
         logError('Flight Search', error, { searchParams });
         throw error;
@@ -132,13 +180,28 @@ export const useCreateBooking = (offerId: string) => {
           passengerCount: passengers.length 
         });
 
-        const bookingResult = await createBooking(offerId, passengers);
+        const { data: response, error } = await supabase.functions.invoke('duffel-proxy', {
+          body: {
+            path: '/air/orders',
+            method: 'POST',
+            body: {
+              data: {
+                offer_id: offerId,
+                passengers
+              }
+            }
+          }
+        });
 
-        if (!bookingResult) {
+        if (error) {
+          throw error;
+        }
+
+        if (!response?.data) {
           throw new Error('Booking creation failed');
         }
 
-        return bookingResult;
+        return response.data;
       } catch (error) {
         logError('Create Booking', error, { offerId, passengers });
         throw error;

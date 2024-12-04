@@ -1,9 +1,17 @@
-import { SearchForm } from "@/components/flight-search/SearchForm";
+import { SearchForm, SearchFormData } from "@/components/flight-search/SearchForm";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Plane, MapPin, Clock, Shield } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
+
+  const handleSearch = (data: SearchFormData) => {
+    // Navigate to search results with the search data
+    navigate('/search', { state: { searchData: data } });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -21,7 +29,7 @@ const Index = () => {
           </div>
 
           <Card className="bg-card/80 backdrop-blur-lg border-border p-6 md:p-8 max-w-4xl mx-auto">
-            <SearchForm />
+            <SearchForm onSearch={handleSearch} />
           </Card>
         </div>
       </div>

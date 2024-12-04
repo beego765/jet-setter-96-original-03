@@ -64,14 +64,10 @@ export const Navbar = () => {
     <nav className="bg-background/80 backdrop-blur-lg border-b border-border sticky top-0 z-50">
       <div className="container max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link 
-            to="/" 
-            className="flex items-center gap-3 group transition-all duration-300 hover:scale-105"
-          >
-            <Plane className="w-7 h-7 text-primary animate-neon-pulse" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-purple-500 via-primary to-blue-500 bg-clip-text text-transparent relative overflow-hidden">
-              <span className="absolute inset-0 bg-gradient-to-r from-purple-500/30 via-primary/30 to-blue-500/30 animate-glow-trace" />
-              <span className="relative animate-neon-pulse">OpusTravels</span>
+          <Link to="/" className="flex items-center gap-2">
+            <Plane className="w-6 h-6 text-primary" />
+            <span className="text-xl font-bold gradient-text">
+              OpusTravels
             </span>
           </Link>
 

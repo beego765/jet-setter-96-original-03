@@ -83,13 +83,25 @@ export default {
           to: { transform: "translateY(0)" },
         },
         "glow-trace": {
-          "0%, 100%": {
+          "0%": {
             transform: "translateX(-100%)",
             opacity: "0",
           },
           "50%": {
             transform: "translateX(100%)",
             opacity: "1",
+          },
+          "100%": {
+            transform: "translateX(-100%)",
+            opacity: "0",
+          }
+        },
+        "neon-pulse": {
+          "0%, 100%": {
+            textShadow: "0 0 7px #fff, 0 0 10px #fff, 0 0 21px #fff, 0 0 42px #bc13fe, 0 0 82px #bc13fe, 0 0 92px #bc13fe, 0 0 102px #bc13fe, 0 0 151px #bc13fe",
+          },
+          "50%": {
+            textShadow: "0 0 4px #fff, 0 0 7px #fff, 0 0 13px #fff, 0 0 26px #bc13fe, 0 0 52px #bc13fe, 0 0 62px #bc13fe, 0 0 72px #bc13fe, 0 0 101px #bc13fe",
           }
         }
       },
@@ -99,6 +111,7 @@ export default {
         fadeIn: "fadeIn 0.5s ease-out",
         slideUp: "slideUp 0.5s ease-out",
         "glow-trace": "glow-trace 3s ease-in-out infinite",
+        "neon-pulse": "neon-pulse 2.5s ease-in-out infinite",
       },
     },
   },

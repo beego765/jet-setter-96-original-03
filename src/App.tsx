@@ -10,7 +10,6 @@ import MyBookings from "./pages/MyBookings";
 import Support from "./pages/Support";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
-import Search from "./pages/Search";
 import BookingDetails from "./pages/BookingDetails";
 import SeatSelection from "./components/booking/SeatSelection";
 import { Navbar } from "./components/Navbar";
@@ -77,7 +76,6 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/deals" element={<Deals />} />
-              <Route path="/search" element={<Search />} />
               <Route path="/my-bookings" element={
                 <ProtectedRoute>
                   <MyBookings />

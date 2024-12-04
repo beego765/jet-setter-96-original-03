@@ -4,25 +4,25 @@
  
 @layer base {
   :root {
-    --background: 260 50% 99.5%;
+    --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 262 83.3% 97%;
-    --primary-foreground: 262 83.3% 40%;
-    --secondary: 260 50% 98%;
+    --primary: 262 83.3% 57.8%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 260 50% 98%;
+    --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
     --accent: 262 83.3% 96%;
     --accent-foreground: 262 83.3% 45%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 260 50% 95%;
-    --input: 260 50% 95%;
-    --ring: 262 83.3% 90%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 262 83.3% 57.8%;
     --radius: 0.75rem;
   }
  
@@ -85,4 +85,25 @@ input:-webkit-autofill {
 
 input {
   @apply shadow-none outline-none ring-0 focus:ring-0 focus:outline-none;
+}
+
+/* Add these new utility classes for consistent theming */
+.glass-light {
+  @apply bg-white/80 backdrop-blur-lg border border-gray-200;
+}
+
+.glass-dark {
+  @apply bg-gray-900/80 backdrop-blur-lg border border-gray-700;
+}
+
+.card-light {
+  @apply bg-white border border-gray-200 shadow-sm;
+}
+
+.card-dark {
+  @apply bg-gray-800/50 backdrop-blur-lg border-gray-700;
+}
+
+.gradient-text {
+  @apply bg-gradient-to-r from-purple-600 to-blue-600 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent;
 }

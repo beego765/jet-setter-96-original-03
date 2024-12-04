@@ -65,40 +65,42 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 };
 
 const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+  <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Navbar />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/deals" element={<Deals />} />
-            <Route path="/my-bookings" element={
-              <ProtectedRoute>
-                <MyBookings />
-              </ProtectedRoute>
-            } />
-            <Route path="/booking/:flightId" element={
-              <ProtectedRoute>
-                <BookingDetails />
-              </ProtectedRoute>
-            } />
-            <Route path="/booking/:flightId/seat-selection" element={
-              <ProtectedRoute>
-                <SeatSelection />
-              </ProtectedRoute>
-            } />
-            <Route path="/support" element={<Support />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/admin" element={
-              <ProtectedRoute adminOnly={true}>
-                <Admin />
-              </ProtectedRoute>
-            } />
-          </Routes>
-        </BrowserRouter>
+        <div className="min-h-screen bg-background text-foreground transition-colors duration-200">
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Navbar />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/deals" element={<Deals />} />
+              <Route path="/my-bookings" element={
+                <ProtectedRoute>
+                  <MyBookings />
+                </ProtectedRoute>
+              } />
+              <Route path="/booking/:flightId" element={
+                <ProtectedRoute>
+                  <BookingDetails />
+                </ProtectedRoute>
+              } />
+              <Route path="/booking/:flightId/seat-selection" element={
+                <ProtectedRoute>
+                  <SeatSelection />
+                </ProtectedRoute>
+              } />
+              <Route path="/support" element={<Support />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/admin" element={
+                <ProtectedRoute adminOnly={true}>
+                  <Admin />
+                </ProtectedRoute>
+              } />
+            </Routes>
+          </BrowserRouter>
+        </div>
       </TooltipProvider>
     </QueryClientProvider>
   </ThemeProvider>

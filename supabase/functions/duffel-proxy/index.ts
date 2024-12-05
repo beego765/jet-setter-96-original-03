@@ -32,13 +32,6 @@ serve(async (req) => {
       throw new Error('Path is required')
     }
 
-    // For all endpoints
-    console.log('Making request to Duffel API:', {
-      url: `https://api.duffel.com${path}`,
-      method: method || 'GET',
-      bodyPreview: body ? JSON.stringify(body, null, 2) : 'No body'
-    });
-
     const response = await fetch(`https://api.duffel.com${path}`, {
       method: method || 'GET',
       headers: {
@@ -58,12 +51,6 @@ serve(async (req) => {
       hasData: !!data,
       dataPreview: data ? JSON.stringify(data).substring(0, 500) + '...' : 'No data'
     });
-
-    // If it's an offer request, wait longer for the offers to be generated
-    if (path === '/air/offer_requests' && response.ok) {
-      console.log('Waiting for offers to be generated...');
-      await new Promise(resolve => setTimeout(resolve, 3000));
-    }
 
     if (!response.ok) {
       console.error('Duffel API error:', {

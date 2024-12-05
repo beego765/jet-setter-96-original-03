@@ -32,8 +32,21 @@ interface Slice {
 }
 
 export const mapDuffelOfferToFlight = (offer: DuffelOffer): Flight => {
-  const firstSlice = (offer.slices?.[0] || {}) as Slice;
-  const firstSegment = firstSlice.segments?.[0] || {};
+  const firstSlice = (offer.slices?.[0] || {
+    segments: [],
+    origin: { iata_code: 'N/A' },
+    destination: { iata_code: 'N/A' },
+    duration: 'N/A'
+  }) as Slice;
+  
+  const firstSegment = firstSlice.segments?.[0] || {
+    operating_carrier_flight_number: 'N/A',
+    departing_at: new Date().toISOString(),
+    arriving_at: new Date().toISOString(),
+    origin: { iata_code: 'N/A' },
+    destination: { iata_code: 'N/A' }
+  };
+  
   const lastSegment = firstSlice.segments?.[firstSlice.segments?.length - 1] || firstSegment;
 
   return {

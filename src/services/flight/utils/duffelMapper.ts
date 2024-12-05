@@ -22,7 +22,8 @@ export const mapDuffelOfferToFlight = (offer: DuffelOffer): Flight => ({
     destination: segment.destination.iata_code,
     departureTime: new Date(segment.departing_at).toLocaleTimeString(),
     arrivalTime: new Date(segment.arriving_at).toLocaleTimeString(),
-    duration: segment.duration
+    // Calculate segment duration from departing and arriving times
+    duration: `${Math.round((new Date(segment.arriving_at).getTime() - new Date(segment.departing_at).getTime()) / (1000 * 60))}m`
   })),
   services: {
     seatSelection: offer.passenger_identity_documents_required,

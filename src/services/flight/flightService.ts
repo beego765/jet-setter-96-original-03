@@ -1,17 +1,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { FlightSearchParams, CreateBookingParams } from './types';
-
-const logError = (context: string, error: any, additionalInfo?: any) => {
-  console.error(`[${context}] Error:`, {
-    message: error.message,
-    stack: error.stack,
-    additionalInfo: additionalInfo || {}
-  });
-};
+import { logError, logDebug } from './utils/logger';
+import { mapDuffelOfferToFlight } from './utils/duffelMapper';
+import type { DuffelApiResponse } from './types/duffel';
 
 export const searchFlights = async (params: FlightSearchParams) => {
   try {
-    console.debug('Flight Search Parameters:', JSON.stringify(params, null, 2));
+    logDebug('Flight Search', 'Search Parameters:', params);
 
     const mappedPassengers = [];
     for (let i = 0; i < params.passengers.adults; i++) {
@@ -24,14 +19,12 @@ export const searchFlights = async (params: FlightSearchParams) => {
       mappedPassengers.push({ type: 'infant_without_seat' });
     }
 
-    // Format the departure date, ensuring it's in YYYY-MM-DD format
     const formattedDepartureDate = typeof params.departureDate === 'string' 
       ? params.departureDate 
       : new Date(params.departureDate).toISOString().split('T')[0];
 
-    console.debug('Formatted departure date:', formattedDepartureDate);
+    logDebug('Flight Search', 'Formatted departure date:', formattedDepartureDate);
 
-    // Ensure cabin class is properly formatted
     const cabinClass = params.cabinClass ? params.cabinClass.toLowerCase() : 'economy';
 
     const requestBody = {
@@ -55,9 +48,8 @@ export const searchFlights = async (params: FlightSearchParams) => {
       }
     };
 
-    console.debug('Duffel API Request:', JSON.stringify(requestBody, null, 2));
+    logDebug('Flight Search', 'Duffel API Request:', requestBody);
 
-    // Create an offer request first
     const { data: response, error } = await supabase.functions.invoke('duffel-proxy', {
       body: {
         path: '/air/offer_requests',
@@ -71,14 +63,13 @@ export const searchFlights = async (params: FlightSearchParams) => {
       throw new Error('Failed to connect to flight search service');
     }
 
-    console.debug('Duffel API Offer Request Response:', JSON.stringify(response, null, 2));
+    logDebug('Flight Search', 'Duffel API Offer Request Response:', response);
 
     if (!response?.data?.id) {
       console.error('Invalid offer request response:', response);
       throw new Error('Failed to create offer request');
     }
 
-    // Get the offers using the offer request ID
     const { data: offersResponse, error: offersError } = await supabase.functions.invoke('duffel-proxy', {
       body: {
         path: `/air/offers?offer_request_id=${response.data.id}`,
@@ -91,67 +82,20 @@ export const searchFlights = async (params: FlightSearchParams) => {
       throw offersError;
     }
 
-    console.debug('Duffel API Offers Response:', {
+    logDebug('Flight Search', 'Duffel API Offers Response:', {
       status: offersResponse?.status,
-      offerCount: offersResponse?.data?.length || 0,
-      offers: offersResponse?.data?.offers || [],
-      meta: offersResponse?.meta,
-      error: offersResponse?.error
+      offerCount: offersResponse?.data?.offers?.length || 0,
+      meta: offersResponse?.meta
     });
 
-    // Validate the offers response structure
     if (!offersResponse?.data?.offers) {
       console.error('Invalid offers response structure:', offersResponse);
       throw new Error('Invalid response format from flight search service');
     }
 
-    // Map the offers to a more friendly format
-    const mappedOffers = offersResponse.data.offers.map(offer => ({
-      id: offer.id,
-      airline: offer.owner.name,
-      airlineLogoUrl: offer.owner.logo_symbol_url,
-      airlineCode: offer.owner.iata_code,
-      flightNumber: offer.slices[0].segments[0].operating_carrier_flight_number,
-      departureTime: new Date(offer.slices[0].segments[0].departing_at).toLocaleTimeString(),
-      arrivalTime: new Date(offer.slices[0].segments[offer.slices[0].segments.length - 1].arriving_at).toLocaleTimeString(),
-      duration: offer.slices[0].duration,
-      price: offer.total_amount,
-      origin: offer.slices[0].origin.iata_code,
-      destination: offer.slices[0].destination.iata_code,
-      aircraft: offer.slices[0].segments[0].aircraft.name,
-      cabinClass: offer.passenger_identity_documents_required ? 'First/Business' : 'Economy',
-      operatingCarrier: offer.slices[0].segments[0].operating_carrier.name,
-      departureDate: offer.slices[0].segments[0].departing_at,
-      segments: offer.slices[0].segments.map(segment => ({
-        origin: segment.origin.iata_code,
-        destination: segment.destination.iata_code,
-        departureTime: new Date(segment.departing_at).toLocaleTimeString(),
-        arrivalTime: new Date(segment.arriving_at).toLocaleTimeString(),
-        duration: segment.duration
-      })),
-      services: {
-        seatSelection: offer.passenger_identity_documents_required,
-        meals: offer.slices[0].segments.map(s => s.meal_service || []).flat(),
-        baggage: {
-          included: offer.passengers[0].baggages && offer.passengers[0].baggages.length > 0,
-          details: `${offer.passengers[0].baggages?.[0]?.quantity || 0} bags included`
-        },
-        refund: {
-          allowed: offer.conditions?.refund_before_departure?.allowed || false,
-          penalty: offer.conditions?.refund_before_departure?.penalty_amount
-        },
-        changes: {
-          allowed: offer.conditions?.change_before_departure?.allowed || false,
-          penalty: offer.conditions?.change_before_departure?.penalty_amount
-        }
-      },
-      carbonEmissions: offer.total_emissions_kg ? {
-        amount: parseInt(offer.total_emissions_kg),
-        unit: 'kg CO2e'
-      } : undefined
-    }));
+    const mappedOffers = offersResponse.data.offers.map(mapDuffelOfferToFlight);
 
-    console.debug('Mapped offers:', mappedOffers);
+    logDebug('Flight Search', 'Mapped offers count:', mappedOffers.length);
 
     if (mappedOffers.length === 0) {
       console.warn('No flights found for search params:', params);
@@ -167,7 +111,7 @@ export const searchFlights = async (params: FlightSearchParams) => {
 
 export const createBooking = async ({ offerId, passengers }: CreateBookingParams) => {
   try {
-    console.debug('Creating Booking:', { 
+    logDebug('Create Booking', 'Creating booking:', { 
       offerId, 
       passengerCount: passengers.length 
     });

@@ -1,48 +1,56 @@
 import type { DuffelOffer } from '../types/duffel';
 import type { Flight } from '@/components/flight-search/FlightCard';
 
-export const mapDuffelOfferToFlight = (offer: DuffelOffer): Flight => ({
-  id: offer.id,
-  airline: offer.owner.name,
-  airlineLogoUrl: offer.owner.logo_symbol_url,
-  airlineCode: offer.owner.iata_code,
-  flightNumber: offer.slices[0].segments[0].operating_carrier_flight_number,
-  departureTime: new Date(offer.slices[0].segments[0].departing_at).toLocaleTimeString(),
-  arrivalTime: new Date(offer.slices[0].segments[offer.slices[0].segments.length - 1].arriving_at).toLocaleTimeString(),
-  duration: offer.slices[0].duration,
-  price: offer.total_amount,
-  origin: offer.slices[0].origin.iata_code,
-  destination: offer.slices[0].destination.iata_code,
-  aircraft: offer.slices[0].segments[0].aircraft.name,
-  cabinClass: offer.passenger_identity_documents_required ? 'First/Business' : 'Economy',
-  operatingCarrier: offer.slices[0].segments[0].operating_carrier.name,
-  departureDate: offer.slices[0].segments[0].departing_at,
-  segments: offer.slices[0].segments.map(segment => ({
-    origin: segment.origin.iata_code,
-    destination: segment.destination.iata_code,
-    departureTime: new Date(segment.departing_at).toLocaleTimeString(),
-    arrivalTime: new Date(segment.arriving_at).toLocaleTimeString(),
-    // Calculate segment duration from departing and arriving times
-    duration: `${Math.round((new Date(segment.arriving_at).getTime() - new Date(segment.departing_at).getTime()) / (1000 * 60))}m`
-  })),
-  services: {
-    seatSelection: offer.passenger_identity_documents_required,
-    meals: offer.slices[0].segments.map(s => s.meal_service || []).flat(),
-    baggage: {
-      included: offer.passengers[0].baggages && offer.passengers[0].baggages.length > 0,
-      details: `${offer.passengers[0].baggages?.[0]?.quantity || 0} bags included`
+export const mapDuffelOfferToFlight = (offer: DuffelOffer): Flight => {
+  // Add null checks and default values
+  const firstSlice = offer.slices?.[0] || {};
+  const firstSegment = firstSlice.segments?.[0] || {};
+  const lastSegment = firstSlice.segments?.[firstSlice.segments?.length - 1] || firstSegment;
+
+  return {
+    id: offer.id,
+    airline: offer.owner?.name || 'Unknown Airline',
+    airlineLogoUrl: offer.owner?.logo_symbol_url || undefined,
+    airlineCode: offer.owner?.iata_code || undefined,
+    flightNumber: firstSegment.operating_carrier_flight_number || 'N/A',
+    departureTime: firstSegment.departing_at ? new Date(firstSegment.departing_at).toLocaleTimeString() : 'N/A',
+    arrivalTime: lastSegment.arriving_at ? new Date(lastSegment.arriving_at).toLocaleTimeString() : 'N/A',
+    duration: firstSlice.duration || 'N/A',
+    price: offer.total_amount || 0,
+    origin: firstSlice.origin?.iata_code || 'N/A',
+    destination: firstSlice.destination?.iata_code || 'N/A',
+    aircraft: firstSegment.aircraft?.name || 'N/A',
+    cabinClass: offer.passenger_identity_documents_required ? 'First/Business' : 'Economy',
+    operatingCarrier: firstSegment.operating_carrier?.name || 'N/A',
+    departureDate: firstSegment.departing_at || new Date().toISOString(),
+    segments: firstSlice.segments?.map(segment => ({
+      origin: segment.origin?.iata_code || 'N/A',
+      destination: segment.destination?.iata_code || 'N/A',
+      departureTime: segment.departing_at ? new Date(segment.departing_at).toLocaleTimeString() : 'N/A',
+      arrivalTime: segment.arriving_at ? new Date(segment.arriving_at).toLocaleTimeString() : 'N/A',
+      duration: segment.departing_at && segment.arriving_at
+        ? `${Math.round((new Date(segment.arriving_at).getTime() - new Date(segment.departing_at).getTime()) / (1000 * 60))}m`
+        : 'N/A'
+    })) || [],
+    services: {
+      seatSelection: offer.passenger_identity_documents_required || false,
+      meals: firstSlice.segments?.flatMap(s => s.meal_service || []) || [],
+      baggage: {
+        included: offer.passengers?.[0]?.baggages?.length > 0 || false,
+        details: `${offer.passengers?.[0]?.baggages?.[0]?.quantity || 0} bags included`
+      },
+      refund: {
+        allowed: offer.conditions?.refund_before_departure?.allowed || false,
+        penalty: offer.conditions?.refund_before_departure?.penalty_amount
+      },
+      changes: {
+        allowed: offer.conditions?.change_before_departure?.allowed || false,
+        penalty: offer.conditions?.change_before_departure?.penalty_amount
+      }
     },
-    refund: {
-      allowed: offer.conditions?.refund_before_departure?.allowed || false,
-      penalty: offer.conditions?.refund_before_departure?.penalty_amount
-    },
-    changes: {
-      allowed: offer.conditions?.change_before_departure?.allowed || false,
-      penalty: offer.conditions?.change_before_departure?.penalty_amount
-    }
-  },
-  carbonEmissions: offer.total_emissions_kg ? {
-    amount: parseInt(offer.total_emissions_kg),
-    unit: 'kg CO2e'
-  } : undefined
-});
+    carbonEmissions: offer.total_emissions_kg ? {
+      amount: parseInt(offer.total_emissions_kg),
+      unit: 'kg CO2e'
+    } : undefined
+  };
+};

@@ -11,7 +11,7 @@ const logError = (context: string, error: any, additionalInfo?: any) => {
 
 export const searchFlights = async (params: FlightSearchParams) => {
   try {
-    console.debug('Flight Search Parameters:', params);
+    console.debug('Flight Search Parameters:', JSON.stringify(params, null, 2));
 
     const mappedPassengers = [];
     for (let i = 0; i < params.passengers.adults; i++) {
@@ -28,6 +28,8 @@ export const searchFlights = async (params: FlightSearchParams) => {
     const formattedDepartureDate = typeof params.departureDate === 'string' 
       ? params.departureDate 
       : new Date(params.departureDate).toISOString().split('T')[0];
+
+    console.debug('Formatted departure date:', formattedDepartureDate);
 
     // Ensure cabin class is properly formatted
     const cabinClass = params.cabinClass ? params.cabinClass.toLowerCase() : 'economy';
@@ -53,7 +55,7 @@ export const searchFlights = async (params: FlightSearchParams) => {
       }
     };
 
-    console.debug('Duffel API Request:', requestBody);
+    console.debug('Duffel API Request:', JSON.stringify(requestBody, null, 2));
 
     // Create an offer request first
     const { data: response, error } = await supabase.functions.invoke('duffel-proxy', {
@@ -69,9 +71,10 @@ export const searchFlights = async (params: FlightSearchParams) => {
       throw new Error('Failed to connect to flight search service');
     }
 
-    console.debug('Duffel API Offer Request Response:', response);
+    console.debug('Duffel API Offer Request Response:', JSON.stringify(response, null, 2));
 
     if (!response?.data?.id) {
+      console.error('Invalid offer request response:', response);
       throw new Error('Failed to create offer request');
     }
 
@@ -90,10 +93,12 @@ export const searchFlights = async (params: FlightSearchParams) => {
 
     console.debug('Duffel API Offers Response:', {
       status: offersResponse?.status,
-      offerCount: offersResponse?.data?.length || 0
+      offerCount: offersResponse?.data?.length || 0,
+      data: JSON.stringify(offersResponse, null, 2)
     });
 
     if (!offersResponse?.data?.offers || offersResponse.data.offers.length === 0) {
+      console.warn('No flights found for search params:', params);
       throw new Error('No flights found for the specified route and dates');
     }
 

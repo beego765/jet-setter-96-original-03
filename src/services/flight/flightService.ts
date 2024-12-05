@@ -94,15 +94,71 @@ export const searchFlights = async (params: FlightSearchParams) => {
     console.debug('Duffel API Offers Response:', {
       status: offersResponse?.status,
       offerCount: offersResponse?.data?.length || 0,
-      data: JSON.stringify(offersResponse, null, 2)
+      offers: offersResponse?.data?.offers || [],
+      meta: offersResponse?.meta,
+      error: offersResponse?.error
     });
 
-    if (!offersResponse?.data?.offers || offersResponse.data.offers.length === 0) {
+    // Validate the offers response structure
+    if (!offersResponse?.data?.offers) {
+      console.error('Invalid offers response structure:', offersResponse);
+      throw new Error('Invalid response format from flight search service');
+    }
+
+    // Map the offers to a more friendly format
+    const mappedOffers = offersResponse.data.offers.map(offer => ({
+      id: offer.id,
+      airline: offer.owner.name,
+      airlineLogoUrl: offer.owner.logo_symbol_url,
+      airlineCode: offer.owner.iata_code,
+      flightNumber: offer.slices[0].segments[0].operating_carrier_flight_number,
+      departureTime: new Date(offer.slices[0].segments[0].departing_at).toLocaleTimeString(),
+      arrivalTime: new Date(offer.slices[0].segments[offer.slices[0].segments.length - 1].arriving_at).toLocaleTimeString(),
+      duration: offer.slices[0].duration,
+      price: offer.total_amount,
+      origin: offer.slices[0].origin.iata_code,
+      destination: offer.slices[0].destination.iata_code,
+      aircraft: offer.slices[0].segments[0].aircraft.name,
+      cabinClass: offer.passenger_identity_documents_required ? 'First/Business' : 'Economy',
+      operatingCarrier: offer.slices[0].segments[0].operating_carrier.name,
+      departureDate: offer.slices[0].segments[0].departing_at,
+      segments: offer.slices[0].segments.map(segment => ({
+        origin: segment.origin.iata_code,
+        destination: segment.destination.iata_code,
+        departureTime: new Date(segment.departing_at).toLocaleTimeString(),
+        arrivalTime: new Date(segment.arriving_at).toLocaleTimeString(),
+        duration: segment.duration
+      })),
+      services: {
+        seatSelection: offer.passenger_identity_documents_required,
+        meals: offer.slices[0].segments.map(s => s.meal_service || []).flat(),
+        baggage: {
+          included: offer.passengers[0].baggages && offer.passengers[0].baggages.length > 0,
+          details: `${offer.passengers[0].baggages?.[0]?.quantity || 0} bags included`
+        },
+        refund: {
+          allowed: offer.conditions?.refund_before_departure?.allowed || false,
+          penalty: offer.conditions?.refund_before_departure?.penalty_amount
+        },
+        changes: {
+          allowed: offer.conditions?.change_before_departure?.allowed || false,
+          penalty: offer.conditions?.change_before_departure?.penalty_amount
+        }
+      },
+      carbonEmissions: offer.total_emissions_kg ? {
+        amount: parseInt(offer.total_emissions_kg),
+        unit: 'kg CO2e'
+      } : undefined
+    }));
+
+    console.debug('Mapped offers:', mappedOffers);
+
+    if (mappedOffers.length === 0) {
       console.warn('No flights found for search params:', params);
       throw new Error('No flights found for the specified route and dates');
     }
 
-    return offersResponse.data.offers;
+    return mappedOffers;
   } catch (error) {
     logError('Flight Search', error, { params });
     throw error;

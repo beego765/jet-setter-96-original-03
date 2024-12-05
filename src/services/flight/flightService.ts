@@ -84,16 +84,17 @@ export const searchFlights = async (params: FlightSearchParams) => {
 
     logDebug('Flight Search', 'Duffel API Offers Response:', {
       status: offersResponse?.status,
-      offerCount: offersResponse?.data?.offers?.length || 0,
+      offerCount: offersResponse?.data?.length || 0,
       meta: offersResponse?.meta
     });
 
-    if (!offersResponse?.data?.offers) {
+    // Updated validation to check for data array directly
+    if (!offersResponse?.data || !Array.isArray(offersResponse.data)) {
       console.error('Invalid offers response structure:', offersResponse);
       throw new Error('Invalid response format from flight search service');
     }
 
-    const mappedOffers = offersResponse.data.offers.map(mapDuffelOfferToFlight);
+    const mappedOffers = offersResponse.data.map(mapDuffelOfferToFlight);
 
     logDebug('Flight Search', 'Mapped offers count:', mappedOffers.length);
 

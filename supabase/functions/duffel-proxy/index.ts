@@ -20,17 +20,23 @@ serve(async (req) => {
       throw new Error('DUFFEL_API_KEY is not set')
     }
 
+    // Safe logging of request details
     console.log('Duffel API Request:', {
       path,
       method,
-      bodyPreview: JSON.stringify(body).substring(0, 500) + '...'
+      bodyPreview: body ? JSON.stringify(body).substring(0, 500) + '...' : 'No body'
     });
+
+    // Validate required parameters
+    if (!path) {
+      throw new Error('Path is required')
+    }
 
     // For all endpoints
     console.log('Making request to Duffel API:', {
       url: `https://api.duffel.com${path}`,
-      method,
-      body: JSON.stringify(body, null, 2)
+      method: method || 'GET',
+      bodyPreview: body ? JSON.stringify(body, null, 2) : 'No body'
     });
 
     const response = await fetch(`https://api.duffel.com${path}`, {
@@ -50,13 +56,21 @@ serve(async (req) => {
       path,
       status: response.status,
       hasData: !!data,
-      dataPreview: JSON.stringify(data).substring(0, 500) + '...'
+      dataPreview: data ? JSON.stringify(data).substring(0, 500) + '...' : 'No data'
     });
 
     // If it's an offer request, wait longer for the offers to be generated
     if (path === '/air/offer_requests' && response.ok) {
       console.log('Waiting for offers to be generated...');
       await new Promise(resolve => setTimeout(resolve, 3000));
+    }
+
+    if (!response.ok) {
+      console.error('Duffel API error:', {
+        status: response.status,
+        data
+      });
+      throw new Error(`Duffel API error: ${response.status} ${JSON.stringify(data)}`);
     }
 
     return new Response(

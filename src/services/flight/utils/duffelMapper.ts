@@ -1,17 +1,46 @@
 import type { DuffelOffer } from '../types/duffel';
 import type { Flight } from '@/components/flight-search/FlightCard';
 
+interface Segment {
+  operating_carrier_flight_number: string;
+  departing_at: string;
+  arriving_at: string;
+  aircraft?: {
+    name: string;
+  };
+  operating_carrier?: {
+    name: string;
+  };
+  origin: {
+    iata_code: string;
+  };
+  destination: {
+    iata_code: string;
+  };
+  meal_service?: string[];
+}
+
+interface Slice {
+  duration?: string;
+  segments: Segment[];
+  origin: {
+    iata_code: string;
+  };
+  destination: {
+    iata_code: string;
+  };
+}
+
 export const mapDuffelOfferToFlight = (offer: DuffelOffer): Flight => {
-  // Add null checks and default values
-  const firstSlice = offer.slices?.[0] || {};
+  const firstSlice = (offer.slices?.[0] || {}) as Slice;
   const firstSegment = firstSlice.segments?.[0] || {};
   const lastSegment = firstSlice.segments?.[firstSlice.segments?.length - 1] || firstSegment;
 
   return {
     id: offer.id,
     airline: offer.owner?.name || 'Unknown Airline',
-    airlineLogoUrl: offer.owner?.logo_symbol_url || undefined,
-    airlineCode: offer.owner?.iata_code || undefined,
+    airlineLogoUrl: offer.owner?.logo_symbol_url,
+    airlineCode: offer.owner?.iata_code,
     flightNumber: firstSegment.operating_carrier_flight_number || 'N/A',
     departureTime: firstSegment.departing_at ? new Date(firstSegment.departing_at).toLocaleTimeString() : 'N/A',
     arrivalTime: lastSegment.arriving_at ? new Date(lastSegment.arriving_at).toLocaleTimeString() : 'N/A',

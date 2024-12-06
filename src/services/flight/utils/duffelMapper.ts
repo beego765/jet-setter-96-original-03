@@ -1,5 +1,5 @@
 import type { DuffelOffer } from '../types/duffel';
-import type { Flight } from '@/components/flight-search/FlightCard';
+import type { Flight } from '@/components/flight-search/types';
 
 interface Segment {
   operating_carrier_flight_number: string;

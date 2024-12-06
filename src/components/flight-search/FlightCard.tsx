@@ -1,10 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { FlightPricing } from "./FlightPricing";
+import type { Flight } from "./types";
 
 interface FlightCardProps {
-  flight: any;
-  onSelect: (flight: any) => void;
+  flight: Flight;
+  onSelect: (flight: Flight) => void;
   isLoading?: boolean;
   passengers: {
     adults: number;

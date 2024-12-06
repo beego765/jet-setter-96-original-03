@@ -1,5 +1,5 @@
 import { Clock, Plane } from "lucide-react";
-import type { Flight } from "./FlightCard";
+import type { Flight } from "./types";
 
 interface FlightDetailsProps {
   flight: Flight;

@@ -55,9 +55,14 @@ interface FlightCardProps {
   flight: Flight;
   onSelect: (flight: Flight) => void;
   isLoading?: boolean;
+  passengers?: {
+    adults: number;
+    children: number;
+    infants: number;
+  };
 }
 
-export const FlightCard = ({ flight, onSelect, isLoading = false }: FlightCardProps) => {
+export const FlightCard = ({ flight, onSelect, isLoading = false, passengers }: FlightCardProps) => {
   // Ensure price is a number
   const price = typeof flight.price === 'number' ? flight.price : 0;
 

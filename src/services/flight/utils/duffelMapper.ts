@@ -49,6 +49,10 @@ export const mapDuffelOfferToFlight = (offer: DuffelOffer): Flight => {
   
   const lastSegment = firstSlice.segments?.[firstSlice.segments?.length - 1] || firstSegment;
 
+  // Ensure total_amount is a number
+  const totalAmount = typeof offer.total_amount === 'number' ? offer.total_amount : 
+    typeof offer.total_amount === 'string' ? parseFloat(offer.total_amount) : 0;
+
   return {
     id: offer.id,
     airline: offer.owner?.name || 'Unknown Airline',
@@ -58,7 +62,7 @@ export const mapDuffelOfferToFlight = (offer: DuffelOffer): Flight => {
     departureTime: firstSegment.departing_at ? new Date(firstSegment.departing_at).toLocaleTimeString() : 'N/A',
     arrivalTime: lastSegment.arriving_at ? new Date(lastSegment.arriving_at).toLocaleTimeString() : 'N/A',
     duration: firstSlice.duration || 'N/A',
-    price: offer.total_amount || 0,
+    price: totalAmount,
     origin: firstSlice.origin?.iata_code || 'N/A',
     destination: firstSlice.destination?.iata_code || 'N/A',
     aircraft: firstSegment.aircraft?.name || 'N/A',

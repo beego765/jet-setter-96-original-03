@@ -14,6 +14,7 @@ import Search from "./pages/Search";
 import FlightSummary from "./pages/FlightSummary";
 import BookingDetails from "./pages/BookingDetails";
 import SeatSelection from "./components/booking/SeatSelection";
+import PassengerDetails from "./pages/PassengerDetails";
 import { Navbar } from "./components/Navbar";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,6 +89,11 @@ const App = () => (
               <Route path="/booking/:flightId" element={
                 <ProtectedRoute>
                   <BookingDetails />
+                </ProtectedRoute>
+              } />
+              <Route path="/booking/:flightId/passenger-details" element={
+                <ProtectedRoute>
+                  <PassengerDetails />
                 </ProtectedRoute>
               } />
               <Route path="/booking/:flightId/seat-selection" element={

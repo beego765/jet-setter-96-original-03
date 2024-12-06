@@ -21,9 +21,13 @@ const BookingDetails = () => {
   useEffect(() => {
     const fetchBookingDetails = async () => {
       try {
-        if (!flightId) {
-          throw new Error('No flight ID provided');
+        // Check if we have a valid UUID format
+        if (!flightId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(flightId)) {
+          console.log('Invalid booking ID format:', flightId);
+          throw new Error('Invalid booking ID format');
         }
+
+        console.log('Fetching booking details for ID:', flightId);
 
         // Fetch booking with payment details
         const { data: bookingData, error: bookingError } = await supabase
@@ -43,9 +47,17 @@ const BookingDetails = () => {
           .eq('id', flightId)
           .single();
 
-        if (bookingError) throw bookingError;
-        if (!bookingData) throw new Error('Booking not found');
+        if (bookingError) {
+          console.error('Error fetching booking:', bookingError);
+          throw bookingError;
+        }
+        
+        if (!bookingData) {
+          console.error('No booking found for ID:', flightId);
+          throw new Error('Booking not found');
+        }
 
+        console.log('Booking data retrieved:', bookingData);
         setBooking(bookingData);
 
         // Only fetch flight details if we have a duffel_offer_id
@@ -65,6 +77,7 @@ const BookingDetails = () => {
               variant: "destructive",
             });
           } else {
+            console.log('Duffel data retrieved:', duffelData);
             setFlightDetails(duffelData);
           }
         }

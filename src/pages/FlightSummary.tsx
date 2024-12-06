@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 
 const FlightSummaryPage = () => {
   const location = useLocation();
@@ -40,13 +41,21 @@ const FlightSummaryPage = () => {
     try {
       setIsLoading(true);
 
-      // Create a booking record
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Create a booking record with properly formatted date
       const { data: bookingData, error: bookingError } = await supabase
         .from('bookings')
         .insert({
+          user_id: user.id,
           origin: flight.origin,
           destination: flight.destination,
-          departure_date: new Date(flight.departureDate),
+          departure_date: format(new Date(flight.departureDate), 'yyyy-MM-dd'),
           passengers: passengers.adults + passengers.children + passengers.infants,
           cabin_class: flight.cabinClass,
           total_price: flight.price,

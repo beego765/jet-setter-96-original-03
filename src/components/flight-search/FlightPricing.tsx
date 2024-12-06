@@ -8,10 +8,13 @@ interface FlightPricingProps {
 }
 
 export const FlightPricing = ({ price, onSelect, isLoading }: FlightPricingProps) => {
+  // Ensure price is a number and has a default value
+  const displayPrice = typeof price === 'number' ? price : 0;
+
   return (
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-2xl font-bold">£{price.toFixed(2)}</p>
+        <p className="text-2xl font-bold">£{displayPrice.toFixed(2)}</p>
         <p className="text-sm text-gray-400">per passenger</p>
       </div>
       <Button

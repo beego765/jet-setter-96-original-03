@@ -1,12 +1,18 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { PassengerForm } from "@/components/booking/PassengerForm";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 const PassengerDetails = () => {
   const { flightId } = useParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [passengerData, setPassengerData] = useState<Record<number, any>>({});
 
   const { data: booking, isLoading } = useQuery({
     queryKey: ['booking', flightId],
@@ -22,6 +28,55 @@ const PassengerDetails = () => {
     },
     enabled: !!flightId
   });
+
+  const handlePassengerDataChange = (index: number, data: any) => {
+    setPassengerData(prev => ({
+      ...prev,
+      [index]: { ...prev[index], ...data }
+    }));
+  };
+
+  const handleContinue = async () => {
+    try {
+      // Validate all required fields are filled
+      const passengers = Object.values(passengerData);
+      const requiredFields = ['title', 'first_name', 'last_name', 'date_of_birth', 'email'];
+      
+      const isValid = passengers.every(passenger => 
+        requiredFields.every(field => passenger && passenger[field])
+      );
+
+      if (!isValid) {
+        toast({
+          title: "Missing Information",
+          description: "Please fill in all required fields for all passengers",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Save passenger details to database
+      const { error } = await supabase
+        .from('passenger_details')
+        .insert(
+          Object.values(passengerData).map(passenger => ({
+            booking_id: flightId,
+            ...passenger
+          }))
+        );
+
+      if (error) throw error;
+
+      // Navigate to payment page
+      navigate(`/booking/${flightId}/payment`);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save passenger details",
+        variant: "destructive"
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -47,11 +102,20 @@ const PassengerDetails = () => {
               key={index}
               index={index}
               type="adult"
-              onChange={(index, data) => {
-                console.log('Passenger data updated:', { index, data });
-              }}
+              onChange={handlePassengerDataChange}
             />
           ))}
+
+          <Card className="p-6 bg-gray-800/50 backdrop-blur-sm border-gray-700">
+            <div className="flex justify-end">
+              <Button
+                onClick={handleContinue}
+                className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+              >
+                Continue to Payment
+              </Button>
+            </div>
+          </Card>
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { FlightExtras } from "@/components/flight-search/FlightExtras";
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const FlightSummaryPage = () => {
   const location = useLocation();
@@ -35,19 +36,103 @@ const FlightSummaryPage = () => {
     setSelectedExtras(extras);
   };
 
-  const handleContinue = () => {
-    setIsLoading(true);
-    // Create a booking object with selected extras
-    const bookingDetails = {
-      flight,
-      passengers,
-      extras: selectedExtras
-    };
+  const handleContinue = async () => {
+    try {
+      setIsLoading(true);
 
-    // Navigate to passenger details page with booking information
-    navigate('/booking/passenger-details', { 
-      state: { bookingDetails } 
-    });
+      // Create a booking record
+      const { data: bookingData, error: bookingError } = await supabase
+        .from('bookings')
+        .insert({
+          origin: flight.origin,
+          destination: flight.destination,
+          departure_date: new Date(flight.departureDate),
+          passengers: passengers.adults + passengers.children + passengers.infants,
+          cabin_class: flight.cabinClass,
+          total_price: flight.price,
+          duffel_offer_id: flight.id,
+          status: 'draft'
+        })
+        .select()
+        .single();
+
+      if (bookingError) {
+        console.error('Error creating booking:', bookingError);
+        throw bookingError;
+      }
+
+      if (!bookingData) {
+        throw new Error('No booking data returned');
+      }
+
+      // Add selected extras as booking addons if any
+      const addons = [];
+      if (selectedExtras.bags) {
+        addons.push({
+          booking_id: bookingData.id,
+          type: 'baggage',
+          name: 'Extra Baggage',
+          price: 30.00
+        });
+      }
+      if (selectedExtras.meals) {
+        addons.push({
+          booking_id: bookingData.id,
+          type: 'meal',
+          name: 'In-flight Meal',
+          price: 15.00
+        });
+      }
+      if (selectedExtras.wifi) {
+        addons.push({
+          booking_id: bookingData.id,
+          type: 'seat',
+          name: 'Wi-Fi Access',
+          price: 10.00
+        });
+      }
+      if (selectedExtras.flexibleTicket) {
+        addons.push({
+          booking_id: bookingData.id,
+          type: 'change',
+          name: 'Flexible Ticket',
+          price: 50.00
+        });
+      }
+
+      if (addons.length > 0) {
+        const { error: addonsError } = await supabase
+          .from('booking_addons')
+          .insert(addons);
+
+        if (addonsError) {
+          console.error('Error adding extras:', addonsError);
+          // Don't throw here, as the booking was created successfully
+          toast({
+            title: "Warning",
+            description: "Some extras couldn't be added to your booking",
+            variant: "destructive",
+          });
+        }
+      }
+
+      // Navigate to passenger details with the booking ID
+      navigate(`/booking/${bookingData.id}/passenger-details`, { 
+        state: { 
+          bookingId: bookingData.id,
+          passengers 
+        } 
+      });
+    } catch (error: any) {
+      console.error('Error handling booking:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create booking",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

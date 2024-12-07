@@ -12,11 +12,16 @@ export const createDuffelBooking = async (flightId: string) => {
         data: {
           type: 'instant',
           selected_offers: [flightId],
+          payments: [{
+            type: 'balance',
+            currency: 'GBP',
+            amount: '1.00' // We'll update this with the actual amount later during payment
+          }],
           passengers: [{
             id: 'pas_temp',
             type: 'adult',
             title: 'mr',
-            gender: 'f',
+            gender: 'm',
             given_name: 'Temporary',
             family_name: 'Passenger',
             email: 'temp@example.com',

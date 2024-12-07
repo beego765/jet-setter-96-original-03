@@ -26,7 +26,7 @@ serve(async (req) => {
         headers: {
           'Authorization': `Bearer ${DUFFEL_API_KEY}`,
           'Content-Type': 'application/json',
-          'Duffel-Version': 'beta',
+          'Duffel-Version': 'v1',
           'Accept': 'application/json',
           'Accept-Encoding': 'gzip',
         },
@@ -55,7 +55,7 @@ serve(async (req) => {
           headers: {
             'Authorization': `Bearer ${DUFFEL_API_KEY}`,
             'Content-Type': 'application/json',
-            'Duffel-Version': 'beta',
+            'Duffel-Version': 'v1',
             'Accept': 'application/json',
             'Accept-Encoding': 'gzip',
           },
@@ -82,7 +82,7 @@ serve(async (req) => {
       headers: {
         'Authorization': `Bearer ${DUFFEL_API_KEY}`,
         'Content-Type': 'application/json',
-        'Duffel-Version': 'beta',
+        'Duffel-Version': 'v1',
         'Accept': 'application/json',
         'Accept-Encoding': 'gzip',
       },

@@ -1,8 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 
-export const createDuffelBooking = async (flightId: string) => {
-  console.log('Creating Duffel booking for offer:', flightId);
+export const createDuffelBooking = async (flight: any) => {
+  console.log('Creating Duffel booking for offer:', flight.id);
 
   const { data: duffelOrder, error: duffelError } = await supabase.functions.invoke('duffel-proxy', {
     body: {
@@ -11,21 +11,21 @@ export const createDuffelBooking = async (flightId: string) => {
       body: {
         data: {
           type: 'instant',
-          selected_offers: [flightId],
+          selected_offers: [flight.id],
           payments: [{
             type: 'balance',
             currency: 'GBP',
-            amount: '1.00' // We'll update this with the actual amount later during payment
+            amount: flight.price.toString() // Use actual flight price
           }],
           passengers: [{
-            id: 'pas_temp',
+            id: `pas_${Math.random().toString(36).substring(2, 15)}`, // Generate unique passenger ID
             type: 'adult',
             title: 'mr',
             gender: 'm',
             given_name: 'Temporary',
             family_name: 'Passenger',
             email: 'temp@example.com',
-            phone_number: '+1234567890',
+            phone_number: '+447700900000', // Valid UK phone number format
             born_on: '1990-01-01'
           }]
         }

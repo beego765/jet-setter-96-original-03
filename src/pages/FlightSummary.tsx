@@ -40,6 +40,7 @@ const FlightSummaryPage = () => {
   const handleContinue = async () => {
     try {
       setIsLoading(true);
+      console.log('Selected flight:', flight);
 
       // Get the current user
       const { data: { user } } = await supabase.auth.getUser();
@@ -49,7 +50,7 @@ const FlightSummaryPage = () => {
       }
 
       // Create Duffel booking
-      const duffelOrder = await createDuffelBooking(flight.id);
+      const duffelOrder = await createDuffelBooking(flight);
 
       // Create booking record
       const bookingData = await createBookingRecord(user.id, flight, duffelOrder.data.id);

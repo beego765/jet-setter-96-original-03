@@ -11,11 +11,17 @@ export const useDuffelPayment = (booking: any, flightDetails: any, onPayNow: () 
 
   const handlePayNow = async () => {
     try {
+      // Validate booking ID
+      if (!booking?.duffel_booking_id) {
+        throw new Error("Invalid booking: missing Duffel booking ID");
+      }
+
       setIsProcessing(true);
       setPaymentError(null);
       const amounts = calculatePaymentAmounts(flightDetails, booking.total_price);
 
       console.log('Processing payment with amounts:', amounts);
+      console.log('Duffel booking ID:', booking.duffel_booking_id);
 
       // Create initial payment record
       const paymentData = await createPaymentRecord(booking.id, amounts);

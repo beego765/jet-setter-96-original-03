@@ -32,6 +32,28 @@ serve(async (req) => {
       throw new Error('Path is required')
     }
 
+    // Special handling for payments
+    if (path.includes('/air/payments')) {
+      console.log('Processing payment request:', {
+        orderId: body?.data?.order_id,
+        amount: body?.data?.amount,
+        currency: body?.data?.currency
+      });
+
+      // Validate payment request
+      if (!body?.data?.order_id || !body?.data?.amount) {
+        throw new Error('Invalid payment request: missing required fields');
+      }
+    }
+
+    // Special handling for hold requests
+    if (path.includes('/air/orders') && path.includes('/hold')) {
+      console.log('Processing hold request:', {
+        orderId: path.split('/')[3],
+        expiresAt: body?.data?.expires_at
+      });
+    }
+
     const response = await fetch(`https://api.duffel.com${path}`, {
       method: method || 'GET',
       headers: {
@@ -57,7 +79,24 @@ serve(async (req) => {
         status: response.status,
         data
       });
-      throw new Error(`Duffel API error: ${response.status} ${JSON.stringify(data)}`);
+
+      // Enhanced error response
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: data.errors?.[0]?.message || 'Duffel API error',
+            code: data.errors?.[0]?.code || response.status,
+            details: data.errors || []
+          }
+        }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+          status: response.status
+        },
+      );
     }
 
     return new Response(
@@ -73,7 +112,12 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in Duffel proxy:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: {
+          message: error.message,
+          type: 'DuffelProxyError'
+        }
+      }),
       { 
         headers: { 
           ...corsHeaders,

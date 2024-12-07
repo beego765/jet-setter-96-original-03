@@ -48,7 +48,38 @@ const FlightSummaryPage = () => {
         throw new Error('User not authenticated');
       }
 
-      // Create a booking record with properly formatted date
+      console.log('Creating Duffel booking for offer:', flight.id);
+
+      // First create the Duffel booking
+      const { data: duffelOrder, error: duffelError } = await supabase.functions.invoke('duffel-proxy', {
+        body: {
+          path: '/air/orders',
+          method: 'POST',
+          body: {
+            data: {
+              type: 'instant',
+              selected_offers: [flight.id],
+              passengers: [{
+                type: 'adult',
+                title: 'mr',
+                given_name: 'Temporary',
+                family_name: 'Passenger',
+                email: 'temp@example.com',
+                born_on: '1990-01-01'
+              }]
+            }
+          }
+        }
+      });
+
+      if (duffelError) {
+        console.error('Error creating Duffel booking:', duffelError);
+        throw duffelError;
+      }
+
+      console.log('Duffel booking created:', duffelOrder);
+
+      // Create a booking record with properly formatted date and Duffel IDs
       const { data: bookingData, error: bookingError } = await supabase
         .from('bookings')
         .insert({
@@ -60,6 +91,7 @@ const FlightSummaryPage = () => {
           cabin_class: flight.cabinClass,
           total_price: flight.price,
           duffel_offer_id: flight.id,
+          duffel_booking_id: duffelOrder.data.id,
           status: 'draft'
         })
         .select()
@@ -116,7 +148,6 @@ const FlightSummaryPage = () => {
 
         if (addonsError) {
           console.error('Error adding extras:', addonsError);
-          // Don't throw here, as the booking was created successfully
           toast({
             title: "Warning",
             description: "Some extras couldn't be added to your booking",

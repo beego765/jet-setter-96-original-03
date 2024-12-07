@@ -15,8 +15,12 @@ export const useDuffelPayment = (booking: any, flightDetails: any, onPayNow: () 
       setPaymentError(null);
       const amounts = calculatePaymentAmounts(flightDetails, booking.total_price);
 
+      console.log('Processing payment with amounts:', amounts);
+
       // Create initial payment record
       const paymentData = await createPaymentRecord(booking.id, amounts);
+
+      console.log('Created payment record:', paymentData);
 
       // Process payment with Duffel
       const { data: duffelPayment, error: duffelError } = await supabase.functions.invoke('duffel-proxy', {
@@ -34,7 +38,12 @@ export const useDuffelPayment = (booking: any, flightDetails: any, onPayNow: () 
         }
       });
 
-      if (duffelError) throw duffelError;
+      if (duffelError) {
+        console.error('Duffel payment error:', duffelError);
+        throw duffelError;
+      }
+
+      console.log('Duffel payment response:', duffelPayment);
 
       // Update payment record with success
       await supabase
@@ -56,10 +65,11 @@ export const useDuffelPayment = (booking: any, flightDetails: any, onPayNow: () 
       onPayNow();
     } catch (error: any) {
       console.error('Payment error:', error);
-      setPaymentError(error.message || "There was an error processing your payment");
+      const errorMessage = error.message || error.error?.message || "There was an error processing your payment";
+      setPaymentError(errorMessage);
       toast({
         title: "Payment Failed",
-        description: error.message || "There was an error processing your payment",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -72,6 +82,8 @@ export const useDuffelPayment = (booking: any, flightDetails: any, onPayNow: () 
       setIsProcessing(true);
       setPaymentError(null);
       const amounts = calculatePaymentAmounts(flightDetails, booking.total_price);
+
+      console.log('Processing hold request for booking:', booking.duffel_booking_id);
 
       // Create hold order with Duffel
       const { data: duffelHold, error: duffelError } = await supabase.functions.invoke('duffel-proxy', {
@@ -86,7 +98,12 @@ export const useDuffelPayment = (booking: any, flightDetails: any, onPayNow: () 
         }
       });
 
-      if (duffelError) throw duffelError;
+      if (duffelError) {
+        console.error('Hold request error:', duffelError);
+        throw duffelError;
+      }
+
+      console.log('Hold response:', duffelHold);
 
       // Create hold payment record
       await createPaymentRecord(booking.id, amounts);
@@ -102,10 +119,11 @@ export const useDuffelPayment = (booking: any, flightDetails: any, onPayNow: () 
       onHoldOrder();
     } catch (error: any) {
       console.error('Hold error:', error);
-      setPaymentError(error.message || "There was an error holding your booking");
+      const errorMessage = error.message || error.error?.message || "There was an error holding your booking";
+      setPaymentError(errorMessage);
       toast({
         title: "Hold Failed",
-        description: error.message || "There was an error holding your booking",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

@@ -80,6 +80,15 @@ export const SearchForm = ({ onSearch }: SearchFormProps) => {
       return;
     }
 
+    if (origin === destination) {
+      toast({
+        title: "Invalid Route",
+        description: "Origin and destination airports must be different",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const searchData = {
       origin,
       destination,

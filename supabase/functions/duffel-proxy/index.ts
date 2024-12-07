@@ -37,12 +37,19 @@ serve(async (req) => {
       console.log('Processing payment request:', {
         orderId: body?.data?.order_id,
         amount: body?.data?.amount,
-        currency: body?.data?.currency
+        currency: body?.data?.currency,
+        type: body?.data?.type
       });
 
       // Validate payment request
-      if (!body?.data?.order_id || !body?.data?.amount) {
-        throw new Error('Invalid payment request: missing required fields');
+      if (!body?.data?.order_id || !body?.data?.amount || !body?.data?.currency || !body?.data?.type) {
+        const missingFields = [];
+        if (!body?.data?.order_id) missingFields.push('order_id');
+        if (!body?.data?.amount) missingFields.push('amount');
+        if (!body?.data?.currency) missingFields.push('currency');
+        if (!body?.data?.type) missingFields.push('type');
+        
+        throw new Error(`Invalid payment request: missing fields: ${missingFields.join(', ')}`);
       }
     }
 

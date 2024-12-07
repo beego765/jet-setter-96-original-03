@@ -32,8 +32,7 @@ export const useDuffelPayment = (booking: any, flightDetails: any, onPayNow: () 
               amount: amounts.totalAmount.toString(),
               currency: flightDetails.data.total_currency || 'GBP',
               order_id: booking.duffel_booking_id,
-              type: 'balance',
-              live_mode: false // Add this for testing
+              type: 'balance'
             }
           }
         }

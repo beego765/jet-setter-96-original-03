@@ -18,14 +18,14 @@ export const createDuffelBooking = async (flight: any) => {
             amount: flight.price.toString()
           }],
           passengers: [{
-            id: 'pas_temp1', // Using Duffel's expected format
+            id: 'temp1', // Simplified ID format
             type: 'adult',
             title: 'mr',
             gender: 'm',
             given_name: 'Temporary',
             family_name: 'Passenger',
             email: 'temp@example.com',
-            phone_number: '+447700900000', // Removed dots to match E.164 format
+            phone_number: '+447700900000', // Simple E.164 format
             born_on: '1990-01-01'
           }]
         }

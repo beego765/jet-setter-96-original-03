@@ -18,16 +18,65 @@ serve(async (req) => {
     const { path, method, body } = await req.json()
     console.log('Duffel proxy request:', { path, method, body })
 
-    // If this is a new order creation, we need to handle passenger data differently
-    if (path === '/air/orders' && method === 'POST' && body?.data?.passengers) {
-      // Remove the id field from passengers for new orders
-      body.data.passengers = body.data.passengers.map((passenger: any) => {
-        const { id, ...passengerWithoutId } = passenger
-        return passengerWithoutId
+    // Handle offer requests specifically
+    if (path === '/air/offer_requests' && method === 'POST') {
+      console.log('Creating offer request:', body)
+      const response = await fetch(`${DUFFEL_API_URL}/offer_requests`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${DUFFEL_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Duffel-Version': 'beta',
+          'Accept': 'application/json',
+          'Accept-Encoding': 'gzip',
+        },
+        body: JSON.stringify(body),
       })
-      console.log('Modified request body for new order:', body)
+
+      const data = await response.json()
+      console.log('Offer request response:', data)
+
+      if (!response.ok) {
+        console.error('Duffel API error:', data)
+        return new Response(
+          JSON.stringify(data),
+          { 
+            status: response.status,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
+      }
+
+      // If this is an offer request, we need to get the offers immediately
+      if (data.data?.id) {
+        console.log('Fetching offers for request:', data.data.id)
+        const offersResponse = await fetch(`${DUFFEL_API_URL}/offers?offer_request_id=${data.data.id}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${DUFFEL_API_KEY}`,
+            'Content-Type': 'application/json',
+            'Duffel-Version': 'beta',
+            'Accept': 'application/json',
+            'Accept-Encoding': 'gzip',
+          },
+        })
+
+        const offersData = await offersResponse.json()
+        console.log('Offers response:', offersData)
+
+        return new Response(
+          JSON.stringify(offersData),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      return new Response(
+        JSON.stringify(data),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
+    // For all other requests
     const response = await fetch(`${DUFFEL_API_URL}${path}`, {
       method,
       headers: {

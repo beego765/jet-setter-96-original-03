@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
+import { createDuffelBooking, createBookingRecord, addBookingExtras } from "@/utils/bookingUtils";
 
 const FlightSummaryPage = () => {
   const location = useLocation();
@@ -48,115 +48,25 @@ const FlightSummaryPage = () => {
         throw new Error('User not authenticated');
       }
 
-      console.log('Creating Duffel booking for offer:', flight.id);
+      // Create Duffel booking
+      const duffelOrder = await createDuffelBooking(flight.id);
 
-      // First create the Duffel booking
-      const { data: duffelOrder, error: duffelError } = await supabase.functions.invoke('duffel-proxy', {
-        body: {
-          path: '/air/orders',
-          method: 'POST',
-          body: {
-            data: {
-              type: 'instant',
-              selected_offers: [flight.id],
-              passengers: [{
-                type: 'adult',
-                title: 'mr',
-                given_name: 'Temporary',
-                family_name: 'Passenger',
-                email: 'temp@example.com',
-                born_on: '1990-01-01'
-              }]
-            }
-          }
-        }
-      });
+      // Create booking record
+      const bookingData = await createBookingRecord(user.id, flight, duffelOrder.data.id);
 
-      if (duffelError) {
-        console.error('Error creating Duffel booking:', duffelError);
-        throw duffelError;
-      }
+      // Add selected extras
+      const addonsError = await addBookingExtras(bookingData.id, selectedExtras);
 
-      console.log('Duffel booking created:', duffelOrder);
-
-      // Create a booking record with properly formatted date and Duffel IDs
-      const { data: bookingData, error: bookingError } = await supabase
-        .from('bookings')
-        .insert({
-          user_id: user.id,
-          origin: flight.origin,
-          destination: flight.destination,
-          departure_date: format(new Date(flight.departureDate), 'yyyy-MM-dd'),
-          passengers: passengers.adults + passengers.children + passengers.infants,
-          cabin_class: flight.cabinClass,
-          total_price: flight.price,
-          duffel_offer_id: flight.id,
-          duffel_booking_id: duffelOrder.data.id,
-          status: 'draft'
-        })
-        .select()
-        .single();
-
-      if (bookingError) {
-        console.error('Error creating booking:', bookingError);
-        throw bookingError;
-      }
-
-      if (!bookingData) {
-        throw new Error('No booking data returned');
-      }
-
-      // Add selected extras as booking addons if any
-      const addons = [];
-      if (selectedExtras.bags) {
-        addons.push({
-          booking_id: bookingData.id,
-          type: 'baggage',
-          name: 'Extra Baggage',
-          price: 30.00
-        });
-      }
-      if (selectedExtras.meals) {
-        addons.push({
-          booking_id: bookingData.id,
-          type: 'meal',
-          name: 'In-flight Meal',
-          price: 15.00
-        });
-      }
-      if (selectedExtras.wifi) {
-        addons.push({
-          booking_id: bookingData.id,
-          type: 'seat',
-          name: 'Wi-Fi Access',
-          price: 10.00
-        });
-      }
-      if (selectedExtras.flexibleTicket) {
-        addons.push({
-          booking_id: bookingData.id,
-          type: 'change',
-          name: 'Flexible Ticket',
-          price: 50.00
+      if (addonsError) {
+        console.error('Error adding extras:', addonsError);
+        toast({
+          title: "Warning",
+          description: "Some extras couldn't be added to your booking",
+          variant: "destructive",
         });
       }
 
-      if (addons.length > 0) {
-        const { error: addonsError } = await supabase
-          .from('booking_addons')
-          .insert(addons);
-
-        if (addonsError) {
-          console.error('Error adding extras:', addonsError);
-          toast({
-            title: "Warning",
-            description: "Some extras couldn't be added to your booking",
-            variant: "destructive",
-          });
-        }
-      }
-
-      // Navigate to passenger details with the booking ID
+      // Navigate to passenger details
       navigate(`/booking/${bookingData.id}/passenger-details`, { 
         state: { 
           bookingId: bookingData.id,

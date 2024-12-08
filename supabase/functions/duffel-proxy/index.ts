@@ -21,9 +21,17 @@ Deno.serve(async (req) => {
     if (path.startsWith('/air/offer_requests')) {
       if (method === 'POST') {
         console.log('Creating offer request:', body)
-        const response = await duffel.offerRequests.create(body.data)
-        console.log('Offer request response:', response)
-        return new Response(JSON.stringify(response), {
+        const offerRequest = await duffel.offerRequests.create(body.data)
+        console.log('Offer request created:', offerRequest)
+        
+        // Get all offers for this request
+        const offers = await duffel.offers.list({
+          offer_request_id: offerRequest.data.id,
+          limit: 50
+        })
+        
+        console.log('Offers retrieved:', offers)
+        return new Response(JSON.stringify({ data: { offers: offers.data } }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })
       }
@@ -31,11 +39,21 @@ Deno.serve(async (req) => {
 
     if (path.startsWith('/air/offers')) {
       if (method === 'GET') {
-        const offerId = path.split('/').pop()
-        console.log('Fetching offer:', offerId)
-        const response = await duffel.offers.get(offerId)
-        console.log('Offer response:', response)
-        return new Response(JSON.stringify(response), {
+        const params = new URLSearchParams(path.split('?')[1])
+        const offerId = params.get('offer_request_id')
+        console.log('Fetching offers for request:', offerId)
+        
+        if (!offerId) {
+          throw new Error('Missing offer_request_id parameter')
+        }
+        
+        const offers = await duffel.offers.list({
+          offer_request_id: offerId,
+          limit: 50
+        })
+        
+        console.log('Offers response:', offers)
+        return new Response(JSON.stringify(offers), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })
       }

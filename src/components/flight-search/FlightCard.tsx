@@ -40,6 +40,14 @@ export const FlightCard = ({ flight, onSelect, isLoading = false, passengers }: 
   const firstSlice = flight.slices?.[0];
   const firstSegment = firstSlice?.segments?.[0];
 
+  const flightDetails = {
+    departureTime: firstSegment ? new Date(firstSegment.departing_at).toLocaleTimeString() : '',
+    arrivalTime: firstSegment ? new Date(firstSegment.arriving_at).toLocaleTimeString() : '',
+    duration: firstSlice ? formatDuration(firstSlice.duration) : '',
+    origin: firstSlice?.origin?.iata_code || '',
+    destination: firstSlice?.destination?.iata_code || ''
+  };
+
   return (
     <Card className="p-6 bg-gray-800/50 backdrop-blur-sm border-gray-700 hover:bg-gray-800/60 transition-colors">
       <div className="space-y-6">
@@ -49,16 +57,7 @@ export const FlightCard = ({ flight, onSelect, isLoading = false, passengers }: 
           iataCode={flight.owner.iata_code}
         />
 
-        <FlightDetails 
-          flight={{
-            ...flight,
-            departureTime: new Date(firstSegment?.departing_at).toLocaleTimeString(),
-            arrivalTime: new Date(firstSegment?.arriving_at).toLocaleTimeString(),
-            duration: formatDuration(firstSlice?.duration),
-            origin: firstSlice?.origin?.iata_code,
-            destination: firstSlice?.destination?.iata_code,
-          }} 
-        />
+        <FlightDetails flight={flightDetails} />
 
         <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
           <div>

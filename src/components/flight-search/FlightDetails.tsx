@@ -1,11 +1,11 @@
 import { Clock, Plane } from "lucide-react";
-import type { Flight } from "./types";
+import type { FlightDetailsProps } from "./types";
 
-interface FlightDetailsProps {
-  flight: Flight;
+interface Props {
+  flight: FlightDetailsProps;
 }
 
-export const FlightDetails = ({ flight }: FlightDetailsProps) => {
+export const FlightDetails = ({ flight }: Props) => {
   return (
     <div className="flex items-center gap-8">
       <div className="text-center">

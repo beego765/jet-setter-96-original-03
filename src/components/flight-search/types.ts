@@ -9,6 +9,12 @@ export interface Flight {
   slices: Array<{
     duration: string;
     fare_brand_name?: string;
+    origin: {
+      iata_code: string;
+    };
+    destination: {
+      iata_code: string;
+    };
     segments: Array<{
       operating_carrier_flight_number: string;
       departing_at: string;
@@ -26,12 +32,6 @@ export interface Flight {
         iata_code: string;
       };
     }>;
-    origin: {
-      iata_code: string;
-    };
-    destination: {
-      iata_code: string;
-    };
   }>;
   total_amount: string;
   conditions?: {
@@ -48,4 +48,12 @@ export interface Flight {
     requires_instant_payment: boolean;
     payment_required_by: string;
   };
+}
+
+export interface FlightDetailsProps {
+  departureTime: string;
+  arrivalTime: string;
+  duration: string;
+  origin: string;
+  destination: string;
 }

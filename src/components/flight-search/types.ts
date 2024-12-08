@@ -1,44 +1,51 @@
 export interface Flight {
   id: string;
-  airline: string;
-  airlineLogoUrl?: string;
-  airlineCode?: string;
-  flightNumber: string;
-  departureTime: string;
-  arrivalTime: string;
-  duration: string;
-  price: number;
-  origin: string;
-  destination: string;
-  aircraft?: string;
-  cabinClass: string;
-  operatingCarrier: string;
-  departureDate: string;
-  segments: Array<{
-    origin: string;
-    destination: string;
-    departureTime: string;
-    arrivalTime: string;
+  owner: {
+    name: string;
+    logo_symbol_url: string;
+    logo_lockup_url?: string;
+    iata_code: string;
+  };
+  slices: Array<{
     duration: string;
+    fare_brand_name?: string;
+    segments: Array<{
+      operating_carrier_flight_number: string;
+      departing_at: string;
+      arriving_at: string;
+      aircraft?: {
+        name: string;
+      };
+      operating_carrier?: {
+        name: string;
+      };
+      origin: {
+        iata_code: string;
+      };
+      destination: {
+        iata_code: string;
+      };
+    }>;
+    origin: {
+      iata_code: string;
+    };
+    destination: {
+      iata_code: string;
+    };
   }>;
-  services?: {
-    seatSelection: boolean;
-    meals: string[];
-    baggage: {
-      included: boolean;
-      details: string;
-    };
-    refund?: {
+  total_amount: string;
+  conditions?: {
+    refund_before_departure?: {
       allowed: boolean;
-      penalty?: number;
+      penalty_amount?: number;
     };
-    changes?: {
+    change_before_departure?: {
       allowed: boolean;
-      penalty?: number;
+      penalty_amount?: number;
     };
   };
-  carbonEmissions?: {
-    amount: number;
-    unit: string;
+  payment_requirements: {
+    requires_instant_payment: boolean;
+    payment_required_by: string;
   };
 }

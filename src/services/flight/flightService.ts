@@ -66,19 +66,12 @@ export const searchFlights = async (params: FlightSearchParams) => {
     logDebug('Flight Search', 'Duffel API Response:', response);
 
     // Check if response has the expected structure
-    if (!response?.data) {
+    if (!response?.data || !Array.isArray(response.data)) {
       console.error('Invalid response structure:', response);
       throw new Error('Invalid response format from flight search service');
     }
 
-    // The response.data contains the offers directly
     const offers = response.data;
-    
-    if (!Array.isArray(offers)) {
-      console.error('Invalid offers format:', offers);
-      throw new Error('Invalid offers format from flight search service');
-    }
-
     const mappedOffers = offers.map(mapDuffelOfferToFlight);
 
     logDebug('Flight Search', 'Mapped offers count:', mappedOffers.length);

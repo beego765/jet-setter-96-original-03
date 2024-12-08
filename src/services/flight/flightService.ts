@@ -63,44 +63,29 @@ export const searchFlights = async (params: FlightSearchParams) => {
       throw new Error('Failed to connect to flight search service');
     }
 
-    logDebug('Flight Search', 'Duffel API Offer Request Response:', response);
+    logDebug('Flight Search', 'Duffel API Response:', response);
 
-    if (!response?.data?.id) {
-      console.error('Invalid offer request response:', response);
-      throw new Error('Failed to create offer request');
-    }
-
-    const { data: offersResponse, error: offersError } = await supabase.functions.invoke('duffel-proxy', {
-      body: {
-        path: `/air/offers?offer_request_id=${response.data.id}`,
-        method: 'GET'
-      }
-    });
-
-    if (offersError) {
-      console.error('Offers fetch error:', offersError);
-      throw offersError;
-    }
-
-    logDebug('Flight Search', 'Duffel API Offers Response:', {
-      status: offersResponse?.status,
-      offerCount: offersResponse?.data?.length || 0,
-      meta: offersResponse?.meta
-    });
-
-    // Updated validation to check for data array directly
-    if (!offersResponse?.data || !Array.isArray(offersResponse.data)) {
-      console.error('Invalid offers response structure:', offersResponse);
+    // Check if response has the expected structure
+    if (!response?.data) {
+      console.error('Invalid response structure:', response);
       throw new Error('Invalid response format from flight search service');
     }
 
-    const mappedOffers = offersResponse.data.map(mapDuffelOfferToFlight);
+    // The response.data contains the offers directly
+    const offers = response.data;
+    
+    if (!Array.isArray(offers)) {
+      console.error('Invalid offers format:', offers);
+      throw new Error('Invalid offers format from flight search service');
+    }
+
+    const mappedOffers = offers.map(mapDuffelOfferToFlight);
 
     logDebug('Flight Search', 'Mapped offers count:', mappedOffers.length);
 
     if (mappedOffers.length === 0) {
       console.warn('No flights found for search params:', params);
-      throw new Error('No flights found for the specified route and dates');
+      return [];
     }
 
     return mappedOffers;

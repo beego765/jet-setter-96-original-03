@@ -33,6 +33,26 @@ const FlightSummaryPage = () => {
     );
   }
 
+  // Extract and transform services from the flight data
+  const flightServices = {
+    seatSelection: flight.conditions?.change_before_departure?.allowed || false,
+    meals: flight.slices?.[0]?.segments?.map(segment => segment.meal_service || []).flat() || [],
+    baggage: {
+      included: flight.passengers?.[0]?.baggages?.length > 0 || false,
+      details: flight.passengers?.[0]?.baggages?.length > 0 
+        ? `${flight.passengers[0].baggages.length} bag(s) included` 
+        : 'No baggage included'
+    },
+    refund: {
+      allowed: flight.conditions?.refund_before_departure?.allowed || false,
+      penalty: flight.conditions?.refund_before_departure?.penalty_amount
+    },
+    changes: {
+      allowed: flight.conditions?.change_before_departure?.allowed || false,
+      penalty: flight.conditions?.change_before_departure?.penalty_amount
+    }
+  };
+
   const handleExtrasChange = (extras: any) => {
     setSelectedExtras(extras);
   };
@@ -107,14 +127,11 @@ const FlightSummaryPage = () => {
           <Card className="p-6 bg-gray-800/50 backdrop-blur-sm border-gray-700">
             <h2 className="text-xl font-semibold mb-4">Included Services</h2>
             <FlightServices 
-              services={{
-                seatSelection: flight.services.seatSelection,
-                meals: flight.services.meals,
-                baggage: flight.services.baggage,
-                refund: flight.services.refund,
-                changes: flight.services.changes
-              }}
-              carbonEmissions={flight.carbonEmissions}
+              services={flightServices}
+              carbonEmissions={flight.total_emissions_kg ? {
+                amount: parseFloat(flight.total_emissions_kg),
+                unit: 'kg CO2'
+              } : undefined}
             />
           </Card>
 
@@ -129,7 +146,7 @@ const FlightSummaryPage = () => {
           <Card className="p-6 bg-gray-800/50 backdrop-blur-sm border-gray-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">£{flight.price.toFixed(2)}</p>
+                <p className="text-2xl font-bold">£{flight.total_amount}</p>
                 <p className="text-sm text-gray-400">Total price including all taxes and fees</p>
               </div>
               <Button

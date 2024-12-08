@@ -1,4 +1,4 @@
-import { Duffel } from '@duffel/api'
+import { Duffel } from 'npm:@duffel/api'
 import { corsHeaders } from '../_shared/cors.ts'
 
 // Initialize the Duffel client

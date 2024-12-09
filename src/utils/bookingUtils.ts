@@ -4,6 +4,10 @@ import { format } from "date-fns";
 export const createDuffelBooking = async (flight: any) => {
   console.log('Creating Duffel booking for offer:', flight);
 
+  if (!flight?.total_amount) {
+    throw new Error('Flight price is required');
+  }
+
   const { data: duffelOrder, error: duffelError } = await supabase.functions.invoke('duffel-proxy', {
     body: {
       path: '/air/orders',
@@ -15,7 +19,7 @@ export const createDuffelBooking = async (flight: any) => {
           payments: [{
             type: 'balance',
             currency: 'GBP',
-            amount: flight.price.toString()
+            amount: flight.total_amount
           }],
           passengers: [{
             id: `pas_${Date.now()}`, // Generate unique ID using timestamp
@@ -51,12 +55,12 @@ export const createBookingRecord = async (
     .from('bookings')
     .insert({
       user_id: userId,
-      origin: flight.origin,
-      destination: flight.destination,
-      departure_date: format(new Date(flight.departureDate), 'yyyy-MM-dd'),
+      origin: flight.slices?.[0]?.origin?.iata_code || flight.origin,
+      destination: flight.slices?.[0]?.destination?.iata_code || flight.destination,
+      departure_date: format(new Date(flight.slices?.[0]?.segments?.[0]?.departing_at || flight.departureDate), 'yyyy-MM-dd'),
       passengers: 1,
-      cabin_class: flight.cabinClass,
-      total_price: flight.price,
+      cabin_class: flight.slices?.[0]?.fare_brand_name || flight.cabinClass || 'economy',
+      total_price: parseFloat(flight.total_amount),
       duffel_offer_id: flight.id,
       duffel_booking_id: duffelOrderId,
       status: 'draft'

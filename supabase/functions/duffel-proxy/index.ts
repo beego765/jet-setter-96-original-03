@@ -42,8 +42,9 @@ Deno.serve(async (req) => {
         // Process the order data with proper passenger formatting
         const orderData = {
           ...body.data,
-          passengers: body.data.passengers.map((passenger: any) => ({
-            type: 'adult', // Default to adult if not specified
+          passengers: body.data.passengers.map((passenger: any, index: number) => ({
+            id: `pas_${Date.now()}_${index}`, // Generate unique ID for each passenger
+            type: passenger.type || 'adult',
             title: passenger.title || 'mr',
             gender: passenger.gender || 'm',
             given_name: passenger.given_name || passenger.firstName || 'Temporary',

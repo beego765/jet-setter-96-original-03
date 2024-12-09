@@ -35,6 +35,18 @@ Deno.serve(async (req) => {
       }
     }
 
+    if (path.startsWith('/air/orders')) {
+      if (method === 'POST') {
+        console.log('Creating order:', body)
+        const order = await duffel.orders.create(body.data)
+        console.log('Order created:', order)
+        
+        return new Response(JSON.stringify(order), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+    }
+
     if (path.startsWith('/air/offers')) {
       if (method === 'GET') {
         const params = new URLSearchParams(path.split('?')[1])

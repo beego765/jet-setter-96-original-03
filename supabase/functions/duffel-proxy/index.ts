@@ -42,7 +42,8 @@ Deno.serve(async (req) => {
         // Process the order data with proper passenger formatting
         const orderData = {
           ...body.data,
-          passengers: body.data.passengers.map((passenger: any) => ({
+          passengers: body.data.passengers.map((passenger: any, index: number) => ({
+            id: `pas_${Date.now()}_${index}`, // Generate a unique, valid Duffel passenger ID
             type: passenger.type || 'adult',
             title: passenger.title || 'mr',
             gender: passenger.gender || 'm',
@@ -57,6 +58,18 @@ Deno.serve(async (req) => {
         console.log('Processed order data:', orderData)
         const order = await duffel.orders.create(orderData)
         console.log('Order created:', order)
+        
+        return new Response(JSON.stringify(order), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+
+      if (method === 'GET') {
+        const orderId = path.split('/')[3]
+        console.log('Fetching order details:', orderId)
+        
+        const order = await duffel.orders.get(orderId)
+        console.log('Order details:', order)
         
         return new Response(JSON.stringify(order), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }

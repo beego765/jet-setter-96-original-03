@@ -42,8 +42,7 @@ Deno.serve(async (req) => {
         // Process the order data with proper passenger formatting
         const orderData = {
           ...body.data,
-          passengers: body.data.passengers.map((passenger: any, index: number) => ({
-            id: `pas_${Date.now()}_${index}`, // Generate a unique, valid Duffel passenger ID
+          passengers: body.data.passengers.map((passenger: any) => ({
             type: passenger.type || 'adult',
             title: passenger.title || 'mr',
             gender: passenger.gender || 'm',

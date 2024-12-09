@@ -42,23 +42,16 @@ Deno.serve(async (req) => {
         // Process the order data with proper passenger formatting
         const orderData = {
           ...body.data,
-          passengers: body.data.passengers.map((passenger: any, index: number) => {
-            // Generate a unique ID for each passenger that follows Duffel's format
-            const passengerId = `pas_${Date.now()}${index}${Math.random().toString(36).substring(7)}`
-            console.log(`Generated passenger ID: ${passengerId} for passenger:`, passenger)
-            
-            return {
-              id: passengerId,
-              type: passenger.type || 'adult',
-              title: passenger.title || 'mr',
-              gender: passenger.gender || 'm',
-              given_name: passenger.given_name || passenger.firstName || 'Temporary',
-              family_name: passenger.family_name || passenger.lastName || 'Passenger',
-              email: passenger.email || 'temp@example.com',
-              phone_number: passenger.phone_number || '+441234567890',
-              born_on: passenger.born_on || passenger.dateOfBirth || '1990-01-01'
-            }
-          })
+          passengers: body.data.passengers.map((passenger: any) => ({
+            type: passenger.type || 'adult',
+            title: passenger.title || 'mr',
+            gender: passenger.gender || 'm',
+            given_name: passenger.given_name || passenger.firstName || 'Temporary',
+            family_name: passenger.family_name || passenger.lastName || 'Passenger',
+            email: passenger.email || 'temp@example.com',
+            phone_number: passenger.phone_number || '+441234567890',
+            born_on: passenger.born_on || passenger.dateOfBirth || '1990-01-01'
+          }))
         }
         
         console.log('Processed order data:', orderData)
